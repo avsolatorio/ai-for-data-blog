@@ -14,8 +14,9 @@
     <!-- to load the model -->
     <script type="module">
         let dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
+        let model_name = "GIST-all-MiniLM-L6-v2";
 
-        fetch("https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/wdi_embeddings.json")
+        fetch("https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/" + model_name + "__wdi_embeddings.json")
             .then(response => response.json())
             .then(json => window.wdi_data = json);
 
@@ -38,7 +39,7 @@
 
             // Specifying feature-extraction task
             // https://github.com/xenova/transformers.js/blob/main/src/pipelines.js
-            let extractor = await pipeline('feature-extraction', 'avsolatorio/GIST-all-MiniLM-L6-v2-onnx');
+            let extractor = await pipeline("feature-extraction", "avsolatorio/" + model_name);
             // let extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
             window.extractor = extractor;
 

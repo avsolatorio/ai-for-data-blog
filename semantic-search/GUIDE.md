@@ -5,7 +5,7 @@ This document contains some guide for setting up the project, processing the mod
 ## Model conversion and quantization
 
 The transformers.js library uses ONNX models. To convert a Hugging Face model to ONNX, you can use the `optimum-cli` tool. The following commands show how to convert a Hugging Face model to ONNX and quantize it using the `optimum-cli` tool.
-sentence-transformers/all-MiniLM-L6-v2
+
 ```bash
 poetry run optimum-cli export onnx -m avsolatorio/GIST-all-MiniLM-L6-v2 GIST_all_MiniLM_L6_v2_onnx/
 poetry run optimum-cli onnxruntime quantize \
@@ -21,7 +21,7 @@ poetry run optimum-cli onnxruntime quantize \
 ```
 
 
-We then upload this to the hugginface model repository. The onnx models must be in the `onnx/` folder in the repository.
+We then upload this to the huggingface model repository. The onnx models must be in the `onnx/` folder in the repository.
 
 ```bash
 git clone https://huggingface.co/avsolatorio/GIST-all-MiniLM-L6-v2
