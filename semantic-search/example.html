@@ -5,13 +5,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentence Embedding Test</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #myForm {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #inputText {
+            width: 50%;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #submitButton {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        #submitButton:hover {
+            background-color: #0056b3;
+        }
+
+        #outputDiv {
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        #loading {
+            display: flex;
+            justify-content: center;
+        }
+
+        #loading-image {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 
 <body>
     <!-- Main heading for the page -->
     <h1>Sentence Embedding Test</h1>
 
-    <!-- Form for user input with an ID for easy JS reference -->
+    <!-- Form for user input -->
     <form id="myForm">
         <input type="text" id="inputText" placeholder="Enter text...">
         <button type="submit" id="submitButton">Submit</button>
@@ -20,13 +80,22 @@
     <!-- Div element to display the result of the embedding test -->
     <div id="outputDiv"></div>
 
-    <!-- Loading indicator that is initially hidden -->
+    <!-- Loading indicator -->
     <div id="loading" style="visibility: hidden;">
-        <img id="loading-image" src="https://i.gifer.com/ZKZg.gif" alt="Loading..." width="5%" />
+        <img id="loading-image" src="https://i.gifer.com/ZKZg.gif" alt="Loading..." />
     </div>
 
     <!-- JavaScript code to load the model and process the input -->
     <script type="module">
+
+        // Function to create HTML for each result item
+        function createResultItem(item) {
+            return `<div class="result-item">
+                        <strong>${item.name}</strong>
+                        <p>Similarity Score: ${item.sim.toFixed(2)}</p>
+                    </div>`;
+        }
+
         // Function to calculate the dot product of two vectors
         const dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
         // Model name for fetching the embeddings
@@ -68,11 +137,14 @@
                 return x;
             }).sort((a, b) => b.sim - a.sim).map(({ embedding, ...rest }) => ({ ...rest })).slice(0, 5);
 
-            // Display the top 5 results in the outputDiv
-            outputDiv.innerHTML = JSON.stringify(window.dots, null, 2);
+            // // Display the top 5 results in the outputDiv
+            // outputDiv.innerHTML = JSON.stringify(window.dots, null, 2);
 
             // Hide the loading indicator
             document.getElementById("loading").style.visibility = "hidden";
+
+            // Display the results using the new format
+            outputDiv.innerHTML = window.dots.map(createResultItem).join('');
         });
     </script>
 </body>
