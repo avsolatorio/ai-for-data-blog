@@ -50,8 +50,13 @@
                 return x;
             });
 
+            // Sort by similarity
+            window.dots.sort((a, b) => b.sim - a.sim);
+
+            result = window.dots.map(({ embedding, ...rest }) => ({ ...rest })).slice(0, 5);
+
             // outputDiv.innerHTML = JSON.stringify(result.data);
-            outputDiv.innerHTML = dot(result.sentence_embedding.data, result.sentence_embedding.data);
+            outputDiv.innerHTML = JSON.stringify(result);
             // outputDiv.innerHTML = JSON.stringify(result.sentence_embedding.data);
 
             window.result = result;
