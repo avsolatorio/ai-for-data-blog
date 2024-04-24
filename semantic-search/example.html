@@ -15,6 +15,11 @@
     <script type="module">
         let dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
 
+        fetch("https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/wdi_embeddings.json")
+            .then(response => response.json())
+            .then(json => window.wdi_data = json);
+
+
         // Imported the cdn of the transformers library
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.4.1';
 
@@ -39,6 +44,11 @@
 
             // let result = await extractor(inputText.value, { pooling: 'mean', normalize: true })
             let result = await extractor.model(extractor.tokenizer(inputText.value));
+
+            window.dots = window.wdi_data.map(x => {
+                x.sim = dot(result.sentence_embedding.data, x.embedding);
+                return x;
+            });
 
             // outputDiv.innerHTML = JSON.stringify(result.data);
             outputDiv.innerHTML = dot(result.sentence_embedding.data, result.sentence_embedding.data);
