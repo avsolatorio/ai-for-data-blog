@@ -13,6 +13,7 @@
 
     <!-- to load the model -->
     <script type="module">
+        let dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
 
         // Imported the cdn of the transformers library
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.4.1';
@@ -36,11 +37,12 @@
             // let extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
             window.extractor = extractor;
 
-            let result = await extractor(inputText.value, { pooling: 'mean', normalize: true })
-            // let result = await extractor.model(extractor.tokenizer(inputText.value));
+            // let result = await extractor(inputText.value, { pooling: 'mean', normalize: true })
+            let result = await extractor.model(extractor.tokenizer(inputText.value));
 
+            // outputDiv.innerHTML = JSON.stringify(result.data);
+            outputDiv.innerHTML = dot(result.sentence_embedding.data, result.sentence_embedding.data);
             // outputDiv.innerHTML = JSON.stringify(result.sentence_embedding.data);
-            outputDiv.innerHTML = JSON.stringify(result.data);
 
             window.result = result;
         });
