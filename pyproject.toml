@@ -11,6 +11,7 @@ python = "^3.10"
 optimum = {extras = ["exporters"], version = "^1.19.1"}
 sentence-transformers = "^2.7.0"
 openpyxl = "^3.1.2"
+fire = "^0.6.0"
 
 
 [build-system]
