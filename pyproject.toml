@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "ai4data"
+version = "0.1.0"
+description = ""
+authors = ["Aivin V. Solatorio <avsolatorio@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+optimum = {extras = ["exporters"], version = "^1.19.1"}
+sentence-transformers = "^2.7.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
