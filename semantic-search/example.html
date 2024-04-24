@@ -1,6 +1,6 @@
 <body>
     <!-- Heading -->
-    <h1>Sentence Embeddin Test</h1>
+    <h1>Sentence Embedding Test</h1>
 
     <!-- for user input -->
     <form id="myForm">
@@ -31,11 +31,16 @@
             e.preventDefault();
 
             // Specifying feature-extraction task
+            // https://github.com/xenova/transformers.js/blob/main/src/pipelines.js
             let extractor = await pipeline('feature-extraction', 'avsolatorio/GIST-all-MiniLM-L6-v2-onnx');
+            // let extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
             window.extractor = extractor;
 
-            let result = await extractor.model(extractor.tokenizer(inputText.value));
-            outputDiv.innerHTML = JSON.stringify(result.sentence_embedding.data);
+            let result = await extractor(inputText.value, { pooling: 'mean', normalize: true })
+            // let result = await extractor.model(extractor.tokenizer(inputText.value));
+
+            // outputDiv.innerHTML = JSON.stringify(result.sentence_embedding.data);
+            outputDiv.innerHTML = JSON.stringify(result.data);
 
             window.result = result;
         });
