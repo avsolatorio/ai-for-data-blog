@@ -42,7 +42,7 @@
                             <v-form @submit.prevent="submit">
                                 <v-text-field v-model="query" label="Search" single-line hide-details>
                                     <template v-slot:append-inner>
-                                        <v-btn icon @click="submit" color="blue lighten-2">
+                                        <v-btn @click="submit" color="blue lighten-2">
                                             <v-icon>mdi-magnify</v-icon>
                                         </v-btn>
                                     </template>
@@ -55,66 +55,51 @@
 
                     <v-row v-show="!loading" justify="center">
                         <v-col cols="12" sm="8" md="6">
-                            <v-infinite-scroll :height="600" :results="results" @load="load">
+                            <v-infinite-scroll :height="800" :results="results" @load="load">
                                 <template v-for="(item, index) in results" :key="item.code">
                                     <div :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : '']">
-                                        {{ item.code }}
-
+                                        <!-- {{ item.code }} -->
                                         <v-card class="mx-auto">
                                             <iframe style="box-sizing: content-box;" loading="lazy" :src="
-                                    'https://data.worldbank.org/share/widget?indicators=' +
-                                    item.code +
-                                    '&end=2023&start=1990&view=chart'
-                                " width="100%" height="300" frameBorder="0" scrolling="no"></iframe>
+                                                'https://data.worldbank.org/share/widget?indicators=' +
+                                                item.code +
+                                                '&end=2023&start=1990&view=chart'
+                                                " width="100%" height="300" frameBorder="0" scrolling="no"></iframe>
 
                                             <v-card-title>{{ item.name }}</v-card-title>
                                             <v-card-text>
                                                 {{ item.name }}
-
-                                                <!-- <iframe src="https://data.worldbank.org/share/widget?indicators=EN.ATM.GHGO.ZG&view=map" width='450' height='300' frameBorder='0' scrolling="no" ></iframe> -->
-                                                <v-row>
-                                                    <v-col cols="6">
-                                                        test
-                                                        <!-- {{ getWDIMetadata(item.code) }} -->
-                                                    </v-col>
-
-                                                    <!-- <v-col cols="6">
-                                                <iframe style="box-sizing: content-box;" loading="lazy" :src="
-                                                    'https://data.worldbank.org/share/widget?indicators=' +
-                                                    item.code +
-                                                    '&end=2023&start=1990&view=chart'
-                                                " width="100%" height="100%" frameBorder="0" scrolling="no"></iframe>
-                                            </v-col> -->
-                                                </v-row>
-
                                             </v-card-text>
+
+                                            <v-card-actions>
+                                                <v-btn @click="item.show = !item.show" color="orange-lighten-2"
+                                                    text="Definition"></v-btn>
+
+                                                <v-spacer></v-spacer>
+
+                                                <!-- <v-btn :icon="item.show ? 'mdi-chevron-up' : 'mdi-chevron-down'" -->
+                                                <v-btn @click="item.show = !item.show">
+                                                    <v-icon v-if="item.show">mdi-chevron-up</v-icon>
+                                                    <v-icon v-else>mdi-chevron-down</v-icon>
+
+                                                </v-btn>
+                                            </v-card-actions>
+
+                                            <v-expand-transition>
+                                                <div v-show="item.show">
+                                                    <v-divider></v-divider>
+
+                                                    <v-card-text>
+                                                        Definition of the indicator here...
+                                                    </v-card-text>
+                                                </div>
+                                            </v-expand-transition>
                                         </v-card>
                                     </div>
                                 </template>
                             </v-infinite-scroll>
                         </v-col>
                     </v-row>
-
-                    <!-- Results -->
-                    <!-- <v-row v-show="!loading">
-                        <v-col v-for="item in results" :key="item.id" cols="12" sm="8" md="6">
-                            <v-card class="mx-auto">
-                                <iframe style="box-sizing: content-box;" loading="lazy" :src="
-                                'https://data.worldbank.org/share/widget?indicators=' +
-                                item.code +
-                                '&end=2023&start=1990&view=chart'
-                                " width="100%" height="300" frameBorder="0" scrolling="no"></iframe>
-
-                                <v-card-title>{{ item.name }}</v-card-title>
-                                <v-card-text>
-                                    {{ item.name }}
-                                </v-card-text>
-
-
-
-                            </v-card>
-                        </v-col>
-                    </v-row> -->
                 </div>
 
                 <!-- Loading indicator -->
@@ -187,7 +172,7 @@
 
                     this.allResults = this.wdi_data.map(x => {
                         let sim = this.dotProduct(embedding, x.embedding);
-                        return { sim: sim, id: x.code, ...x }
+                        return { sim: sim, show: false, id: x.code, ...x }
                     }).sort((a, b) => b.sim - a.sim).map(({ embedding, ...rest }) => ({ ...rest }))
 
                     window.allResults = this.allResults;
@@ -207,9 +192,18 @@
                 dotProduct(a, b) {
                     return a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n)
                 },
-                load({ done }) {
+                async mockApi() {
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            const res = this.allResults.slice(this.results.length, this.results.length + this.topN);
+                            resolve(res)
+                        }, 500)
+                    })
+                },
+                async load({ done }) {
                     // Perform API call
-                    const res = this.allResults.slice(this.results.length, this.results.length + this.topN);
+                    const res = await this.mockApi()
+
                     console.log(res);
 
                     this.results.push(...res)
