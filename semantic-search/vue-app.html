@@ -76,20 +76,25 @@
         </v-app>
     </div>
 
-    <script>
+    <script type="module">
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
+
+        console.log(pipeline)
+
         const { createApp } = Vue
         const { createVuetify } = Vuetify
 
         const vuetify = createVuetify()
 
         createApp({
-            mounted() {
+            async mounted() {
                 // this.$refs.search.focus()
 
                 // Load the WDI data
                 this.loadJSON()
 
-                window.wdi = this;
+                // window.wdi = this;
+                this.extractor = await pipeline("feature-extraction", `avsolatorio/${this.model_name}`);
             },
             data() {
                 return {
@@ -98,19 +103,28 @@
                     output: '',
                     loading: false,
                     wdi_data: [],
-                    results: []
+                    results: [],
+                    extractor: null,
+                    topN: 5
                 }
             },
             methods: {
+                async getEmbedding(text) {
+                    const result = await this.extractor.model(this.extractor.tokenizer(text));
+
+                    return result.sentence_embedding.data;
+                },
                 async submit() {
                     // Process the search query
                     this.loading = true
 
-                    this.results.push({
-                        id: this.results.length + 1,
-                        code: this.search,
-                        name: this.search
-                    })
+                    const embedding = await this.getEmbedding(this.search);
+
+                    // Calculate similarity with stored embeddings and sort the results
+                    this.results = this.wdi_data.map(x => {
+                        let sim = this.dotProduct(embedding, x.embedding);
+                        return { sim: sim, id: x.code, ...x }
+                    }).sort((a, b) => b.sim - a.sim).map(({ embedding, ...rest }) => ({ ...rest })).slice(0, this.topN);
 
                     this.loading = false
                 },
