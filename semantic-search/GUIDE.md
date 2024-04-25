@@ -90,5 +90,5 @@ cd search/
 # Update the contents of the main.js file as needed. Then build.
 # browserify main.js --standalone semanticSearch -o bundle.js
 
-browserify -r wink-bm25-text-search -r compute-cosine-similarity > ss-bundle.js
+browserify -r wink-bm25-text-search:bm25 -r compute-cosine-similarity:similarity > ss-bundle.js
 ```
