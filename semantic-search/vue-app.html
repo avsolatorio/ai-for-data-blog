@@ -30,45 +30,40 @@
                     </v-col>
                 </v-row>
 
-                <!-- Search bar -->
+                <div v-show="isExtractorReady">
+                    <!-- Search bar -->
+                    <v-row justify="center">
+                        <v-col cols="12" sm="8" md="6">
+                            <v-form @submit.prevent="submit">
+                                <v-text-field v-model="search" label="Search" single-line hide-details>
+                                    <template v-slot:append-inner>
+                                        <v-btn icon @click="submit" color="blue lighten-2">
+                                            <v-icon>mdi-magnify</v-icon>
+                                        </v-btn>
+                                    </template>
 
-                <v-row justify="center">
-                    <v-col cols="12" sm="8" md="6">
-                        <v-form @submit.prevent="submit">
-                            <v-text-field v-model="search" label="Search" single-line hide-details>
-                                <template v-slot:append-inner>
-                                    <v-btn icon @click="submit" color="blue lighten-2">
-                                        <v-icon>mdi-magnify</v-icon>
-                                    </v-btn>
-                                </template>
+                                </v-text-field>
+                            </v-form>
 
-                            </v-text-field>
-                        </v-form>
+                        </v-col>
+                    </v-row>
 
-                    </v-col>
-                </v-row>
-
-                <!-- Loading indicator -->
-                <v-row justify="center">
-                    <v-col class="text-center">
-                        <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
-                    </v-col>
-                </v-row>
-
-                <!-- Results -->
-                <v-row v-show="!loading">
-                    <v-col v-for="item in results" :key="item.id" cols="12">
-                        <v-card class="mb-3">
-                            <v-card-title>{{ item.code }}</v-card-title>
-                            <v-card-text>{{ item.name }}</v-card-text>
-                        </v-card>
-                    </v-col>
-                </v-row>
+                    <!-- Results -->
+                    <v-row v-show="!loading">
+                        <v-col v-for="item in results" :key="item.id" cols="12">
+                            <v-card class="mb-3">
+                                <v-card-title>{{ item.code }}</v-card-title>
+                                <v-card-text>{{ item.name }}</v-card-text>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </div>
 
                 <!-- Loading indicator -->
                 <v-row justify="center">
                     <v-col class="text-center">
-                        <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
+                        <v-progress-circular v-if="loading || !isExtractorReady" indeterminate
+                            color="primary"></v-progress-circular>
                     </v-col>
                 </v-row>
 
@@ -92,9 +87,8 @@
 
                 // Load the WDI data
                 this.loadJSON()
-
-                // window.wdi = this;
-                this.extractor = await pipeline("feature-extraction", `avsolatorio/${this.model_name}`);
+                const initEmbed = await this.getEmbedding("poverty");
+                console.log(initEmbed);
             },
             data() {
                 return {
@@ -108,8 +102,20 @@
                     topN: 5
                 }
             },
+            computed: {
+                isExtractorReady() {
+                    return this.extractor !== null;
+                }
+            },
             methods: {
+                async loadExtractor() {
+                    if (this.extractor === null) {
+                        this.extractor = await pipeline("feature-extraction", `avsolatorio/${this.model_name}`);
+                    }
+                },
                 async getEmbedding(text) {
+                    await this.loadExtractor();
+
                     const result = await this.extractor.model(this.extractor.tokenizer(text));
 
                     return result.sentence_embedding.data;
