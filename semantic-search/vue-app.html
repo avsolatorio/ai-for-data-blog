@@ -9,6 +9,10 @@
     <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
     <!-- Vuetify JS CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@3.x/dist/vuetify.min.js"></script>
     <script type="text/javascript" src="https://pym.nprapps.org/pym.v1.min.js"></script>
@@ -90,7 +94,7 @@
                                                     <v-divider></v-divider>
 
                                                     <v-card-text>
-                                                        Definition of the indicator here...
+                                                        {{ item.definition }}
                                                     </v-card-text>
                                                 </div>
                                             </v-expand-transition>
@@ -128,6 +132,8 @@
 
         createApp({
             async mounted() {
+                window.wdi_app = this;
+
                 // Load the WDI data
                 this.loadJSON()
                 const initEmbed = await this.getEmbedding("poverty");
@@ -140,6 +146,7 @@
                     query: 'poverty rate',
                     loading: false,
                     wdi_data: [],
+                    wdi_definitions: {},
                     results: [],
                     allResults: [],
                     extractor: null,
@@ -164,6 +171,30 @@
 
                     return result.sentence_embedding.data;
                 },
+                wdiMetadataURL(code) {
+                    return `https://api.worldbank.org/v2/sources/2/series/${code}/metadata?format=json`
+
+                },
+                async updateResultsWithDescriptions(results) {
+                    try {
+                        // Use Promise.all to wait for all map operations to complete
+                        await Promise.all(results.map(async (x) => {
+                            const data = await this.dataFetch(this.wdiMetadataURL(x.code));
+                            let out = data.source[0].concept[0].variable[0].metatype.reduce((obj, item) => {
+                                obj[item.id] = item.value;
+                                return obj;
+                            }, {});
+                            x.description = out.Longdefinition;
+                        }));
+
+                        // At this point, all items in 'results' have been updated
+                        return results;
+                    } catch (error) {
+                        // Handle any errors that might occur during fetch or processing
+                        console.error("Error updating results with descriptions:", error);
+                        throw error; // Re-throw to handle this error outside of this function if necessary
+                    }
+                },
                 async submit() {
                     // Process the search query
                     this.loading = true
@@ -180,6 +211,14 @@
                     // Calculate similarity with stored embeddings and sort the results
                     this.results = this.allResults.slice(0, this.topN);
 
+                    // this.results = await this.updateResultsWithDescriptions(this.results)
+
+                    this.results.map(x => {
+                        x.definition = this.wdi_definitions[x.code];
+                    })
+
+                    window.results = this.results
+
                     this.loading = false
                 },
                 loadJSON() {
@@ -187,6 +226,12 @@
                         .then(response => response.json())
                         .then(data => {
                             this.wdi_data = data
+                        });
+
+                    fetch("https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/wdi_definitions.json")
+                        .then(response => response.json())
+                        .then(data => {
+                            this.wdi_definitions = data
                         });
                 },
                 dotProduct(a, b) {
@@ -209,17 +254,22 @@
                     this.results.push(...res)
 
                     done('ok')
+                },
+                async dataFetch(dataUrl) {
+                    let loadData = {};
+                    await $.ajax({
+                        url: dataUrl,
+                        crossDomain: true,
+                        success: function (data) {
+                            loadData = data;
+                        },
+                        error: function (error) {
+                            console.log(error)
+                        }
+                    });
+                    return loadData;
                 }
-
-                // getWDIMetadata(code) {
-                //     let url = "https://api.worldbank.org/v2/sources/2/series/" + code + "/metadata?format=json"
-
-                //     fetch(url, { mode: 'cors' })
-                //         .then(response => respons.json())
-                //         .then(data => {
-                //             console.log(data);
-                //         });
-                // }
+                // https://api.worldbank.org/v2/countries/BTN;PHL/indicators/SP.POP.DPND?per_page=10000&format=json
             }
         }).use(vuetify).mount('#app')
 
