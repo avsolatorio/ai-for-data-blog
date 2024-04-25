@@ -11,6 +11,11 @@
     <!-- Vuetify JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@3.x/dist/vuetify.min.js"></script>
+    <script type="text/javascript" src="https://pym.nprapps.org/pym.v1.min.js"></script>
+    <script>window.onload = function () {
+            var pymChild = new pym.Child({ polling: 500 });
+        }
+    </script>
     <style>
         #loading-image {
             width: 50px;
@@ -35,7 +40,7 @@
                     <v-row justify="center">
                         <v-col cols="12" sm="8" md="6">
                             <v-form @submit.prevent="submit">
-                                <v-text-field v-model="search" label="Search" single-line hide-details>
+                                <v-text-field v-model="query" label="Search" single-line hide-details>
                                     <template v-slot:append-inner>
                                         <v-btn icon @click="submit" color="blue lighten-2">
                                             <v-icon>mdi-magnify</v-icon>
@@ -62,8 +67,10 @@
                 <!-- Loading indicator -->
                 <v-row justify="center">
                     <v-col class="text-center">
-                        <v-progress-circular v-if="loading || !isExtractorReady" indeterminate
-                            color="primary"></v-progress-circular>
+                        <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
+                        <v-progress-linear v-if="!isExtractorReady" indeterminate color="success" height="20">
+                            <div>Loading model...</div>
+                        </v-progress-linear>
                     </v-col>
                 </v-row>
 
@@ -83,18 +90,16 @@
 
         createApp({
             async mounted() {
-                // this.$refs.search.focus()
-
                 // Load the WDI data
                 this.loadJSON()
                 const initEmbed = await this.getEmbedding("poverty");
                 console.log(initEmbed);
+                this.submit(this.query);
             },
             data() {
                 return {
                     model_name: 'GIST-all-MiniLM-L6-v2',
-                    input: '',
-                    output: '',
+                    query: 'poverty rate',
                     loading: false,
                     wdi_data: [],
                     results: [],
@@ -124,7 +129,7 @@
                     // Process the search query
                     this.loading = true
 
-                    const embedding = await this.getEmbedding(this.search);
+                    const embedding = await this.getEmbedding(this.query);
 
                     // Calculate similarity with stored embeddings and sort the results
                     this.results = this.wdi_data.map(x => {
