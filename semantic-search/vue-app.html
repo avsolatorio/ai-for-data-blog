@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Embedding Test</title>
+    <!-- Vuetify CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <!-- Vuetify JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.x/dist/vuetify.min.js"></script>
+    <style>
+        #loading-image {
+            width: 50px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <v-app>
+            <v-container>
+                <!-- Main heading for the page -->
+                <v-row>
+                    <v-col>
+                        <h1 class="text-center mb-5">WDI Semantic Search</h1>
+                    </v-col>
+                </v-row>
+
+                <!-- Search bar -->
+
+                <v-row justify="center">
+                    <v-col cols="12" sm="8" md="6">
+                        <v-form @submit.prevent="submit">
+                            <v-text-field v-model="search" label="Search" single-line hide-details>
+                                <template v-slot:append-inner>
+                                    <v-btn icon @click="submit" color="blue lighten-2">
+                                        <v-icon>mdi-magnify</v-icon>
+                                    </v-btn>
+                                </template>
+
+                            </v-text-field>
+                        </v-form>
+
+                    </v-col>
+                </v-row>
+
+                <!-- Loading indicator -->
+                <v-row justify="center">
+                    <v-col class="text-center">
+                        <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
+                    </v-col>
+                </v-row>
+
+                <!-- Results -->
+                <v-row v-show="!loading">
+                    <v-col v-for="item in results" :key="item.id" cols="12">
+                        <v-card class="mb-3">
+                            <v-card-title>{{ item.code }}</v-card-title>
+                            <v-card-text>{{ item.name }}</v-card-text>
+                        </v-card>
+                    </v-col>
+                </v-row>
+
+                <!-- Loading indicator -->
+                <v-row justify="center">
+                    <v-col class="text-center">
+                        <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
+                    </v-col>
+                </v-row>
+
+            </v-container>
+        </v-app>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+        const { createVuetify } = Vuetify
+
+        const vuetify = createVuetify()
+
+        createApp({
+            data() {
+                return {
+                    input: '',
+                    output: '',
+                    loading: false,
+                    results: []
+                }
+            },
+            methods: {
+                async submit() {
+                    // Process the search query
+                    this.loading = true
+
+                    this.results.push({
+                        id: this.results.length + 1,
+                        code: this.search,
+                        name: this.search
+                    })
+
+                    this.loading = false
+                },
+            }
+
+        }).use(vuetify).mount('#app')
+
+    </script>
+</body>
+
+</html>
