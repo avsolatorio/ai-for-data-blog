@@ -50,7 +50,7 @@
 
                 <div v-show="isExtractorReady">
                     <!-- Search bar -->
-                    <v-row justify="center">
+                    <!-- <v-row justify="center">
                         <v-col cols="12" sm="8" md="6">
                             <v-form @submit.prevent="submit">
                                 <v-text-field v-model="query" label="Search" single-line hide-details>
@@ -62,55 +62,92 @@
 
                                 </v-text-field>
                             </v-form>
-
                         </v-col>
-                    </v-row>
+                    </v-row> -->
 
                     <v-row v-show="!loading" justify="center">
                         <v-col cols="12" sm="8" md="6">
-                            <v-infinite-scroll :height="650" :results="results" @load="load">
-                                <template v-for="(item, index) in results" :key="item.code">
-                                    <div :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : '']">
-                                        <!-- {{ item.code }} -->
-                                        <v-card class="mx-auto">
-                                            <iframe style="box-sizing: content-box;" loading="lazy" :src="
+
+                            <v-card class="mx-auto">
+                                <v-toolbar color="primary" dark>
+                                    <!-- <v-toolbar-title>Results</v-toolbar-title> -->
+                                    <v-row justify="center">
+                                        <v-col cols="12">
+                                            <v-form @submit.prevent="submit">
+                                                <v-text-field v-model="query" label="Search" single-line hide-details>
+                                                    <template v-slot:append-inner>
+                                                        <v-btn @click="submit" color="blue lighten-2">
+                                                            <v-icon>mdi-magnify</v-icon>
+                                                        </v-btn>
+                                                    </template>
+
+                                                </v-text-field>
+                                            </v-form>
+                                        </v-col>
+                                    </v-row>
+                                </v-toolbar>
+
+                                <v-card-text>
+                                    Results
+                                </v-card-text>
+
+
+
+                                <v-infinite-scroll :height="650" :results="results" @load="load" color="success">
+                                    <template v-for="(item, index) in results" :key="item.code">
+                                        <div :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : '']">
+                                            <!-- {{ item.code }} -->
+                                            <v-card class="mx-auto">
+                                                <v-card-title>{{index + 1}}. {{ item.name }}</v-card-title>
+
+                                                <iframe style="box-sizing: content-box;" loading="lazy" :src="
                                                 'https://data.worldbank.org/share/widget?indicators=' +
                                                 item.code +
                                                 '&end=2023&start=1990&view=chart'
                                                 " width="100%" height="350" frameBorder="0" scrolling="no"></iframe>
 
-                                            <v-card-title>{{ item.name }}</v-card-title>
-                                            <v-card-text>
-                                                {{ item.name }}
-                                            </v-card-text>
+                                                <v-card-text>
+                                                    <!-- {{ item.name }} -->
+                                                    <v-card>
+                                                        <v-divider></v-divider>
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-card-text>
 
-                                            <v-card-actions>
-                                                <v-btn @click="item.show = !item.show" color="orange-lighten-2"
-                                                    text="Definition"></v-btn>
+                                                <!-- <v-card-actions>
+                                                    <v-btn @click="item.show = !item.show" color="orange-lighten-2"
+                                                        text="Definition"></v-btn>
 
-                                                <v-spacer></v-spacer>
+                                                    <v-spacer></v-spacer>
 
-                                                <!-- <v-btn :icon="item.show ? 'mdi-chevron-up' : 'mdi-chevron-down'" -->
-                                                <v-btn @click="item.show = !item.show">
-                                                    <v-icon v-if="item.show">mdi-chevron-up</v-icon>
-                                                    <v-icon v-else>mdi-chevron-down</v-icon>
+                                                    <v-btn @click="item.show = !item.show">
+                                                        <v-icon v-if="item.show">mdi-chevron-up</v-icon>
+                                                        <v-icon v-else>mdi-chevron-down</v-icon>
 
-                                                </v-btn>
-                                            </v-card-actions>
+                                                    </v-btn>
+                                                </v-card-actions>
 
-                                            <v-expand-transition>
-                                                <div v-show="item.show">
-                                                    <v-divider></v-divider>
+                                                <v-expand-transition>
+                                                    <div v-show="item.show">
+                                                        <v-divider></v-divider>
 
-                                                    <v-card-text>
-                                                        {{ item.definition }}
-                                                    </v-card-text>
-                                                </div>
-                                            </v-expand-transition>
-                                        </v-card>
-                                    </div>
-                                </template>
-                            </v-infinite-scroll>
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </div>
+                                                </v-expand-transition> -->
+                                            </v-card>
+                                        </div>
+                                    </template>
+                                </v-infinite-scroll>
+
+
+                            </v-card>
+
+
+
                         </v-col>
                     </v-row>
                 </div>
@@ -250,6 +287,11 @@
                     return new Promise(resolve => {
                         setTimeout(() => {
                             const res = this.allResults.slice(this.results.length, this.results.length + this.topN);
+
+                            res.map(x => {
+                                x.definition = this.wdi_definitions[x.code];
+                            })
+
                             resolve(res)
                         }, 500)
                     })
