@@ -83,11 +83,21 @@
         const vuetify = createVuetify()
 
         createApp({
+            mounted() {
+                // this.$refs.search.focus()
+
+                // Load the WDI data
+                this.loadJSON()
+
+                window.wdi = this;
+            },
             data() {
                 return {
+                    model_name: 'GIST-all-MiniLM-L6-v2',
                     input: '',
                     output: '',
                     loading: false,
+                    wdi_data: [],
                     results: []
                 }
             },
@@ -104,8 +114,17 @@
 
                     this.loading = false
                 },
+                loadJSON() {
+                    fetch(`https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${this.model_name}__wdi_embeddings.json`)
+                        .then(response => response.json())
+                        .then(data => {
+                            this.wdi_data = data
+                        });
+                },
+                dotProduct(a, b) {
+                    return a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n)
+                }
             }
-
         }).use(vuetify).mount('#app')
 
     </script>
