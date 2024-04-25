@@ -67,3 +67,27 @@ onnx_out = sess.run(None, onnx_input)
 
 assert np.dot(model_out.flatten(), onnx_out[1].flatten()) > 0.99
 ```
+
+
+## Creating the JS package
+
+This app uses npm packages which we need to compile and bundle for use. We will use [`browserify`](https://github.com/browserify/browserify#usage) to create this bundle.
+
+First we create the `js/` directory and do the following inside this directory.
+
+```bash
+
+
+cd js/
+
+# Install browserify
+# sudo npm install browserify -g
+
+npm install wink-bm25-text-search --save
+npm install compute-cosine-similarity --save
+
+cd search/
+# Update the contents of the main.js file as needed. Then build.
+browserify main.js > bundle.js
+
+```
