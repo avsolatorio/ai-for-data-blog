@@ -27,7 +27,7 @@ def main(model_name: str = "avsolatorio/GIST-all-MiniLM-L6-v2"):
 
     wdi.set_index("code")["definition"].to_json(os.path.join(data_dir, f"wdi_definitions.json"))
 
-    wdi[["code", "name", "embedding"]].to_json(os.path.join(data_dir, f"{base_model}__wdi_embeddings.json"), orient="records")
+    wdi[["code", "name", "definition", "embedding"]].to_json(os.path.join(data_dir, f"{base_model}__wdi_embeddings.json"), orient="records")
 
 
 if __name__ == "__main__":
