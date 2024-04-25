@@ -33,11 +33,20 @@
         <v-app>
             <v-container>
                 <!-- Main heading for the page -->
-                <v-row>
-                    <v-col>
-                        <h1 class="text-center mb-5">WDI Semantic Search</h1>
+                <v-row justify="center">
+                    <v-col cols="12" sm="8" md="6">
+                        <h1 class="text-center">WDI Semantic Search</h1>
+
+                        <span>
+                            The indicator name and definition are used to generate embeddings using
+                            the `{{ model_name }}` model.
+
+                            Try any query and scroll through the results below.
+                        </span>
                     </v-col>
                 </v-row>
+
+                <v-spacer></v-spacer>
 
                 <div v-show="isExtractorReady">
                     <!-- Search bar -->
@@ -59,7 +68,7 @@
 
                     <v-row v-show="!loading" justify="center">
                         <v-col cols="12" sm="8" md="6">
-                            <v-infinite-scroll :height="800" :results="results" @load="load">
+                            <v-infinite-scroll :height="650" :results="results" @load="load">
                                 <template v-for="(item, index) in results" :key="item.code">
                                     <div :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : '']">
                                         <!-- {{ item.code }} -->
@@ -68,7 +77,7 @@
                                                 'https://data.worldbank.org/share/widget?indicators=' +
                                                 item.code +
                                                 '&end=2023&start=1990&view=chart'
-                                                " width="100%" height="300" frameBorder="0" scrolling="no"></iframe>
+                                                " width="100%" height="350" frameBorder="0" scrolling="no"></iframe>
 
                                             <v-card-title>{{ item.name }}</v-card-title>
                                             <v-card-text>
@@ -150,7 +159,7 @@
                     results: [],
                     allResults: [],
                     extractor: null,
-                    topN: 5
+                    topN: 10
                 }
             },
             computed: {
