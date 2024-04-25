@@ -88,6 +88,6 @@ npm install compute-cosine-similarity --save
 
 cd search/
 # Update the contents of the main.js file as needed. Then build.
-browserify main.js > bundle.js
+browserify main.js --standalone semanticSearch -o bundle.js
 
 ```
