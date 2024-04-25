@@ -39,7 +39,9 @@
 
                         <span>
                             The indicator name and definition are used to generate embeddings using
-                            the `{{ model_name }}` model.
+                            the <a :href="'https://huggingface.co/avsolatorio/' + model_name" target="_blank"><v-chip
+                                    color="success">{{
+                                    model_name }}</v-chip></a> model.
 
                             Try any query and scroll through the results below.
                         </span>
@@ -154,7 +156,7 @@
 
                 <!-- Loading indicator -->
                 <v-row justify="center">
-                    <v-col class="text-center">
+                    <v-col class="text-center" cols="12" sm="8" md="6">
                         <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
                         <v-progress-linear v-if="!isExtractorReady" indeterminate color="success" height="20">
                             <div>Loading model...</div>
@@ -192,7 +194,7 @@
                     query: 'poverty rate',
                     loading: false,
                     wdi_data: [],
-                    wdi_definitions: {},
+                    // wdi_definitions: {},
                     results: [],
                     allResults: [],
                     extractor: null,
@@ -242,6 +244,8 @@
                     }
                 },
                 async submit() {
+                    this.results = []
+
                     // Process the search query
                     this.loading = true
 
@@ -259,9 +263,9 @@
 
                     // this.results = await this.updateResultsWithDescriptions(this.results)
 
-                    this.results.map(x => {
-                        x.definition = this.wdi_definitions[x.code];
-                    })
+                    // this.results.map(x => {
+                    //     x.definition = this.wdi_definitions[x.code];
+                    // })
 
                     window.results = this.results
 
@@ -274,11 +278,11 @@
                             this.wdi_data = data
                         });
 
-                    fetch("https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/wdi_definitions.json")
-                        .then(response => response.json())
-                        .then(data => {
-                            this.wdi_definitions = data
-                        });
+                    // fetch("https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/wdi_definitions.json")
+                    //     .then(response => response.json())
+                    //     .then(data => {
+                    //         this.wdi_definitions = data
+                    //     });
                 },
                 dotProduct(a, b) {
                     return a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n)
@@ -288,9 +292,9 @@
                         setTimeout(() => {
                             const res = this.allResults.slice(this.results.length, this.results.length + this.topN);
 
-                            res.map(x => {
-                                x.definition = this.wdi_definitions[x.code];
-                            })
+                            // res.map(x => {
+                            //     x.definition = this.wdi_definitions[x.code];
+                            // })
 
                             resolve(res)
                         }, 500)
