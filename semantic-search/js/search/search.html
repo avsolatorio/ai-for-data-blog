@@ -13,8 +13,16 @@
         import * as search from "./search.js";
 
         console.log("hello!")
+        console.log(search.searchSimilarity);
         console.log(search.similarity);
         console.log(search.bm25);
+
+        var cosSim = search.searchSimilarity([1, 2], [2, 3]);
+        console.log(cosSim);
+
+        window.cosSim = cosSim;
+
+        // export const similarity = (x, y) => search.searchSimilarity(x, y);
 
     </script>
 </body>
