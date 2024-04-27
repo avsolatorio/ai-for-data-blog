@@ -8,7 +8,15 @@
 </head>
 
 <body>
-    <script type="module" src="search.js"></script>
+    Hello world!
+    <script type="module">
+        import * as search from "./search.js";
+
+        console.log("hello!")
+        console.log(search.similarity);
+        console.log(search.bm25);
+
+    </script>
 </body>
 
 </html>
