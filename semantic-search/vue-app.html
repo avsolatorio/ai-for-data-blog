@@ -170,11 +170,16 @@
 
     <script type="module">
         import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
-
-        console.log(pipeline)
+        import * as search from 'https://avsolatorio.github.io/ai-for-data-blog/semantic-search/js/search/search.min.js';
 
         const { createApp } = Vue
         const { createVuetify } = Vuetify
+
+        window.search = search
+
+        var cosSim = search.similarity([1, 2], [2, 3]);
+        console.log(cosSim);
+        window.cosSim = cosSim;
 
         const vuetify = createVuetify()
 
@@ -204,7 +209,15 @@
             computed: {
                 isExtractorReady() {
                     return this.extractor !== null;
-                }
+                },
+                keywordSearch() {
+                    return this.results.filter((row) => {
+                        const definition = row.definition.toLowerCase();
+                        const searchTerm = this.query.toLowerCase();
+
+                        return definition.includes(searchTerm);
+                    });
+                },
             },
             methods: {
                 async loadExtractor() {
@@ -323,8 +336,19 @@
                         }
                     });
                     return loadData;
-                }
-                // https://api.worldbank.org/v2/countries/BTN;PHL/indicators/SP.POP.DPND?per_page=10000&format=json
+                },
+                highlightMatches(text) {
+                    const matchExists = text
+                        .toLowerCase()
+                        .includes(this.query.toLowerCase());
+                    if (!matchExists) return text;
+
+                    const re = new RegExp(this.query, "ig");
+                    return text.replace(
+                        re,
+                        (matchedText) => `<strong>${matchedText}</strong>`
+                    );
+                },
             }
         }).use(vuetify).mount('#app')
 
