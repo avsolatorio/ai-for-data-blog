@@ -93,5 +93,5 @@ cd search/
 # browserify -r wink-bm25-text-search:bm25 -r compute-cosine-similarity:similarity > ss-bundle.js
 # parcel build ss-bundle.js --dist-dir=build/
 
-# parcel build search.js --dist-dir=build/
+# parcel build search.html --dist-dir=build/
 ```
