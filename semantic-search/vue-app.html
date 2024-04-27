@@ -95,7 +95,8 @@
 
 
 
-                                <v-infinite-scroll :height="650" :results="results" @load="load" color="success">
+                                <v-infinite-scroll v-if="!loading" :height="650" :results="results" @load="load"
+                                    color="success">
                                     <template v-for="(item, index) in results" :key="item.code">
                                         <div :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : '']">
                                             <!-- {{ item.code }} -->
