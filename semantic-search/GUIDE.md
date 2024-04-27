@@ -91,7 +91,7 @@ cd search/
 # browserify main.js --standalone semanticSearch -o bundle.js
 
 # browserify -r wink-bm25-text-search:bm25 -r compute-cosine-similarity:similarity > ss-bundle.js
+# parcel build ss-bundle.js --dist-dir=build/
 
-
-parcel build search.js --dist-dir=build/
+# parcel build search.js --dist-dir=build/
 ```
