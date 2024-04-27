@@ -88,14 +88,21 @@
                                         </v-col>
                                     </v-row>
                                 </v-toolbar>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                    <v-row>
+                        <!--
+                        <v-card-text>
+                            Results
+                        </v-card-text> -->
 
-                                <v-card-text>
-                                    Results
-                                </v-card-text>
-
-                                <v-infinite-scroll v-if="allResults.length > 0" :height="650" :results="results"
-                                    @load="load" color="success">
-                                    <template v-for="(item, index) in results" :key="item.code">
+                        <v-col cols="6" sm="6" md="6">
+                            Lexical
+                            <v-card class="mx-auto">
+                                <v-infinite-scroll v-if="allLexResults.length > 0" :height="650" :lresults="lresults"
+                                    @load="loadLex" color="success">
+                                    <template v-for="(item, index) in lresults" :key="item.code">
                                         <div :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : '']">
                                             <!-- {{ item.code }} -->
                                             <v-card class="mx-auto">
@@ -107,27 +114,26 @@
                                                 '&end=2023&start=1990&view=chart'
                                                 " width="100%" height="350" frameBorder="0" scrolling="no"></iframe> -->
 
-                                                <v-card-text>
-                                                    <!-- {{ item.name }} -->
+                                                <!-- <v-card-text>
                                                     <v-card>
                                                         <v-divider></v-divider>
                                                         <v-card-text>
                                                             {{ item.definition }}
                                                         </v-card-text>
                                                     </v-card>
-                                                </v-card-text>
+                                                </v-card-text> -->
 
-                                                <!-- <v-card-actions>
-                                                    <v-btn @click="item.show = !item.show" color="orange-lighten-2"
+                                                <v-card-actions>
+                                                    <v-btn @click="item.show = !item.show" color="success"
                                                         text="Definition"></v-btn>
 
                                                     <v-spacer></v-spacer>
 
-                                                    <v-btn @click="item.show = !item.show">
+                                                    <!-- <v-btn @click="item.show = !item.show">
                                                         <v-icon v-if="item.show">mdi-chevron-up</v-icon>
                                                         <v-icon v-else>mdi-chevron-down</v-icon>
 
-                                                    </v-btn>
+                                                    </v-btn> -->
                                                 </v-card-actions>
 
                                                 <v-expand-transition>
@@ -138,7 +144,64 @@
                                                             {{ item.definition }}
                                                         </v-card-text>
                                                     </div>
-                                                </v-expand-transition> -->
+                                                </v-expand-transition>
+                                            </v-card>
+                                        </div>
+                                    </template>
+                                </v-infinite-scroll>
+
+
+                            </v-card>
+
+                        </v-col>
+                        <v-col cols="6" sm="6" md="6">
+                            Semantic
+                            <v-card class="mx-auto">
+                                <v-infinite-scroll v-if="allResults.length > 0" :height="650" :results="results"
+                                    @load="load" color="success">
+                                    <template v-for="(item, index) in results" :key="item.code + '2'">
+                                        <div :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : '']">
+                                            <!-- {{ item.code }} -->
+                                            <v-card class="mx-auto">
+                                                <v-card-title>{{index + 1}}. {{ item.name }}</v-card-title>
+
+                                                <!-- <iframe style="box-sizing: content-box;" loading="lazy" :src="
+                                                'https://data.worldbank.org/share/widget?indicators=' +
+                                                item.code +
+                                                '&end=2023&start=1990&view=chart'
+                                                " width="100%" height="350" frameBorder="0" scrolling="no"></iframe> -->
+
+                                                <!-- <v-card-text>
+                                                    <v-card>
+                                                        <v-divider></v-divider>
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-card-text> -->
+
+                                                <v-card-actions>
+                                                    <v-btn @click="item.show = !item.show" color="success"
+                                                        text="Definition"></v-btn>
+
+                                                    <v-spacer></v-spacer>
+
+                                                    <!-- <v-btn @click="item.show = !item.show">
+                                                        <v-icon v-if="item.show">mdi-chevron-up</v-icon>
+                                                        <v-icon v-else>mdi-chevron-down</v-icon>
+
+                                                    </v-btn> -->
+                                                </v-card-actions>
+
+                                                <v-expand-transition>
+                                                    <div v-show="item.show">
+                                                        <v-divider></v-divider>
+
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </div>
+                                                </v-expand-transition>
                                             </v-card>
                                         </div>
                                     </template>
@@ -185,7 +248,7 @@
 
         // Setup the engine
         // Here we define the field boosting
-        engine.defineConfig({ fldWeights: { name: 1, definition: 2 } });
+        engine.defineConfig({ fldWeights: { name: 2, definition: 1 } });
         // Define the processor to use
         engine.definePrepTasks([search.prepTask]);
 
@@ -211,7 +274,9 @@
                     wdi_data: [],
                     // wdi_definitions: {},
                     results: [],
+                    lresults: [],
                     allResults: [],
+                    allLexResults: [],
                     extractor: null,
                     topN: 10
                 }
@@ -233,9 +298,9 @@
                 initEngine(data) {
                     console.log(data.length)
                     // Add documents to the engine
-                    data.forEach(function (doc) {
-                        // Note, 'code' becomes the unique id for 'doc'
-                        engine.addDoc(doc, doc.code);
+                    data.forEach(function (doc, i) {
+                        // Note, 'i' becomes the unique id for 'doc'
+                        engine.addDoc(doc, i);
                     });
 
                     // Consolidate before searching
@@ -278,17 +343,20 @@
                     }
                 },
                 async submit() {
-                    this.results = []
-
-                    var lresults = engine.search(this.query);
-                    console.log('%d entries found.', lresults.length);
-                    window.lresults = lresults;
-
                     // Process the search query
                     this.loading = true
 
-                    const embedding = await this.getEmbedding(this.query);
+                    this.results = []
+                    this.lresults = []
 
+                    // Perform lexical search
+                    this.allLexResults = engine.search(this.query, this.wdi_data.length).map(x => this.wdi_data[x[0]]);
+
+                    console.log('%d entries found.', this.allLexResults.length);
+                    window.allLexResults = this.allLexResults;
+
+                    // Perform semantic search
+                    const embedding = await this.getEmbedding(this.query);
                     this.allResults = this.wdi_data.map(x => {
                         let sim = this.dotProduct(embedding, x.embedding);
                         return { sim: sim, show: false, id: x.code, ...x }
@@ -298,6 +366,7 @@
 
                     // Calculate similarity with stored embeddings and sort the results
                     this.results = this.allResults.slice(0, this.topN);
+                    this.lresults = this.allLexResults.slice(0, this.topN);
 
                     // this.results = await this.updateResultsWithDescriptions(this.results)
 
@@ -305,7 +374,8 @@
                     //     x.definition = this.wdi_definitions[x.code];
                     // })
 
-                    window.results = this.results
+                    window.results = this.results;
+                    window.lresults = this.lresults;
 
                     this.loading = false
                 },
@@ -325,26 +395,32 @@
                 dotProduct(a, b) {
                     return a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n)
                 },
-                async mockApi() {
+                async mockApi(data, buffer) {
                     return new Promise(resolve => {
                         setTimeout(() => {
-                            const res = this.allResults.slice(this.results.length, this.results.length + this.topN);
-
-                            // res.map(x => {
-                            //     x.definition = this.wdi_definitions[x.code];
-                            // })
-
+                            const res = data.slice(buffer.length, buffer.length + this.topN);
                             resolve(res)
                         }, 500)
                     })
                 },
                 async load({ done }) {
                     // Perform API call
-                    const res = await this.mockApi()
+                    const res = await this.mockApi(this.allResults, this.results)
 
                     console.log(res);
 
                     this.results.push(...res)
+
+                    done('ok')
+                },
+
+                async loadLex({ done }) {
+                    // Perform API call
+                    const res = await this.mockApi(this.allLexResults, this.lresults)
+
+                    console.log(res);
+
+                    this.lresults.push(...res)
 
                     done('ok')
                 },
