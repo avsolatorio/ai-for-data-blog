@@ -75,6 +75,9 @@ This app uses npm packages which we need to compile and bundle for use. We will 
 
 First we create the `js/` directory and do the following inside this directory.
 
+Use https://bundlejs.com/ to bundle the search/search.js script. Save the output to search/search.min.js
+
+
 ```bash
 
 
