@@ -272,7 +272,6 @@
                 // Load the WDI data
                 this.loadJSON()
                 const initEmbed = await this.getEmbedding("poverty");
-                this.initEngine(this.wdi_data)
 
                 console.log(initEmbed);
                 this.submit(this.query);
@@ -308,6 +307,11 @@
             methods: {
                 initEngine(data) {
                     console.log(data.length)
+
+                    // Use initEngine inside the loadJSON so that
+                    // we know that the data is available. This is
+                    // to prevent: Uncaught (in promise) Error: winkBM25S: document collection is too small for consolidation; add more docs!
+
                     // Add documents to the engine
                     data.forEach(function (doc, i) {
                         // Note, 'i' becomes the unique id for 'doc'
@@ -394,8 +398,9 @@
                     fetch(`https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${this.model_name}__wdi_embeddings.json`)
                         .then(response => response.json())
                         .then(data => {
-                            this.wdi_data = data
-                        });
+                            this.wdi_data = data;
+                            this.initEngine(this.wdi_data)
+                        })
 
                     // fetch("https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/wdi_definitions.json")
                     //     .then(response => response.json())
