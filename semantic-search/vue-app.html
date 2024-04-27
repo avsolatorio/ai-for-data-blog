@@ -98,12 +98,16 @@
                         </v-card-text> -->
 
                         <v-col cols="6" sm="6" md="6">
-                            Lexical
                             <v-card class="mx-auto">
+                                <v-card-title>
+                                    Keywords Search
+                                    <!-- <v-chip>Keywords Search</v-chip> -->
+                                </v-card-title>
                                 <v-infinite-scroll v-if="allLexResults.length > 0" :height="650" :lresults="lresults"
                                     @load="loadLex" color="success">
                                     <template v-for="(item, index) in lresults" :key="item.code">
-                                        <div :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : '']">
+                                        <div
+                                            :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
                                             <!-- {{ item.code }} -->
                                             <v-card class="mx-auto">
                                                 <v-card-title>{{index + 1}}. {{ item.name }}</v-card-title>
@@ -148,19 +152,23 @@
                                             </v-card>
                                         </div>
                                     </template>
+                                    <template v-slot:empty>
+                                        <v-alert type="warning">No more results!</v-alert>
+                                    </template>
                                 </v-infinite-scroll>
-
-
                             </v-card>
-
                         </v-col>
                         <v-col cols="6" sm="6" md="6">
-                            Semantic
                             <v-card class="mx-auto">
+                                <v-card-title>
+                                    Semantic Search
+                                    <!-- <v-chip>Semantic Search</v-chip> -->
+                                </v-card-title>
                                 <v-infinite-scroll v-if="allResults.length > 0" :height="650" :results="results"
                                     @load="load" color="success">
                                     <template v-for="(item, index) in results" :key="item.code + '2'">
-                                        <div :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : '']">
+                                        <div
+                                            :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
                                             <!-- {{ item.code }} -->
                                             <v-card class="mx-auto">
                                                 <v-card-title>{{index + 1}}. {{ item.name }}</v-card-title>
@@ -204,6 +212,9 @@
                                                 </v-expand-transition>
                                             </v-card>
                                         </div>
+                                    </template>
+                                    <template v-slot:empty>
+                                        <v-alert type="warning">No more results!</v-alert>
                                     </template>
                                 </v-infinite-scroll>
 
@@ -405,24 +416,25 @@
                 },
                 async load({ done }) {
                     // Perform API call
-                    const res = await this.mockApi(this.allResults, this.results)
-
-                    console.log(res);
-
-                    this.results.push(...res)
-
-                    done('ok')
+                    if (this.results.length >= this.allResults.length) {
+                        done('empty')
+                    } else {
+                        const res = await this.mockApi(this.allResults, this.results)
+                        console.log(res);
+                        this.results.push(...res)
+                        done('ok')
+                    }
                 },
-
                 async loadLex({ done }) {
                     // Perform API call
-                    const res = await this.mockApi(this.allLexResults, this.lresults)
-
-                    console.log(res);
-
-                    this.lresults.push(...res)
-
-                    done('ok')
+                    if (this.lresults.length >= this.allLexResults.length) {
+                        done('empty')
+                    } else {
+                        const res = await this.mockApi(this.allLexResults, this.lresults)
+                        console.log(res);
+                        this.lresults.push(...res)
+                        done('ok')
+                    }
                 },
                 async dataFetch(dataUrl) {
                     let loadData = {};
