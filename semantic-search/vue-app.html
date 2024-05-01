@@ -24,6 +24,15 @@
         #loading-image {
             width: 50px;
         }
+
+        a.hover {
+            color: #1460aa !important;
+            text-decoration: none !important;
+        }
+
+        a.hover:hover {
+            text-decoration: underline !important;
+        }
     </style>
 </head>
 
@@ -35,13 +44,13 @@
                 <!-- Main heading for the page -->
                 <v-row justify="center">
                     <v-col cols="12" sm="8" md="6">
-                        <h1 class="text-center">WDI Semantic Search</h1>
+                        <h1 class="text-center">World Development Indicators (WDI) Search Demo</h1>
 
                         <span>
                             The indicator name and definition are used to generate embeddings using
                             the <a :href="'https://huggingface.co/avsolatorio/' + model_name" target="_blank"><v-chip
                                     color="success">{{
-                                    model_name }}</v-chip></a> model.
+                                    model_name }}</v-chip></a> model. The BM25 algorithm is used for the keyword search.
 
                             Try any query and scroll through the results below.
                         </span>
@@ -91,7 +100,7 @@
                             </v-card>
                         </v-col>
                     </v-row>
-                    <v-row>
+                    <v-row v-show="!loading" justify="center">
                         <!--
                         <v-card-text>
                             Results
@@ -99,7 +108,7 @@
 
                         <v-col cols="6" sm="6" md="6">
                             <v-card class="mx-auto">
-                                <v-card-title>
+                                <v-card-title style="background: rgb(var(--v-theme-success));color: white;">
                                     Keywords Search
                                     <!-- <v-chip>Keywords Search</v-chip> -->
                                 </v-card-title>
@@ -110,7 +119,9 @@
                                             :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
                                             <!-- {{ item.code }} -->
                                             <v-card class="mx-auto">
-                                                <v-card-title>{{index + 1}}. {{ item.name }}</v-card-title>
+                                                <v-card-title :title="item.name"><a class="hover" :href="'https://data.worldbank.org/indicator/' +
+                                                    item.code" target="_blank">{{index + 1}}. {{ item.name
+                                                        }}</a></v-card-title>
 
                                                 <!-- <iframe style="box-sizing: content-box;" loading="lazy" :src="
                                                 'https://data.worldbank.org/share/widget?indicators=' +
@@ -160,7 +171,7 @@
                         </v-col>
                         <v-col cols="6" sm="6" md="6">
                             <v-card class="mx-auto">
-                                <v-card-title>
+                                <v-card-title style="background: rgb(var(--v-theme-success));color: white;">
                                     Semantic Search
                                     <!-- <v-chip>Semantic Search</v-chip> -->
                                 </v-card-title>
@@ -171,7 +182,9 @@
                                             :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
                                             <!-- {{ item.code }} -->
                                             <v-card class="mx-auto">
-                                                <v-card-title>{{index + 1}}. {{ item.name }}</v-card-title>
+                                                <v-card-title :title="item.name"><a class="hover" :href="'https://data.worldbank.org/indicator/' +
+                                                item.code" target="_blank">{{index + 1}}. {{ item.name
+                                                        }}</a></v-card-title>
 
                                                 <!-- <iframe style="box-sizing: content-box;" loading="lazy" :src="
                                                 'https://data.worldbank.org/share/widget?indicators=' +
@@ -272,9 +285,7 @@
                 // Load the WDI data
                 this.loadJSON()
                 const initEmbed = await this.getEmbedding("poverty");
-
                 console.log(initEmbed);
-                this.submit(this.query);
             },
             data() {
                 return {
@@ -306,7 +317,7 @@
             },
             methods: {
                 initEngine(data) {
-                    console.log(data.length)
+                    console.log("initEngine", data.length)
 
                     // Use initEngine inside the loadJSON so that
                     // we know that the data is available. This is
@@ -320,6 +331,8 @@
 
                     // Consolidate before searching
                     engine.consolidate();
+
+                    this.submit(this.query);
                 },
                 async loadExtractor() {
                     if (this.extractor === null) {
