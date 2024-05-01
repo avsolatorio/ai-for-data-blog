@@ -340,10 +340,13 @@
                     }
                 },
                 async getEmbedding(text) {
+                    console.log("loadExtractor")
                     await this.loadExtractor();
 
+                    console.log("infer embedding")
                     const result = await this.extractor.model(this.extractor.tokenizer(text));
 
+                    console.log("return data")
                     return result.sentence_embedding.data;
                 },
                 wdiMetadataURL(code) {
@@ -374,6 +377,8 @@
                     // Process the search query
                     this.loading = true
 
+
+
                     this.results = []
                     this.lresults = []
 
@@ -384,15 +389,19 @@
                     window.allLexResults = this.allLexResults;
 
                     // Perform semantic search
+                    console.log("Gen embed")
                     const embedding = await this.getEmbedding(this.query);
+                    console.log("Compute sims")
                     this.allResults = this.wdi_data.map(x => {
                         let sim = this.dotProduct(embedding, x.embedding);
                         return { sim: sim, show: false, id: x.code, ...x }
                     }).sort((a, b) => b.sim - a.sim).map(({ embedding, ...rest }) => ({ ...rest }))
 
+                    console.log("Assign res")
                     window.allResults = this.allResults;
 
                     // Calculate similarity with stored embeddings and sort the results
+                    console.log("Slice res")
                     this.results = this.allResults.slice(0, this.topN);
                     this.lresults = this.allLexResults.slice(0, this.topN);
 
@@ -406,6 +415,7 @@
                     window.lresults = this.lresults;
 
                     this.loading = false
+
                 },
                 loadJSON() {
                     fetch(`https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${this.model_name}__wdi_embeddings.json`)
