@@ -47,12 +47,17 @@
                         <h1 class="text-center">World Development Indicators (WDI) Search Demo</h1>
 
                         <span>
-                            The indicator name and definition are used to generate embeddings using
+                            The indicator name and definition are used to generate embeddings for the semantic search
+                            using
                             the <a :href="'https://huggingface.co/avsolatorio/' + model_name" target="_blank"><v-chip
                                     color="success">{{
-                                    model_name }}</v-chip></a> model. The BM25 algorithm is used for the keyword search.
+                                    model_name }}</v-chip></a> model. The <a
+                                href="https://en.wikipedia.org/wiki/Okapi_BM25" target="_blank"><v-chip
+                                    color="success">BM25 algorithm</v-chip></a> is
+                            used for the keyword search.
 
-                            Try any query and scroll through the results below.
+                            Try any query and compare the results below.
+
                         </span>
                     </v-col>
                 </v-row>
@@ -346,8 +351,11 @@
                     console.log("infer embedding")
                     const result = await this.extractor.model(this.extractor.tokenizer(text));
 
-                    console.log("return data")
-                    return result.sentence_embedding.data;
+                    console.log("get data")
+                    const data = result.sentence_embedding.data;
+
+                    console.log("return data", data)
+                    return data
                 },
                 wdiMetadataURL(code) {
                     return `https://api.worldbank.org/v2/sources/2/series/${code}/metadata?format=json`
@@ -374,6 +382,7 @@
                     }
                 },
                 async submit() {
+                    console.log("submit")
                     // Process the search query
                     this.loading = true
 
@@ -392,7 +401,7 @@
                     console.log("Gen embed")
                     const embedding = await this.getEmbedding(this.query);
                     console.log("Compute sims")
-                    this.allResults = this.wdi_data.map(x => {
+                    this.allResults = await this.wdi_data.map(x => {
                         let sim = this.dotProduct(embedding, x.embedding);
                         return { sim: sim, show: false, id: x.code, ...x }
                     }).sort((a, b) => b.sim - a.sim).map(({ embedding, ...rest }) => ({ ...rest }))
