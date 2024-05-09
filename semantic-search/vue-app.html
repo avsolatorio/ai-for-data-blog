@@ -49,12 +49,16 @@
                 <!-- Main heading for the page -->
                 <v-row justify="center">
                     <v-col cols="12" sm="8" md="6">
-                        <h1 class="text-center">World Development Indicators (WDI) Search Demo</h1>
+                        <h1 class="text-center"><a class="hover"
+                                href="https://datatopics.worldbank.org/world-development-indicators/"
+                                target="_blank">World Development Indicators (WDI)</a><span style="color: #5f5f5f;">
+                                Search Demo</span></h1>
                     </v-col>
                     <v-col cols="12" sm="8" md="8">
 
                         <span>
-                            The indicator name and definition are used to generate embeddings for the semantic search
+                            The indicator name and definition are used to generate embeddings for the <a class="hover"
+                                href="https://en.wikipedia.org/wiki/Semantic_search" target="_blank">semantic search</a>
                             using
                             the <a :href="'https://huggingface.co/avsolatorio/' + model_name" target="_blank"><v-chip
                                     color="success">{{
