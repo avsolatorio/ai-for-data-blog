@@ -38,6 +38,10 @@
         a.hover:hover {
             text-decoration: underline !important;
         }
+
+        .low-sim {
+            background-color: bisque;
+        }
     </style>
 </head>
 
@@ -56,7 +60,7 @@
                     </v-col>
                     <v-col cols="12" sm="8" md="8">
 
-                        <span>
+                        <div>
                             The indicator name and definition are used to generate embeddings for the <a class="hover"
                                 href="https://en.wikipedia.org/wiki/Semantic_search" target="_blank">semantic search</a>
                             using
@@ -66,10 +70,12 @@
                                 href="https://en.wikipedia.org/wiki/Okapi_BM25" target="_blank"><v-chip
                                     color="success">BM25 algorithm</v-chip></a> is
                             used for the keyword search.
+                        </div>
+                        <div>
+                            Results for the semantic search with similarity score less than 75% are highlighted (e.g.,
+                            search for "hunger"). Try any query and compare the results below.
+                        </div>
 
-                            Try any query and compare the results below.
-
-                        </span>
                     </v-col>
                 </v-row>
 
@@ -128,7 +134,7 @@
                                     Keywords Search
                                     <!-- <v-chip>Keywords Search</v-chip> -->
                                 </v-card-title>
-                                <v-infinite-scroll v-if="allLexResults.length > 0" :height="650" :lresults="lresults"
+                                <v-infinite-scroll v-if="allLexResults.length > 0" :height="550" :lresults="lresults"
                                     @load="loadLex" color="success">
                                     <template v-for="(item, index) in lresults" :key="item.code">
                                         <div
@@ -191,13 +197,13 @@
                                     Semantic Search
                                     <!-- <v-chip>Semantic Search</v-chip> -->
                                 </v-card-title>
-                                <v-infinite-scroll v-if="allResults.length > 0" :height="650" :results="results"
+                                <v-infinite-scroll v-if="allResults.length > 0" :height="550" :results="results"
                                     @load="load" color="success">
                                     <template v-for="(item, index) in results" :key="item.code + '2'">
                                         <div
                                             :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
                                             <!-- {{ item.code }} -->
-                                            <v-card class="mx-auto">
+                                            <v-card :class="['mx-auto', item.sim < 0.75 ? 'low-sim' : 'high-sim']">
                                                 <v-card-title :title="item.name"><a class="hover" :href="'https://data.worldbank.org/indicator/' +
                                                 item.code" target="_blank">{{index + 1}}. {{ item.name
                                                         }}</a></v-card-title>
