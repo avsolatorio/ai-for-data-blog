@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Embedding Test</title>
+    <!-- Vuetify CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <!-- Vuetify JS CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.x/dist/vuetify.min.js"></script>
+    <script type="text/javascript" src="https://pym.nprapps.org/pym.v1.min.js"></script>
+    <script>window.onload = function () {
+            var pymChild = new pym.Child({ polling: 500 });
+        }
+    </script>
+    <style>
+        #loading-image {
+            width: 50px;
+        }
+
+        a.hover {
+            color: #1460aa !important;
+            text-decoration: none !important;
+        }
+
+        .v-card-title {
+            overflow-x: scroll;
+            text-overflow: unset;
+        }
+
+        a.hover:hover {
+            text-decoration: underline !important;
+        }
+
+        .low-sim {
+            background-color: bisque;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <v-app>
+            <v-container>
+                <!-- Main heading for the page -->
+                <v-row justify="center">
+                    <v-col cols="12" sm="8" md="6">
+                        <h1 class="text-center"><a class="hover"
+                                href="https://datatopics.worldbank.org/world-development-indicators/"
+                                target="_blank">World Development Indicators (WDI)</a><br /><span
+                                style="color: #5f5f5f;">Search Demo</span></h1>
+                    </v-col>
+                    <v-col cols="12" sm="10" md="10">
+
+                        <div>
+                            The indicator name and definition are used to generate embeddings for the <a class="hover"
+                                href="https://en.wikipedia.org/wiki/Semantic_search" target="_blank">semantic search</a>
+                            using
+                            the <a :href="'https://huggingface.co/avsolatorio/' + model_name" target="_blank"><v-chip
+                                    color="success">{{
+                                    model_name }}</v-chip></a> model. The <a
+                                href="https://en.wikipedia.org/wiki/Okapi_BM25" target="_blank"><v-chip
+                                    color="success">BM25 algorithm</v-chip></a> is
+                            used for the keyword search. Results for the semantic search with similarity score less than
+                            75% are highlighted (e.g.,
+                            search for "hunger"). Try any query and compare the results below.
+                        </div>
+
+                    </v-col>
+                </v-row>
+
+                <v-spacer></v-spacer>
+
+                <div v-show="isExtractorReady">
+                    <!-- Search bar -->
+                    <!-- <v-row justify="center">
+                        <v-col cols="12" sm="8" md="6">
+                            <v-form @submit.prevent="submit">
+                                <v-text-field v-model="query" label="Search" single-line hide-details>
+                                    <template v-slot:append-inner>
+                                        <v-btn @click="submit" color="blue lighten-2">
+                                            <v-icon>mdi-magnify</v-icon>
+                                        </v-btn>
+                                    </template>
+
+                                </v-text-field>
+                            </v-form>
+                        </v-col>
+                    </v-row> -->
+
+                    <v-row v-show="!loading" justify="center">
+                        <v-col cols="12" sm="12" md="12">
+
+                            <v-card class="mx-auto">
+                                <v-toolbar color="primary" dark>
+                                    <!-- <v-toolbar-title>Results</v-toolbar-title> -->
+                                    <v-row justify="center">
+                                        <v-col cols="12">
+                                            <v-form @submit.prevent="submit">
+                                                <v-text-field v-model="query" label="Search" single-line hide-details>
+                                                    <template v-slot:append-inner>
+                                                        <v-btn @click="submit" color="blue lighten-2">
+                                                            <v-icon>mdi-magnify</v-icon>
+                                                        </v-btn>
+                                                    </template>
+
+                                                </v-text-field>
+                                            </v-form>
+                                        </v-col>
+                                    </v-row>
+                                </v-toolbar>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                    <v-row v-show="!loading" justify="center">
+                        <!--
+                        <v-card-text>
+                            Results
+                        </v-card-text> -->
+
+                        <v-col cols="6" sm="6" md="6">
+                            <v-card class="mx-auto">
+                                <v-card-title style="background: rgb(var(--v-theme-success));color: white;">
+                                    Keywords Search
+                                    <!-- <v-chip>Keywords Search</v-chip> -->
+                                </v-card-title>
+                                <v-infinite-scroll v-if="allLexResults.length > 0" :height="550" :lresults="lresults"
+                                    @load="loadLex" color="success">
+                                    <template v-for="(item, index) in lresults" :key="item.code">
+                                        <div
+                                            :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
+                                            <!-- {{ item.code }} -->
+                                            <v-card class="mx-auto">
+                                                <v-card-title :title="item.name"><a class="hover" :href="'https://data.worldbank.org/indicator/' +
+                                                    item.code" target="_blank">{{index + 1}}. {{ item.name
+                                                        }}</a></v-card-title>
+
+                                                <!-- <iframe style="box-sizing: content-box;" loading="lazy" :src="
+                                                'https://data.worldbank.org/share/widget?indicators=' +
+                                                item.code +
+                                                '&end=2023&start=1990&view=chart'
+                                                " width="100%" height="350" frameBorder="0" scrolling="no"></iframe> -->
+
+                                                <!-- <v-card-text>
+                                                    <v-card>
+                                                        <v-divider></v-divider>
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-card-text> -->
+
+                                                <v-card-actions>
+                                                    <v-btn @click="item.show = !item.show" color="success"
+                                                        text="Definition"></v-btn>
+
+                                                    <v-spacer></v-spacer>
+
+                                                    <!-- <v-btn @click="item.show = !item.show">
+                                                        <v-icon v-if="item.show">mdi-chevron-up</v-icon>
+                                                        <v-icon v-else>mdi-chevron-down</v-icon>
+
+                                                    </v-btn> -->
+                                                </v-card-actions>
+
+                                                <v-expand-transition>
+                                                    <div v-show="item.show">
+                                                        <v-divider></v-divider>
+
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </div>
+                                                </v-expand-transition>
+                                            </v-card>
+                                        </div>
+                                    </template>
+                                    <template v-slot:empty>
+                                        <v-alert type="warning">No more results!</v-alert>
+                                    </template>
+                                </v-infinite-scroll>
+                            </v-card>
+                        </v-col>
+                        <v-col cols="6" sm="6" md="6">
+                            <v-card class="mx-auto">
+                                <v-card-title style="background: rgb(var(--v-theme-success));color: white;">
+                                    Semantic Search
+                                    <!-- <v-chip>Semantic Search</v-chip> -->
+                                </v-card-title>
+                                <v-infinite-scroll v-if="allResults.length > 0" :height="550" :results="results"
+                                    @load="load" color="success">
+                                    <template v-for="(item, index) in results" :key="item.code + '2'">
+                                        <div
+                                            :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
+                                            <!-- {{ item.code }} -->
+                                            <v-card :class="['mx-auto', item.sim < 0.75 ? 'low-sim' : 'high-sim']">
+                                                <v-card-title :title="item.name"><a class="hover" :href="'https://data.worldbank.org/indicator/' +
+                                                item.code" target="_blank">{{index + 1}}. {{ item.name
+                                                        }}</a></v-card-title>
+
+                                                <!-- <iframe style="box-sizing: content-box;" loading="lazy" :src="
+                                                'https://data.worldbank.org/share/widget?indicators=' +
+                                                item.code +
+                                                '&end=2023&start=1990&view=chart'
+                                                " width="100%" height="350" frameBorder="0" scrolling="no"></iframe> -->
+
+                                                <!-- <v-card-text>
+                                                    <v-card>
+                                                        <v-divider></v-divider>
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-card-text> -->
+
+                                                <v-card-actions>
+                                                    <v-btn @click="item.show = !item.show" color="success"
+                                                        text="Definition"></v-btn>
+
+                                                    <v-spacer></v-spacer>
+
+                                                    <!-- <v-btn @click="item.show = !item.show">
+                                                        <v-icon v-if="item.show">mdi-chevron-up</v-icon>
+                                                        <v-icon v-else>mdi-chevron-down</v-icon>
+
+                                                    </v-btn> -->
+                                                </v-card-actions>
+
+                                                <v-expand-transition>
+                                                    <div v-show="item.show">
+                                                        <v-divider></v-divider>
+
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </div>
+                                                </v-expand-transition>
+                                            </v-card>
+                                        </div>
+                                    </template>
+                                    <template v-slot:empty>
+                                        <v-alert type="warning">No more results!</v-alert>
+                                    </template>
+                                </v-infinite-scroll>
+
+
+                            </v-card>
+
+
+
+                        </v-col>
+                    </v-row>
+                </div>
+
+                <!-- Loading indicator -->
+                <v-row justify="center">
+                    <v-col class="text-center" cols="12" sm="8" md="6">
+                        <v-progress-circular v-if="loading" indeterminate color="primary"></v-progress-circular>
+                        <v-progress-linear v-if="!isExtractorReady" indeterminate color="success" height="20">
+                            <div>Loading model...</div>
+                        </v-progress-linear>
+                    </v-col>
+                </v-row>
+
+            </v-container>
+        </v-app>
+    </div>
+
+    <script type="module">
+        import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
+        import * as search from 'https://avsolatorio.github.io/ai-for-data-blog/semantic-search/js/search/search.min.js';
+
+        const { createApp } = Vue
+        const { createVuetify } = Vuetify
+
+        window.search = search
+
+        var cosSim = search.similarity([1, 2], [2, 3]);
+        console.log(cosSim);
+        window.cosSim = cosSim;
+
+
+        var engine = search.bm25();
+
+        // Setup the engine
+        // Here we define the field boosting
+        engine.defineConfig({ fldWeights: { name: 2, definition: 1 } });
+        // Define the processor to use
+        engine.definePrepTasks([search.prepTask]);
+
+        const vuetify = createVuetify()
+
+        createApp({
+            async mounted() {
+                window.wdi_app = this;
+
+                // Load the WDI data
+                this.loadJSON()
+                const initEmbed = await this.getEmbedding("poverty");
+                console.log(initEmbed);
+            },
+            data() {
+                return {
+                    model_name: 'GIST-all-MiniLM-L6-v2',
+                    query: 'poverty rate',
+                    loading: false,
+                    wdi_data: [],
+                    // wdi_definitions: {},
+                    results: [],
+                    lresults: [],
+                    allResults: [],
+                    allLexResults: [],
+                    extractor: null,
+                    topN: 10
+                }
+            },
+            computed: {
+                isExtractorReady() {
+                    return this.extractor !== null;
+                },
+                keywordSearch() {
+                    return this.results.filter((row) => {
+                        const definition = row.definition.toLowerCase();
+                        const searchTerm = this.query.toLowerCase();
+
+                        return definition.includes(searchTerm);
+                    });
+                },
+            },
+            methods: {
+                initEngine(data) {
+                    console.log("initEngine", data.length)
+
+                    // Use initEngine inside the loadJSON so that
+                    // we know that the data is available. This is
+                    // to prevent: Uncaught (in promise) Error: winkBM25S: document collection is too small for consolidation; add more docs!
+
+                    // Add documents to the engine
+                    data.forEach(function (doc, i) {
+                        // Note, 'i' becomes the unique id for 'doc'
+                        engine.addDoc(doc, i);
+                    });
+
+                    // Consolidate before searching
+                    engine.consolidate();
+
+                    this.submit(this.query);
+                },
+                async loadExtractor() {
+                    if (this.extractor === null) {
+                        this.extractor = await pipeline("feature-extraction", `avsolatorio/${this.model_name}`);
+                    }
+                },
+                async getEmbedding(text) {
+                    console.log("loadExtractor")
+                    await this.loadExtractor();
+
+                    console.log("infer embedding")
+                    const result = await this.extractor.model(this.extractor.tokenizer(text));
+
+                    console.log("get data")
+                    const data = result.sentence_embedding.data;
+
+                    console.log("return data", data)
+                    return data
+                },
+                wdiMetadataURL(code) {
+                    return `https://api.worldbank.org/v2/sources/2/series/${code}/metadata?format=json`
+
+                },
+                async updateResultsWithDescriptions(results) {
+                    try {
+                        // Use Promise.all to wait for all map operations to complete
+                        await Promise.all(results.map(async (x) => {
+                            const data = await this.dataFetch(this.wdiMetadataURL(x.code));
+                            let out = data.source[0].concept[0].variable[0].metatype.reduce((obj, item) => {
+                                obj[item.id] = item.value;
+                                return obj;
+                            }, {});
+                            x.description = out.Longdefinition;
+                        }));
+
+                        // At this point, all items in 'results' have been updated
+                        return results;
+                    } catch (error) {
+                        // Handle any errors that might occur during fetch or processing
+                        console.error("Error updating results with descriptions:", error);
+                        throw error; // Re-throw to handle this error outside of this function if necessary
+                    }
+                },
+                async submit() {
+                    console.log("submit")
+                    // Process the search query
+                    this.loading = true
+
+
+
+                    this.results = []
+                    this.lresults = []
+
+                    // Perform lexical search
+                    this.allLexResults = engine.search(this.query, this.wdi_data.length).map(x => this.wdi_data[x[0]]);
+
+                    console.log('%d entries found.', this.allLexResults.length);
+                    window.allLexResults = this.allLexResults;
+
+                    // Perform semantic search
+                    console.log("Gen embed")
+                    const embedding = await this.getEmbedding(this.query);
+                    console.log("Compute sims")
+                    this.allResults = await this.wdi_data.map(x => {
+                        let sim = this.dotProduct(embedding, x.embedding);
+                        return { sim: sim, show: false, id: x.code, ...x }
+                    }).sort((a, b) => b.sim - a.sim).map(({ embedding, ...rest }) => ({ ...rest }))
+
+                    console.log("Assign res")
+                    window.allResults = this.allResults;
+
+                    // Calculate similarity with stored embeddings and sort the results
+                    console.log("Slice res")
+                    this.results = this.allResults.slice(0, this.topN);
+                    this.lresults = this.allLexResults.slice(0, this.topN);
+
+                    // this.results = await this.updateResultsWithDescriptions(this.results)
+
+                    // this.results.map(x => {
+                    //     x.definition = this.wdi_definitions[x.code];
+                    // })
+
+                    window.results = this.results;
+                    window.lresults = this.lresults;
+
+                    this.loading = false
+
+                },
+                loadJSON() {
+                    fetch(`https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${this.model_name}__wdi_embeddings.json`)
+                        .then(response => response.json())
+                        .then(data => {
+                            this.wdi_data = data;
+                            this.initEngine(this.wdi_data)
+                        })
+
+                    // fetch("https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/wdi_definitions.json")
+                    //     .then(response => response.json())
+                    //     .then(data => {
+                    //         this.wdi_definitions = data
+                    //     });
+                },
+                dotProduct(a, b) {
+                    return a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n)
+                },
+                async mockApi(data, buffer) {
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            const res = data.slice(buffer.length, buffer.length + this.topN);
+                            resolve(res)
+                        }, 500)
+                    })
+                },
+                async load({ done }) {
+                    // Perform API call
+                    if (this.results.length >= this.allResults.length) {
+                        done('empty')
+                    } else {
+                        const res = await this.mockApi(this.allResults, this.results)
+                        console.log(res);
+                        this.results.push(...res)
+                        done('ok')
+                    }
+                },
+                async loadLex({ done }) {
+                    // Perform API call
+                    if (this.lresults.length >= this.allLexResults.length) {
+                        done('empty')
+                    } else {
+                        const res = await this.mockApi(this.allLexResults, this.lresults)
+                        console.log(res);
+                        this.lresults.push(...res)
+                        done('ok')
+                    }
+                },
+                async dataFetch(dataUrl) {
+                    let loadData = {};
+                    await $.ajax({
+                        url: dataUrl,
+                        crossDomain: true,
+                        success: function (data) {
+                            loadData = data;
+                        },
+                        error: function (error) {
+                            console.log(error)
+                        }
+                    });
+                    return loadData;
+                },
+                highlightMatches(text) {
+                    const matchExists = text
+                        .toLowerCase()
+                        .includes(this.query.toLowerCase());
+                    if (!matchExists) return text;
+
+                    const re = new RegExp(this.query, "ig");
+                    return text.replace(
+                        re,
+                        (matchedText) => `<strong>${matchedText}</strong>`
+                    );
+                },
+            }
+        }).use(vuetify).mount('#app')
+
+    </script>
+</body>
+
+</html>
