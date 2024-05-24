@@ -30,18 +30,8 @@
             text-decoration: none !important;
         }
 
-        /* .v-card-title {
+        .v-card-title {
             overflow-x: scroll;
-            text-overflow: unset;
-        } */
-        .title-height {
-            min-height: 5em;
-            /* Adjust this value as needed */
-        }
-
-        .definition {
-            max-height: 12em;
-            overflow-y: scroll;
             text-overflow: unset;
         }
 
@@ -65,13 +55,8 @@
                     <v-col cols="12" sm="8" md="6">
                         <h1 class="text-center"><a class="hover"
                                 href="https://datatopics.worldbank.org/world-development-indicators/"
-                                target="_blank">World Development Indicators (WDI)</a>
-                            <br />
-                            <span style="color: #5f5f5f;">Search Demo</span>
-                            <br />
-                            <v-chip class="text-center">Optimized for desktop viewing.</v-chip>
-                        </h1>
-
+                                target="_blank">World Development Indicators (WDI)</a><br /><span
+                                style="color: #5f5f5f;">Search Demo</span></h1>
                     </v-col>
                     <v-col cols="12" sm="10" md="10">
 
@@ -95,11 +80,28 @@
                 <v-spacer></v-spacer>
 
                 <div v-show="isExtractorReady">
+                    <!-- Search bar -->
+                    <!-- <v-row justify="center">
+                        <v-col cols="12" sm="8" md="6">
+                            <v-form @submit.prevent="submit">
+                                <v-text-field v-model="query" label="Search" single-line hide-details>
+                                    <template v-slot:append-inner>
+                                        <v-btn @click="submit" color="blue lighten-2">
+                                            <v-icon>mdi-magnify</v-icon>
+                                        </v-btn>
+                                    </template>
+
+                                </v-text-field>
+                            </v-form>
+                        </v-col>
+                    </v-row> -->
+
                     <v-row v-show="!loading" justify="center">
                         <v-col cols="12" sm="12" md="12">
 
                             <v-card class="mx-auto">
                                 <v-toolbar color="primary" dark>
+                                    <!-- <v-toolbar-title>Results</v-toolbar-title> -->
                                     <v-row justify="center">
                                         <v-col cols="12">
                                             <v-form @submit.prevent="submit">
@@ -119,42 +121,65 @@
                         </v-col>
                     </v-row>
                     <v-row v-show="!loading" justify="center">
-                        <v-col cols="12" sm="12" md="12">
-                            <v-card class="mx-auto">
-                                <v-row>
-                                    <v-col cols="6">
-                                        <v-card>
-                                            <v-card-title style="background: rgb(var(--v-theme-success));color: white;">
-                                                Semantic Search
-                                            </v-card-title>
-                                        </v-card>
-                                    </v-col>
+                        <!--
+                        <v-card-text>
+                            Results
+                        </v-card-text> -->
 
-                                    <v-col cols="6">
-                                        <v-card>
-                                            <v-card-title style="background: rgb(var(--v-theme-success));color: white;">
-                                                Keyword Search
-                                            </v-card-title>
-                                        </v-card>
-                                    </v-col>
-                                </v-row>
+                        <v-col cols="6" sm="6" md="6">
+                            <v-card class="mx-auto">
+                                <v-card-title style="background: rgb(var(--v-theme-success));color: white;">
+                                    Keywords Search
+                                    <!-- <v-chip>Keywords Search</v-chip> -->
                                 </v-card-title>
-                                <v-infinite-scroll v-if="allResults.length > 0" :height="800" :results="results"
-                                    @load="load" color="success">
-                                    <template v-for="(item, index) in results" :key="item.code">
+                                <v-infinite-scroll v-if="allLexResults.length > 0" :height="550" :lresults="lresults"
+                                    @load="loadLex" color="success">
+                                    <template v-for="(item, index) in lresults" :key="item.code">
                                         <div
                                             :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
-                                            <v-card class="mx-auto pa-2">
-                                                <v-row>
-                                                    <v-col>
-                                                        <custom-card :item="allResults[index]"
-                                                            :index="index"></custom-card>
-                                                    </v-col>
-                                                    <v-col>
-                                                        <custom-card :item="allLexResults[index]"
-                                                            :index="index"></custom-card>
-                                                    </v-col>
-                                                </v-row>
+                                            <!-- {{ item.code }} -->
+                                            <v-card class="mx-auto">
+                                                <v-card-title :title="item.name"><a class="hover" :href="'https://data.worldbank.org/indicator/' +
+                                                    item.code" target="_blank">{{index + 1}}. {{ item.name
+                                                        }}</a></v-card-title>
+
+                                                <!-- <iframe style="box-sizing: content-box;" loading="lazy" :src="
+                                                'https://data.worldbank.org/share/widget?indicators=' +
+                                                item.code +
+                                                '&end=2023&start=1990&view=chart'
+                                                " width="100%" height="350" frameBorder="0" scrolling="no"></iframe> -->
+
+                                                <!-- <v-card-text>
+                                                    <v-card>
+                                                        <v-divider></v-divider>
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-card-text> -->
+
+                                                <v-card-actions>
+                                                    <v-btn @click="item.show = !item.show" color="success"
+                                                        text="Definition"></v-btn>
+
+                                                    <v-spacer></v-spacer>
+
+                                                    <!-- <v-btn @click="item.show = !item.show">
+                                                        <v-icon v-if="item.show">mdi-chevron-up</v-icon>
+                                                        <v-icon v-else>mdi-chevron-down</v-icon>
+
+                                                    </v-btn> -->
+                                                </v-card-actions>
+
+                                                <v-expand-transition>
+                                                    <div v-show="item.show">
+                                                        <v-divider></v-divider>
+
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </div>
+                                                </v-expand-transition>
                                             </v-card>
                                         </div>
                                     </template>
@@ -164,8 +189,77 @@
                                 </v-infinite-scroll>
                             </v-card>
                         </v-col>
+                        <v-col cols="6" sm="6" md="6">
+                            <v-card class="mx-auto">
+                                <v-card-title style="background: rgb(var(--v-theme-success));color: white;">
+                                    Semantic Search
+                                    <!-- <v-chip>Semantic Search</v-chip> -->
+                                </v-card-title>
+                                <v-infinite-scroll v-if="allResults.length > 0" :height="550" :results="results"
+                                    @load="load" color="success">
+                                    <template v-for="(item, index) in results" :key="item.code + '2'">
+                                        <div
+                                            :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
+                                            <!-- {{ item.code }} -->
+                                            <v-card :class="['mx-auto', item.sim < 0.75 ? 'low-sim' : 'high-sim']">
+                                                <v-card-title :title="item.name"><a class="hover" :href="'https://data.worldbank.org/indicator/' +
+                                                item.code" target="_blank">{{index + 1}}. {{ item.name
+                                                        }}</a></v-card-title>
+
+                                                <!-- <iframe style="box-sizing: content-box;" loading="lazy" :src="
+                                                'https://data.worldbank.org/share/widget?indicators=' +
+                                                item.code +
+                                                '&end=2023&start=1990&view=chart'
+                                                " width="100%" height="350" frameBorder="0" scrolling="no"></iframe> -->
+
+                                                <!-- <v-card-text>
+                                                    <v-card>
+                                                        <v-divider></v-divider>
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </v-card>
+                                                </v-card-text> -->
+
+                                                <v-card-actions>
+                                                    <v-btn @click="item.show = !item.show" color="success"
+                                                        text="Definition"></v-btn>
+
+                                                    <v-spacer></v-spacer>
+
+                                                    <!-- <v-btn @click="item.show = !item.show">
+                                                        <v-icon v-if="item.show">mdi-chevron-up</v-icon>
+                                                        <v-icon v-else>mdi-chevron-down</v-icon>
+
+                                                    </v-btn> -->
+                                                </v-card-actions>
+
+                                                <v-expand-transition>
+                                                    <div v-show="item.show">
+                                                        <v-divider></v-divider>
+
+                                                        <v-card-text>
+                                                            {{ item.definition }}
+                                                        </v-card-text>
+                                                    </div>
+                                                </v-expand-transition>
+                                            </v-card>
+                                        </div>
+                                    </template>
+                                    <template v-slot:empty>
+                                        <v-alert type="warning">No more results!</v-alert>
+                                    </template>
+                                </v-infinite-scroll>
+
+
+                            </v-card>
+
+
+
+                        </v-col>
                     </v-row>
                 </div>
+
                 <!-- Loading indicator -->
                 <v-row justify="center">
                     <v-col class="text-center" cols="12" sm="8" md="6">
@@ -175,6 +269,7 @@
                         </v-progress-linear>
                     </v-col>
                 </v-row>
+
             </v-container>
         </v-app>
     </div>
@@ -211,42 +306,6 @@
                 this.loadJSON()
                 const initEmbed = await this.getEmbedding("poverty");
                 console.log(initEmbed);
-            },
-            components: {
-                'custom-card': {
-                    template: `
-                    <v-card v-if="item" height="100%" :class="['mx-auto', item.sim < 0.75 ? 'low-sim' : 'high-sim']">
-                        <v-card-title class="title-height">
-                            <v-col cols="12" style="word-wrap: break-word; word-break: break-word; white-space: normal; padding-right: 20px;">
-                            <span style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
-                                <a class="hover" :href="'https://data.worldbank.org/indicator/' + item.code" target="_blank">
-                                {{index + 1}}. {{ item.name }}
-                                </a>
-                            </span>
-                            </v-col>
-                        </v-card-title>
-
-                        <v-expand-transition >
-                                <v-card-text class="definition">
-                                {{ item.definition }}
-                                </v-card-text>
-                        </v-expand-transition>
-                    </v-card>
-                    <v-card v-else height="100%">
-                        <v-alert type="warning">Nothing found...</v-alert>
-                    </v-card>
-                    `,
-                    props: {
-                        item: {
-                            type: Object,
-                            required: true
-                        },
-                        index: {
-                            type: Number,
-                            required: true
-                        }
-                    }
-                }
             },
             data() {
                 return {
@@ -341,6 +400,8 @@
                     console.log("submit")
                     // Process the search query
                     this.loading = true
+
+
 
                     this.results = []
                     this.lresults = []
