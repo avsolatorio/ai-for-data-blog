@@ -30,9 +30,13 @@
             text-decoration: none !important;
         }
 
-        .v-card-title {
+        /* .v-card-title {
             overflow-x: scroll;
             text-overflow: unset;
+        } */
+        .title-height {
+            min-height: 5em;
+            /* Adjust this value as needed */
         }
 
         a.hover:hover {
@@ -104,75 +108,30 @@
                         </v-col>
                     </v-row>
                     <v-row v-show="!loading" justify="center">
-                        <v-col cols="6" sm="6" md="6">
+                        <v-col cols="12" sm="12" md="12">
                             <v-card class="mx-auto">
                                 <v-card-title style="background: rgb(var(--v-theme-success));color: white;">
-                                    Keywords Search
+                                    <v-row>
+                                        <v-col cols="6">Semantic Search</v-col>
+                                        <v-col cols="6">Keyword Search</v-col>
+                                    </v-row>
                                 </v-card-title>
-                                <v-infinite-scroll v-if="allLexResults.length > 0" :height="550" :lresults="lresults"
-                                    @load="loadLex" color="success">
-                                    <template v-for="(item, index) in lresults" :key="item.code">
-                                        <div
-                                            :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
-                                            <v-card class="mx-auto">
-                                                <v-card-title :title="item.name"><a class="hover" :href="'https://data.worldbank.org/indicator/' +
-                                                    item.code" target="_blank">{{index + 1}}. {{ item.name
-                                                        }}</a></v-card-title>
-                                                <v-card-actions>
-                                                    <v-btn @click="item.show = !item.show" color="success"
-                                                        text="Definition"></v-btn>
-
-                                                    <v-spacer></v-spacer>
-                                                </v-card-actions>
-
-                                                <v-expand-transition>
-                                                    <div v-show="item.show">
-                                                        <v-divider></v-divider>
-
-                                                        <v-card-text>
-                                                            {{ item.definition }}
-                                                        </v-card-text>
-                                                    </div>
-                                                </v-expand-transition>
-                                            </v-card>
-                                        </div>
-                                    </template>
-                                    <template v-slot:empty>
-                                        <v-alert type="warning">No more results!</v-alert>
-                                    </template>
-                                </v-infinite-scroll>
-                            </v-card>
-                        </v-col>
-                        <v-col cols="6" sm="6" md="6">
-                            <v-card class="mx-auto">
-                                <v-card-title style="background: rgb(var(--v-theme-success));color: white;">
-                                    Semantic Search
-                                </v-card-title>
-                                <v-infinite-scroll v-if="allResults.length > 0" :height="550" :results="results"
+                                <v-infinite-scroll v-if="allResults.length > 0" :height="800" :results="results"
                                     @load="load" color="success">
-                                    <template v-for="(item, index) in results" :key="item.code + '2'">
+                                    <template v-for="(item, index) in results" :key="item.code">
                                         <div
                                             :class="['pa-2', index % 2 === 0 ? 'bg-grey-lighten-2' : 'bg-grey-lighten-3']">
-                                            <v-card :class="['mx-auto', item.sim < 0.75 ? 'low-sim' : 'high-sim']">
-                                                <v-card-title :title="item.name"><a class="hover" :href="'https://data.worldbank.org/indicator/' +
-                                                item.code" target="_blank">{{index + 1}}. {{ item.name
-                                                        }}</a></v-card-title>
-                                                <v-card-actions>
-                                                    <v-btn @click="item.show = !item.show" color="success"
-                                                        text="Definition"></v-btn>
-
-                                                    <v-spacer></v-spacer>
-                                                </v-card-actions>
-
-                                                <v-expand-transition>
-                                                    <div v-show="item.show">
-                                                        <v-divider></v-divider>
-
-                                                        <v-card-text>
-                                                            {{ item.definition }}
-                                                        </v-card-text>
-                                                    </div>
-                                                </v-expand-transition>
+                                            <v-card class="mx-auto pa-2">
+                                                <v-row>
+                                                    <v-col>
+                                                        <custom-card :item="allResults[index]"
+                                                            :index="index"></custom-card>
+                                                    </v-col>
+                                                    <v-col>
+                                                        <custom-card :item="allLexResults[index]"
+                                                            :index="index"></custom-card>
+                                                    </v-col>
+                                                </v-row>
                                             </v-card>
                                         </div>
                                     </template>
@@ -180,12 +139,7 @@
                                         <v-alert type="warning">No more results!</v-alert>
                                     </template>
                                 </v-infinite-scroll>
-
-
                             </v-card>
-
-
-
                         </v-col>
                     </v-row>
                 </div>
@@ -236,6 +190,49 @@
                 this.loadJSON()
                 const initEmbed = await this.getEmbedding("poverty");
                 console.log(initEmbed);
+            },
+            components: {
+                'custom-card': {
+                    template: `
+                    <v-card v-if="item" height="100%">
+                        <v-card-title class="title-height">
+                            <v-col cols="12" style="word-wrap: break-word; word-break: break-word; white-space: normal; padding-right: 20px;">
+                            <span style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                                <a class="hover" :href="'https://data.worldbank.org/indicator/' + item.code" target="_blank">
+                                {{index + 1}}. {{ item.name }}
+                                </a>
+                            </span>
+                            </v-col>
+                        </v-card-title>
+                        <v-card-actions>
+                            <v-btn @click="item.show = !item.show" color="success" text>Definition</v-btn>
+                            <v-spacer></v-spacer>
+                        </v-card-actions>
+                        <v-expand-transition>
+                            <v-row v-show="item.show">
+                            <v-col>
+                                <v-card-text>
+                                {{ item.definition }}
+                                </v-card-text>
+                            </v-col>
+                            </v-row>
+                        </v-expand-transition>
+                    </v-card>
+                    <v-card v-else height="100%">
+                        <v-alert type="warning">Nothing found...</v-alert>
+                    </v-card>
+                    `,
+                    props: {
+                        item: {
+                            type: Object,
+                            required: true
+                        },
+                        index: {
+                            type: Number,
+                            required: true
+                        }
+                    }
+                }
             },
             data() {
                 return {
@@ -330,8 +327,6 @@
                     console.log("submit")
                     // Process the search query
                     this.loading = true
-
-
 
                     this.results = []
                     this.lresults = []
