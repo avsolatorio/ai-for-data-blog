@@ -9,6 +9,71 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
   <style>
+    :root {
+      --primary-dark: #0c1a4d;
+      --primary: #223974;
+      --primary-light: #3d5396;
+      --purple: #526bc7;
+      --purple-100: #cbd3e6b2;
+      --purple-20: #526bc733;
+      --purple-150: #526bc740;
+      --purple-200: #526bc71a;
+      --purple-250: #526bc726;
+      --purple-300: #526bc70d;
+      --purple-400: #526bc780;
+      --purple-500: #4b6cce;
+      --gray: #505050;
+      --gray-100: #f0f2f7;
+      --gray-600: #515151;
+      --silver: #858585;
+      --dark-blue: #223974;
+      --charcoal: #333333;
+      --dark-gray: #515151;
+      --secondary-light: #e3e9f8;
+      --secondary-100: #f3f5fc;
+      --secondary-200: #e4f4ff;
+      --light-gray: #858585;
+      --alert-color: #ff3131;
+      --white: #ffffff;
+      --base-color: #333333;
+      --black-150: #00000026;
+      --background: #fbfcfe;
+      --purple-50: #526bc74d;
+      --v-theme-background: #fbfcfe;
+
+      --font-family: 'Roboto', sans-serif;
+      --font-size: 0.875rem;
+      --line-height: 1.3;
+      --font-weight-thin: 100;
+      --font-weight-extra-light: 200;
+      --font-weight-light: 300;
+      --font-weight-normal: 400;
+      --font-weight-medium: 500;
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+      --font-weight-extra-bold: 800;
+      --font-weight-heavy: 900;
+      --font-style-italic: italic;
+      --text-decoration-underline: underline;
+      --text-decoration-strike: line-through;
+
+      --button-height: 40px;
+      --border-radius: 8px;
+
+      --v-textarea-control-height: 30px;
+      --v-input-control-height: 30px;
+    }
+
+    /* Animations - converted as static fallback only */
+    :root {
+      --progress-circular-intermediate-svg-transition: all 2.8s ease-in-out;
+      --progress-circular-overlay-transition: all 2.8s ease-in-out, stroke-width 0s;
+      --progress-circular-rotate-animation: progress-circular-rotate 1.4s ease-in-out infinite;
+      --progress-circular-rotate-dash: progress-circular-dash 1.4s ease-in-out infinite;
+    }
+  </style>
+
+  <style>
     html, body, #app {
       height: 100vh;
       margin: 0;
@@ -36,13 +101,23 @@
     .text-muted {
       color: #666;
     }
+
+    .search-bar-container{
+      background-color: #ffffff !important;
+      padding-right: 0% !important;
+    }
+
+    .content-panel {
+      background-color: var(--secondary-100);
+      border-radius: var(--border-radius);
+    }
   </style>
 </head>
 <body>
   <div id="app">
     <v-app>
-      <v-container fluid class="pa-0 d-flex flex-column" style="height: 100%;">
-        <v-toolbar flat height="80" class="px-4">
+      <v-container fluid class="pa-10 d-flex flex-column" style="height: 100%;">
+        <v-toolbar flat height="80" class="px-4 search-bar-container">
           <v-form @submit.prevent="submit" class="w-100">
             <v-text-field
               v-model="query"
@@ -87,7 +162,7 @@
             </v-sheet>
           </v-col>
 
-          <v-col cols="12" md="8" class="pa-4 d-flex flex-column" style="height: 100%;">
+          <v-col cols="12" md="8" class="pa-4 d-flex flex-column content-panel" style="height: 100%;">
             <v-sheet class="d-flex flex-column scroll-panel">
               <v-card v-if="selected" flat class="pa-4 d-flex flex-column" style="height: 100%;">
                 <div>
@@ -150,6 +225,7 @@
     createApp({
       setup() {
         const model_name = 'GIST-all-MiniLM-L6-v2';
+        const hf_organization = 'avsolatorio';
         const query = ref('');
         const tab = ref(0);
         const selected = ref(null);
@@ -164,7 +240,7 @@
 
         const loadExtractor = async () => {
           if (!extractor.value) {
-            extractor.value = await pipeline("feature-extraction", `avsolatorio/${model_name}`);
+            extractor.value = await pipeline("feature-extraction", `${hf_organization}/${model_name}`);
           }
         };
 
@@ -235,7 +311,6 @@
         });
 
         return {
-          model_name,
           query,
           tab,
           selected,
