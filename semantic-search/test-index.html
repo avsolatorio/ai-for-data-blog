@@ -392,7 +392,9 @@
           loadedCount.value = semanticResults.value.length;
 
           if (selected.value === null) {
-            selectItem(res[0]);
+            if (window.innerWidth >= 960) {
+              selectItem(res[0]);
+            }
           }
 
           done('ok');
