@@ -332,7 +332,8 @@
   </div>
 
   <script type="module">
-    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
+    // import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
+    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers';
 
     const { createApp, ref, onMounted } = Vue;
     const { createVuetify } = Vuetify;
@@ -383,6 +384,8 @@
 
           semanticResults.value = [];
           await loadMore({ done: () => {} });
+          window.results = semanticResults.value;
+          window.query = query.value;
         };
 
         const mockApi = async (data, buffer) => {
@@ -463,11 +466,14 @@
       }
     }).use(vuetify).mount('#app');
   </script>
-  <script type="module">
-    import { AutoTokenizer, XLMRobertaModel } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
+  <!-- <script type="module">
+    // rank(query, results.map(x => x.name + "\n\n" + x.definition));
+    import { env, AutoTokenizer, XLMRobertaModel } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers';
+
+    env.allowRemoteModels = true;
 
     const model_id = 'jinaai/jina-reranker-v2-base-multilingual';
-    const model = await XLMRobertaModel.from_pretrained(model_id, { dtype: 'q4' });
+    const model = await XLMRobertaModel.from_pretrained(model_id, { dtype: 'int8' });
     const tokenizer = await AutoTokenizer.from_pretrained(model_id);
 
     /**
@@ -515,7 +521,7 @@
 
     window.rank = rank;
 
-  </script>
+  </script> -->
 </body>
 </html>
 
