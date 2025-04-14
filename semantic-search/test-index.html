@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Semantic Indicator Search</title>
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
+  <style>
+    html, body, #app {
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Roboto', sans-serif;
+      background: #f9f9fc;
+    }
+
+    .scroll-panel {
+      flex-grow: 1;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    .card-clickable {
+      cursor: pointer;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .card-clickable:hover {
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .text-muted {
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <v-app>
+      <v-container fluid class="pa-0 d-flex flex-column" style="height: 100%;">
+        <v-toolbar flat height="80" class="px-4">
+          <v-form @submit.prevent="submit" class="w-100">
+            <v-text-field
+              v-model="query"
+              placeholder="Search indicators"
+              prepend-inner-icon="mdi-magnify"
+              append-inner-icon="mdi-close-circle"
+              @click:append-inner="clearSearch"
+              hide-details
+              single-line
+              variant="outlined"
+              density="comfortable"
+              class="flex-grow-1"
+            ></v-text-field>
+          </v-form>
+        </v-toolbar>
+
+        <v-row no-gutters class="flex-grow-1" style="height: 98%;">
+          <v-col cols="12" md="4" class="pa-4 d-flex flex-column" style="height: 98%;">
+            <v-sheet class="d-flex flex-column" style="height: 100%;">
+              <v-infinite-scroll
+                v-if="fullResults.length > 0"
+                :items="semanticResults"
+                @load="loadMore"
+                class="scroll-panel"
+                color="primary"
+              >
+                <div v-for="(item, index) in semanticResults" :key="item.code">
+                  <v-card
+                    class="mb-2 px-4 py-2 card-clickable"
+                    @click="selectItem(item)"
+                    :elevation="selected === item ? 2 : 0"
+                    :style="{ border: selected === item ? '2px solid #2196f3' : '1px solid #ddd' }"
+                  >
+                    <div style="font-weight: 500;">{{ index + 1 }}. {{ item.name }}</div>
+                    <div class="text-caption text-muted">Code: {{ item.code }}</div>
+                  </v-card>
+                </div>
+                <template v-slot:empty>
+                  <v-alert v-if="!loading && hasQueried" type="info">No more results</v-alert>
+                </template>
+              </v-infinite-scroll>
+            </v-sheet>
+          </v-col>
+
+          <v-col cols="12" md="8" class="pa-4 d-flex flex-column" style="height: 100%;">
+            <v-sheet class="d-flex flex-column scroll-panel">
+              <v-card v-if="selected" flat class="pa-4 d-flex flex-column" style="height: 100%;">
+                <div>
+                  <h3 class="mb-1">{{ selected.name }}</h3>
+                  <div class="text-caption mb-4 text-muted">
+                    <v-icon size="16" class="mr-1" icon="mdi-identifier" /> Code: {{ selected.code }}
+                  </div>
+
+                  <v-tabs v-model="tab" color="primary" density="comfortable">
+                    <v-tab>Metadata</v-tab>
+                  </v-tabs>
+
+                  <v-window v-model="tab" class="mt-4">
+                    <v-window-item>
+                      <v-btn class="mb-3" variant="outlined" density="comfortable" prepend-icon="mdi-download">
+                        JSON
+                      </v-btn>
+                      <h4 class="mb-2">Indicator description</h4>
+                      <p><strong>Definition:</strong> {{ selected.definition }}</p>
+                    </v-window-item>
+                  </v-window>
+                </div>
+
+                <div class="mt-4" style="flex-grow: 1;">
+                  <v-card flat class="h-100 d-flex flex-column">
+                    <v-card-title class="text-subtitle-1">WDI Embedded Chart</v-card-title>
+                    <v-card-text class="flex-grow-1 pa-0">
+                      <v-responsive class="h-100">
+                        <iframe
+                          :src="`https://data.worldbank.org/share/widget?indicators=${selected.code}&locations=1W&start=1984&view=chart`"
+                          width="100%"
+                          height="100%"
+                          frameborder="0"
+                          scrolling="no"
+                          style="border: none;"
+                        ></iframe>
+                      </v-responsive>
+                    </v-card-text>
+                  </v-card>
+                </div>
+              </v-card>
+
+              <v-card v-else flat class="pa-4 text-muted">
+                <p>{{ loadedCount }} indicators loaded. Select one to view metadata.</p>
+              </v-card>
+            </v-sheet>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-app>
+  </div>
+
+  <script type="module">
+    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
+
+    const { createApp, ref, onMounted } = Vue;
+    const { createVuetify } = Vuetify;
+    const vuetify = createVuetify();
+
+    createApp({
+      setup() {
+        const model_name = 'GIST-all-MiniLM-L6-v2';
+        const query = ref('');
+        const tab = ref(0);
+        const selected = ref(null);
+        const wdi_data = ref([]);
+        const fullResults = ref([]);
+        const semanticResults = ref([]);
+        const loadedCount = ref(0);
+        const batchSize = 10;
+        const extractor = ref(null);
+        const loading = ref(false);
+        const hasQueried = ref(false);
+
+        const loadExtractor = async () => {
+          if (!extractor.value) {
+            extractor.value = await pipeline("feature-extraction", `avsolatorio/${model_name}`);
+          }
+        };
+
+        const getEmbedding = async (text) => {
+          await loadExtractor();
+          const result = await extractor.value.model(extractor.value.tokenizer(text));
+          return result.sentence_embedding.data;
+        };
+
+        const dotProduct = (a, b) =>
+          a.map((x, i) => x * b[i]).reduce((sum, val) => sum + val, 0);
+
+        const submit = async () => {
+          loadedCount.value = 0;
+          hasQueried.value = true;
+          const emb = await getEmbedding(query.value);
+          fullResults.value = wdi_data.value
+            .map(d => ({ ...d, sim: dotProduct(emb, d.embedding) }))
+            .sort((a, b) => b.sim - a.sim)
+            .filter(x => x.sim > 0.4);
+
+          semanticResults.value = [];
+          await loadMore({ done: () => {} });
+        };
+
+        const mockApi = async (data, buffer) => {
+          const next = data.slice(buffer.length, buffer.length + batchSize);
+          return new Promise(resolve => setTimeout(() => resolve(next), 500));
+        };
+
+        const loadMore = async ({ done }) => {
+          loading.value = true;
+          const res = await mockApi(fullResults.value, semanticResults.value);
+          loading.value = false;
+
+          if (res.length === 0) {
+            done('empty');
+            return;
+          }
+          semanticResults.value.push(...res);
+          loadedCount.value = semanticResults.value.length;
+          done('ok');
+        };
+
+        const selectItem = (item) => {
+          selected.value = item;
+          tab.value = 0;
+        };
+
+        const clearSearch = () => {
+          query.value = '';
+          selected.value = null;
+          semanticResults.value = [];
+          hasQueried.value = false;
+        };
+
+        const loadJSON = () => {
+          fetch(`https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${model_name}__wdi_embeddings.json`)
+            .then(res => res.json())
+            .then(data => {
+              wdi_data.value = data;
+              submit();
+            });
+        };
+
+        onMounted(() => {
+          loadJSON();
+        });
+
+        return {
+          model_name,
+          query,
+          tab,
+          selected,
+          semanticResults,
+          selectItem,
+          clearSearch,
+          loadMore,
+          submit,
+          loadedCount,
+          loading,
+          hasQueried,
+          fullResults
+        };
+      }
+    }).use(vuetify).mount('#app');
+  </script>
+</body>
+</html>
+
