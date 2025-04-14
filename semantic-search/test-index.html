@@ -463,6 +463,59 @@
       }
     }).use(vuetify).mount('#app');
   </script>
+  <script type="module">
+    import { AutoTokenizer, XLMRobertaModel } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
+
+    const model_id = 'jinaai/jina-reranker-v2-base-multilingual';
+    const model = await XLMRobertaModel.from_pretrained(model_id, { dtype: 'q4' });
+    const tokenizer = await AutoTokenizer.from_pretrained(model_id);
+
+    /**
+     * Performs ranking with the CrossEncoder on the given query and documents. Returns a sorted list with the document indices and scores.
+     * @param {string} query A single query
+     * @param {string[]} documents A list of documents
+     * @param {Object} options Options for ranking
+     * @param {number} [options.top_k=undefined] Return the top-k documents. If undefined, all documents are returned.
+     * @param {number} [options.return_documents=false] If true, also returns the documents. If false, only returns the indices and scores.
+     */
+    async function rank(query, documents, {
+        top_k = undefined,
+        return_documents = false,
+    } = {}) {
+        const inputs = tokenizer(
+            new Array(documents.length).fill(query),
+            { text_pair: documents, padding: true, truncation: true }
+        )
+        const { logits } = await model(inputs);
+        return logits.sigmoid().tolist()
+            .map(([score], i) => ({
+                corpus_id: i,
+                score,
+                ...(return_documents ? { text: documents[i] } : {})
+            })).sort((a, b) => b.score - a.score).slice(0, top_k);
+    }
+
+    // Example usage:
+    const query = "Organic skincare products for sensitive skin"
+    const documents = [
+        "Organic skincare for sensitive skin with aloe vera and chamomile.",
+        "New makeup trends focus on bold colors and innovative techniques",
+        "Bio-Hautpflege für empfindliche Haut mit Aloe Vera und Kamille",
+        "Neue Make-up-Trends setzen auf kräftige Farben und innovative Techniken",
+        "Cuidado de la piel orgánico para piel sensible con aloe vera y manzanilla",
+        "Las nuevas tendencias de maquillaje se centran en colores vivos y técnicas innovadoras",
+        "针对敏感肌专门设计的天然有机护肤产品",
+        "新的化妆趋势注重鲜艳的颜色和创新的技巧",
+        "敏感肌のために特別に設計された天然有機スキンケア製品",
+        "新しいメイクのトレンドは鮮やかな色と革新的な技術に焦点を当てています",
+    ]
+
+    const results = await rank(query, documents, { return_documents: true, top_k: 3 });
+    console.log(results);
+
+    window.rank = rank;
+
+  </script>
 </body>
 </html>
 
