@@ -169,6 +169,9 @@
                   <v-alert v-if="!loading && hasQueried" type="info">No more results</v-alert>
                 </template>
               </v-infinite-scroll>
+              <v-card v-else flat class="d-flex justify-center align-center" style="height: 100%;">
+                <v-progress-circular indeterminate color="primary" size="48" />
+              </v-card>
             </v-sheet>
           </v-col>
 
@@ -216,9 +219,10 @@
                 </div>
               </v-card>
 
-              <v-card v-else flat class="pa-4 text-muted">
-                <p>{{ loadedCount }} indicators loaded. Select one to view metadata.</p>
+              <v-card v-else flat class="d-flex justify-center align-center" style="height: 100%;">
+                <v-progress-circular indeterminate color="primary" size="48" />
               </v-card>
+
             </v-sheet>
           </v-col>
         </v-row>
@@ -357,6 +361,7 @@
           a.map((x, i) => x * b[i]).reduce((sum, val) => sum + val, 0);
 
         const submit = async () => {
+          selected.value = null;
           loadedCount.value = 0;
           hasQueried.value = true;
           const emb = await getEmbedding(query.value);
@@ -385,6 +390,11 @@
           }
           semanticResults.value.push(...res);
           loadedCount.value = semanticResults.value.length;
+
+          if (selected.value === null) {
+            selectItem(res[0]);
+          }
+
           done('ok');
         };
 
