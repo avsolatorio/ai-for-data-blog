@@ -111,6 +111,12 @@
       background-color: var(--secondary-100);
       border-radius: var(--border-radius);
     }
+
+    @media (max-width: 960px) {
+      .desktop-only {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -138,7 +144,7 @@
           <v-col cols="12" md="4" class="pa-4 d-flex flex-column" style="height: 98%;">
             <v-sheet class="d-flex flex-column" style="height: 100%;">
               <v-infinite-scroll
-                v-if="fullResults.length > 0"
+                v-if="fullResults.length > 0 && semanticResults.length > 0"
                 :items="semanticResults"
                 @load="loadMore"
                 class="scroll-panel"
@@ -162,7 +168,7 @@
             </v-sheet>
           </v-col>
 
-          <v-col cols="12" md="8" class="pa-4 d-flex flex-column content-panel" style="height: 100%;">
+          <v-col cols="0" md="8" class="pa-4 d-flex flex-column desktop-only content-panel" style="height: 100%;">
             <v-sheet class="d-flex flex-column scroll-panel">
               <v-card v-if="selected" flat class="pa-4 d-flex flex-column" style="height: 100%;">
                 <div>
@@ -211,6 +217,94 @@
             </v-sheet>
           </v-col>
         </v-row>
+
+        <v-dialog v-model="showMobileModal" fullscreen transition="dialog-bottom-transition">
+          <v-card v-if="selected" flat class="pa-0 d-flex flex-column" style="height: 100%;">
+            <v-toolbar flat color="primary" dark>
+              <v-btn icon @click="closeMobileModal">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+              <v-toolbar-title>Indicator Details</v-toolbar-title>
+            </v-toolbar>
+
+            <v-card-text class="scroll-panel pa-4" style="flex: 1 1 auto;">
+              <h3 class="mb-1">{{ selected.name }}</h3>
+              <div class="text-caption mb-4 text-muted">
+                <v-icon size="16" class="mr-1" icon="mdi-identifier" /> Code: {{ selected.code }}
+              </div>
+              <h4 class="mb-2">Definition</h4>
+              <p>{{ selected.definition }}</p>
+              <h4 class="mt-4">Chart</h4>
+              <v-responsive style="height: 300px;">
+                <iframe
+                  :src="`https://data.worldbank.org/share/widget?indicators=${selected.code}&locations=1W&start=1984&view=chart`"
+                  width="100%"
+                  height="100%"
+                  frameborder="0"
+                  scrolling="no"
+                  style="border: none;"
+                ></iframe>
+              </v-responsive>
+            </v-card-text>
+
+            <v-card-actions class="pa-4 justify-end">
+              <v-btn @click="closeMobileModal" color="primary" variant="flat" prepend-icon="mdi-arrow-left">
+                Back to Results
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+<!--
+          <v-col cols="12" md="8" class="pa-4 d-flex flex-column content-panel" style="height: 100%;">
+            <v-sheet class="d-flex flex-column scroll-panel">
+              <v-card v-if="selected" flat class="pa-4 d-flex flex-column" style="height: 100%;">
+                <div>
+                  <h3 class="mb-1">{{ selected.name }}</h3>
+                  <div class="text-caption mb-4 text-muted">
+                    <v-icon size="16" class="mr-1" icon="mdi-identifier" /> Code: {{ selected.code }}
+                  </div>
+
+                  <v-tabs v-model="tab" color="primary" density="comfortable">
+                    <v-tab>Metadata</v-tab>
+                  </v-tabs>
+
+                  <v-window v-model="tab" class="mt-4">
+                    <v-window-item>
+                      <v-btn class="mb-3" variant="outlined" density="comfortable" prepend-icon="mdi-download">
+                        JSON
+                      </v-btn>
+                      <h4 class="mb-2">Indicator description</h4>
+                      <p><strong>Definition:</strong> {{ selected.definition }}</p>
+                    </v-window-item>
+                  </v-window>
+                </div>
+
+                <div class="mt-4" style="flex-grow: 1;">
+                  <v-card flat class="h-100 d-flex flex-column">
+                    <v-card-title class="text-subtitle-1">WDI Embedded Chart</v-card-title>
+                    <v-card-text class="flex-grow-1 pa-0">
+                      <v-responsive class="h-100">
+                        <iframe
+                          :src="`https://data.worldbank.org/share/widget?indicators=${selected.code}&locations=1W&start=1984&view=chart`"
+                          width="100%"
+                          height="100%"
+                          frameborder="0"
+                          scrolling="no"
+                          style="border: none;"
+                        ></iframe>
+                      </v-responsive>
+                    </v-card-text>
+                  </v-card>
+                </div>
+              </v-card>
+
+              <v-card v-else flat class="pa-4 text-muted">
+                <p>{{ loadedCount }} indicators loaded. Select one to view metadata.</p>
+              </v-card>
+            </v-sheet>
+          </v-col>
+        </v-row> -->
       </v-container>
     </v-app>
   </div>
@@ -229,6 +323,7 @@
         const query = ref('');
         const tab = ref(0);
         const selected = ref(null);
+        const showMobileModal = ref(false);
         const wdi_data = ref([]);
         const fullResults = ref([]);
         const semanticResults = ref([]);
@@ -288,6 +383,13 @@
         const selectItem = (item) => {
           selected.value = item;
           tab.value = 0;
+          if (window.innerWidth < 960) {
+            showMobileModal.value = true;
+          }
+        };
+
+        const closeMobileModal = () => {
+          showMobileModal.value = false;
         };
 
         const clearSearch = () => {
@@ -322,7 +424,9 @@
           loadedCount,
           loading,
           hasQueried,
-          fullResults
+          fullResults,
+          showMobileModal,
+          closeMobileModal
         };
       }
     }).use(vuetify).mount('#app');
