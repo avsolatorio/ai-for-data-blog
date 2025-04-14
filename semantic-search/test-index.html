@@ -126,6 +126,10 @@
         padding-right: 16px !important;
       }
     }
+
+    .low-sim {
+      opacity: 0.6;
+    }
   </style>
 </head>
 <body>
@@ -162,11 +166,12 @@
                 <div v-for="(item, index) in semanticResults" :key="item.code">
                   <v-card
                     class="mb-2 px-4 py-2 card-clickable"
+                    :class="{ 'low-sim': item.sim < threshold }"
                     @click="selectItem(item)"
                     :elevation="selected === item ? 2 : 0"
                     :style="{ border: selected === item ? '2px solid #2196f3' : '1px solid #ddd' }"
                   >
-                    <div style="font-weight: 500;">{{ index + 1 }}. {{ item.name }}</div>
+                    <div style="font-weight: 500;" :title="'Score: ' + item.sim">{{ index + 1 }}. {{ item.name }}</div>
                     <div class="text-caption text-muted">Code: {{ item.code }}</div>
                   </v-card>
                 </div>
@@ -349,6 +354,7 @@
         const extractor = ref(null);
         const loading = ref(false);
         const hasQueried = ref(false);
+        const threshold = 0.78;
 
         const loadExtractor = async () => {
           if (!extractor.value) {
@@ -373,7 +379,7 @@
           fullResults.value = wdi_data.value
             .map(d => ({ ...d, sim: dotProduct(emb, d.embedding) }))
             .sort((a, b) => b.sim - a.sim)
-            .filter(x => x.sim > 0.4);
+            .filter(x => x.sim > 0.5);
 
           semanticResults.value = [];
           await loadMore({ done: () => {} });
@@ -451,7 +457,8 @@
           hasQueried,
           fullResults,
           showMobileModal,
-          closeMobileModal
+          closeMobileModal,
+          threshold
         };
       }
     }).use(vuetify).mount('#app');
