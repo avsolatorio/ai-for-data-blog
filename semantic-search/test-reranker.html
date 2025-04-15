@@ -173,12 +173,16 @@
                 <div v-for="(item, index) in semanticResults" :key="item.code">
                   <v-card
                     class="mb-2 px-4 py-2 card-clickable"
-                    :class="{ 'low-sim': item.sim < threshold }"
+                    :class="{
+                      'low-sim': applyReranking
+                        ? (item.rerank_score != null ? item.rerank_score < 0.15 : item.sim < threshold)
+                        : item.sim < threshold
+                    }"
                     @click="selectItem(item)"
                     :elevation="selected === item ? 2 : 0"
                     :style="{ border: selected === item ? '2px solid #2196f3' : '1px solid #ddd' }"
                   >
-                    <div style="font-weight: 500;" :title="'Score: ' + item.sim">{{ index + 1 }}. {{ item.name }}</div>
+                    <div style="font-weight: 500;" :title="'Score: ' + item.sim + ' Reranking: ' + item.rerank_score">{{ index + 1 }}. {{ item.name }}</div>
                     <div class="text-caption text-muted">Code: {{ item.code }}</div>
                   </v-card>
                 </div>
