@@ -344,8 +344,13 @@
     const { createVuetify } = Vuetify;
     const vuetify = createVuetify();
 
+    let rerankWorker;
+
     // create once at top-level scope
-    const rerankWorker = new Worker('/js/search/rank.worker.js', { type: 'module' });
+    const rerankWorkerRemote = new Worker('/ai-for-data-blog/semantic-search/js/search/rank.worker.js', { type: 'module' });
+    const rerankWorkerLocal = new Worker('/js/search/rank.worker.js', { type: 'module' });
+
+    rerankWorker = rerankWorkerRemote
 
     createApp({
       setup() {

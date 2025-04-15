@@ -17,6 +17,11 @@ await init();
 
 self.onmessage = async (e) => {
   try {
+    if (e.data?.ping) {
+      self.postMessage("pong"); // Responds to ping so Promise resolves
+      return;
+    }
+
     const { query, documents, top_k, return_documents } = e.data;
 
     const inputs = await tokenizer(
