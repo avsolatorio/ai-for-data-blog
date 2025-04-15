@@ -152,12 +152,13 @@
             ></v-text-field>
           </v-form>
         </v-toolbar>
+        {{ loading }}
 
         <v-row no-gutters class="flex-grow-1" style="height: 98%;">
           <v-col cols="12" md="4" class="pa-4 d-flex flex-column" style="height: 98%;">
             <v-sheet class="d-flex flex-column" style="height: 100%;">
               <v-infinite-scroll
-                v-if="fullResults.length > 0 && semanticResults.length > 0"
+                v-if="!loading && fullResults.length > 0 && semanticResults.length > 0"
                 :items="semanticResults"
                 @load="loadMore"
                 class="scroll-panel"
@@ -179,6 +180,9 @@
                   <v-alert v-if="!loading && hasQueried" type="info">No more results</v-alert>
                 </template>
               </v-infinite-scroll>
+              <v-card v-else-if="loading" flat class="d-flex justify-center align-center" style="height: 100%;">
+                <v-progress-circular indeterminate color="primary" size="48" />
+              </v-card>
               <v-card v-else flat class="d-flex justify-center align-center" style="height: 100%;">
                 <v-progress-circular indeterminate color="primary" size="48" />
               </v-card>
@@ -333,9 +337,42 @@
 
   <script type="module">
     // import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
-    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers';
+    import { pipeline, env, AutoTokenizer, XLMRobertaModel } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers';
 
-    const { createApp, ref, onMounted } = Vue;
+    env.allowRemoteModels = true;
+
+    // const model_id = 'jinaai/jina-reranker-v2-base-multilingual';
+    // const model = await XLMRobertaModel.from_pretrained(model_id, { dtype: 'int8' });
+    const r_model_id = 'jinaai/jina-reranker-v1-turbo-en';
+    const r_model = await XLMRobertaModel.from_pretrained(r_model_id, { quantized: true });
+    const r_tokenizer = await AutoTokenizer.from_pretrained(r_model_id);
+
+    /**
+     * Performs ranking with the CrossEncoder on the given query and documents. Returns a sorted list with the document indices and scores.
+     * @param {string} query A single query
+     * @param {string[]} documents A list of documents
+     * @param {Object} options Options for ranking
+     * @param {number} [options.top_k=undefined] Return the top-k documents. If undefined, all documents are returned.
+     * @param {number} [options.return_documents=false] If true, also returns the documents. If false, only returns the indices and scores.
+     */
+     async function rank(query, documents, {
+        top_k = undefined,
+        return_documents = false,
+    } = {}) {
+        const inputs = r_tokenizer(
+            new Array(documents.length).fill(query),
+            { text_pair: documents, padding: true, truncation: true }
+        )
+        const { logits } = await r_model(inputs);
+        return logits.sigmoid().tolist()
+            .map(([score], i) => ({
+                corpus_id: i,
+                score,
+                ...(return_documents ? { text: documents[i] } : {})
+            })).sort((a, b) => b.score - a.score).slice(0, top_k);
+    }
+
+    const { createApp, ref, onMounted, nextTick } = Vue;
     const { createVuetify } = Vuetify;
     const vuetify = createVuetify();
 
@@ -356,6 +393,7 @@
         const loading = ref(false);
         const hasQueried = ref(false);
         const threshold = 0.78;
+        const top_k = 20;
 
         const loadExtractor = async () => {
           if (!extractor.value) {
@@ -376,16 +414,42 @@
           selected.value = null;
           loadedCount.value = 0;
           hasQueried.value = true;
+
           const emb = await getEmbedding(query.value);
           fullResults.value = wdi_data.value
             .map(d => ({ ...d, sim: dotProduct(emb, d.embedding) }))
             .sort((a, b) => b.sim - a.sim)
             .filter(x => x.sim > 0.5);
 
+          await rerank();
+
           semanticResults.value = [];
           await loadMore({ done: () => {} });
           window.results = semanticResults.value;
           window.query = query.value;
+          window.fullResults = fullResults.value;
+        };
+
+        const rerank = async () => {
+          if (!query.value || query.value.trim() === "") {
+            console.log("Query is empty. Not changing anything...");
+            return;
+          }
+
+          loading.value = true;
+          console.log("Reranking...", loading);
+          await nextTick();
+          await new Promise(resolve => setTimeout(resolve, 10)); // allow animation to start
+
+          // Rerank the top_k results from the fullResults.
+          const batch = fullResults.value.slice(0, top_k);
+          const reranked = await rank(query.value, batch.map(x => x.name + "\n\n" + x.definition));
+
+          // Replace top_k entries in fullResults based on reranked order
+          for (let i = 0; i < top_k; i++) {
+            fullResults.value[i] = batch[reranked[i].corpus_id];
+          }
+          loading.value = false;
         };
 
         const mockApi = async (data, buffer) => {
@@ -472,8 +536,10 @@
 
     env.allowRemoteModels = true;
 
-    const model_id = 'jinaai/jina-reranker-v2-base-multilingual';
-    const model = await XLMRobertaModel.from_pretrained(model_id, { dtype: 'int8' });
+    // const model_id = 'jinaai/jina-reranker-v2-base-multilingual';
+    // const model = await XLMRobertaModel.from_pretrained(model_id, { dtype: 'int8' });
+    const model_id = 'jinaai/jina-reranker-v1-turbo-en';
+    const model = await XLMRobertaModel.from_pretrained(model_id, { quantized: true });
     const tokenizer = await AutoTokenizer.from_pretrained(model_id);
 
     /**
