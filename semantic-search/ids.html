@@ -6,7 +6,11 @@
   <title>Semantic Indicator Search</title>
   <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet" />
-  <!-- <link href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/index.min.css" rel="stylesheet" /> -->
+  <link href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/universal.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/material-design-icons-iconfont@7.0.1/dist/material-design-icons.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/splitpanes@latest/dist/splitpanes.css" rel="stylesheet">
+
   <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
   <script type="text/javascript" src="https://pym.nprapps.org/pym.v1.min.js"></script>
@@ -14,70 +18,6 @@
           var pymChild = new pym.Child({ polling: 500 });
       }
   </script>
-  <style>
-    :root {
-      --primary-dark: #0c1a4d;
-      --primary: #223974;
-      --primary-light: #3d5396;
-      --purple: #526bc7;
-      --purple-100: #cbd3e6b2;
-      --purple-20: #526bc733;
-      --purple-150: #526bc740;
-      --purple-200: #526bc71a;
-      --purple-250: #526bc726;
-      --purple-300: #526bc70d;
-      --purple-400: #526bc780;
-      --purple-500: #4b6cce;
-      --gray: #505050;
-      --gray-100: #f0f2f7;
-      --gray-600: #515151;
-      --silver: #858585;
-      --dark-blue: #223974;
-      --charcoal: #333333;
-      --dark-gray: #515151;
-      --secondary-light: #e3e9f8;
-      --secondary-100: #f3f5fc;
-      --secondary-200: #e4f4ff;
-      --light-gray: #858585;
-      --alert-color: #ff3131;
-      --white: #ffffff;
-      --base-color: #333333;
-      --black-150: #00000026;
-      --background: #fbfcfe;
-      --purple-50: #526bc74d;
-      --v-theme-background: #fbfcfe;
-
-      --font-family: 'Roboto', sans-serif;
-      --font-size: 0.875rem;
-      --line-height: 1.3;
-      --font-weight-thin: 100;
-      --font-weight-extra-light: 200;
-      --font-weight-light: 300;
-      --font-weight-normal: 400;
-      --font-weight-medium: 500;
-      --font-weight-semibold: 600;
-      --font-weight-bold: 700;
-      --font-weight-extra-bold: 800;
-      --font-weight-heavy: 900;
-      --font-style-italic: italic;
-      --text-decoration-underline: underline;
-      --text-decoration-strike: line-through;
-
-      --button-height: 40px;
-      --border-radius: 8px;
-
-      --v-textarea-control-height: 30px;
-      --v-input-control-height: 30px;
-    }
-
-    /* Animations - converted as static fallback only */
-    :root {
-      --progress-circular-intermediate-svg-transition: all 2.8s ease-in-out;
-      --progress-circular-overlay-transition: all 2.8s ease-in-out, stroke-width 0s;
-      --progress-circular-rotate-animation: progress-circular-rotate 1.4s ease-in-out infinite;
-      --progress-circular-rotate-dash: progress-circular-dash 1.4s ease-in-out infinite;
-    }
-  </style>
 
   <style>
     html, body, #app {
@@ -290,58 +230,6 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
-
-
-<!--
-          <v-col cols="12" md="8" class="pa-4 d-flex flex-column content-panel" style="height: 100%;">
-            <v-sheet class="d-flex flex-column scroll-panel">
-              <v-card v-if="selected" flat class="pa-4 d-flex flex-column" style="height: 100%;">
-                <div>
-                  <h3 class="mb-1">{{ selected.name }}</h3>
-                  <div class="text-caption mb-4 text-muted">
-                    <v-icon size="16" class="mr-1" icon="mdi-identifier" /> Code: {{ selected.code }}
-                  </div>
-
-                  <v-tabs v-model="tab" color="primary" density="comfortable">
-                    <v-tab>Metadata</v-tab>
-                  </v-tabs>
-
-                  <v-window v-model="tab" class="mt-4">
-                    <v-window-item>
-                      <v-btn class="mb-3" variant="outlined" density="comfortable" prepend-icon="mdi-download">
-                        JSON
-                      </v-btn>
-                      <h4 class="mb-2">Indicator description</h4>
-                      <p><strong>Definition:</strong> {{ selected.definition }}</p>
-                    </v-window-item>
-                  </v-window>
-                </div>
-
-                <div class="mt-4" style="flex-grow: 1;">
-                  <v-card flat class="h-100 d-flex flex-column">
-                    <v-card-title class="text-subtitle-1">WDI Embedded Chart</v-card-title>
-                    <v-card-text class="flex-grow-1 pa-0">
-                      <v-responsive class="h-100">
-                        <iframe
-                          :src="`https://data.worldbank.org/share/widget?indicators=${selected.code}&locations=1W&start=1984&view=chart`"
-                          width="100%"
-                          height="100%"
-                          frameborder="0"
-                          scrolling="no"
-                          style="border: none;"
-                        ></iframe>
-                      </v-responsive>
-                    </v-card-text>
-                  </v-card>
-                </div>
-              </v-card>
-
-              <v-card v-else flat class="pa-4 text-muted">
-                <p>{{ loadedCount }} indicators loaded. Select one to view metadata.</p>
-              </v-card>
-            </v-sheet>
-          </v-col>
-        </v-row> -->
       </v-container>
     </v-app>
   </div>
@@ -360,8 +248,8 @@
     const rerankWorkerRemote = new Worker('/ai-for-data-blog/semantic-search/js/search/rank.worker.js', { type: 'module' });
     const rerankWorkerLocal = new Worker('/js/search/rank.worker.js', { type: 'module' });
 
-    rerankWorker = rerankWorkerRemote
-    // rerankWorker = rerankWorkerLocal
+    // rerankWorker = rerankWorkerRemote
+    rerankWorker = rerankWorkerLocal
 
     createApp({
       setup() {
@@ -561,64 +449,6 @@
       }
     }).use(vuetify).mount('#app');
   </script>
-  <!-- <script type="module">
-    // rank(query, results.map(x => x.name + "\n\n" + x.definition));
-    import { env, AutoTokenizer, XLMRobertaModel } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers';
-
-    env.allowRemoteModels = true;
-
-    // const model_id = 'jinaai/jina-reranker-v2-base-multilingual';
-    // const model = await XLMRobertaModel.from_pretrained(model_id, { dtype: 'int8' });
-    const model_id = 'jinaai/jina-reranker-v1-turbo-en';
-    const model = await XLMRobertaModel.from_pretrained(model_id, { quantized: true });
-    const tokenizer = await AutoTokenizer.from_pretrained(model_id);
-
-    /**
-     * Performs ranking with the CrossEncoder on the given query and documents. Returns a sorted list with the document indices and scores.
-     * @param {string} query A single query
-     * @param {string[]} documents A list of documents
-     * @param {Object} options Options for ranking
-     * @param {number} [options.top_k=undefined] Return the top-k documents. If undefined, all documents are returned.
-     * @param {number} [options.return_documents=false] If true, also returns the documents. If false, only returns the indices and scores.
-     */
-    async function rank(query, documents, {
-        top_k = undefined,
-        return_documents = false,
-    } = {}) {
-        const inputs = tokenizer(
-            new Array(documents.length).fill(query),
-            { text_pair: documents, padding: true, truncation: true }
-        )
-        const { logits } = await model(inputs);
-        return logits.sigmoid().tolist()
-            .map(([score], i) => ({
-                corpus_id: i,
-                score,
-                ...(return_documents ? { text: documents[i] } : {})
-            })).sort((a, b) => b.score - a.score).slice(0, top_k);
-    }
-
-    // Example usage:
-    const query = "Organic skincare products for sensitive skin"
-    const documents = [
-        "Organic skincare for sensitive skin with aloe vera and chamomile.",
-        "New makeup trends focus on bold colors and innovative techniques",
-        "Bio-Hautpflege für empfindliche Haut mit Aloe Vera und Kamille",
-        "Neue Make-up-Trends setzen auf kräftige Farben und innovative Techniken",
-        "Cuidado de la piel orgánico para piel sensible con aloe vera y manzanilla",
-        "Las nuevas tendencias de maquillaje se centran en colores vivos y técnicas innovadoras",
-        "针对敏感肌专门设计的天然有机护肤产品",
-        "新的化妆趋势注重鲜艳的颜色和创新的技巧",
-        "敏感肌のために特別に設計された天然有機スキンケア製品",
-        "新しいメイクのトレンドは鮮やかな色と革新的な技術に焦点を当てています",
-    ]
-
-    const results = await rank(query, documents, { return_documents: true, top_k: 3 });
-    console.log(results);
-
-    window.rank = rank;
-
-  </script> -->
 </body>
 </html>
 
