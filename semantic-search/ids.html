@@ -1,31 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Lightweight IDS</title>
-  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet" />
-  <link href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/universal.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/material-design-icons-iconfont@7.0.1/dist/material-design-icons.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/splitpanes@latest/dist/splitpanes.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <title>Lightweight IDS</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/universal.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/material-design-icons-iconfont@7.0.1/dist/material-design-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/splitpanes@latest/dist/splitpanes.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
 
-  <!-- <link href="/css/ids.min.css" rel="stylesheet" /> -->
+    <!-- <link href="/css/ids.min.css" rel="stylesheet" /> -->
 
-  <link href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/ids.min.css" rel="stylesheet" />
+    <link
+      href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/ids.min.css"
+      rel="stylesheet"
+    />
 
-  <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
-  <script type="text/javascript" src="https://pym.nprapps.org/pym.v1.min.js"></script>
-  <script>window.onload = function () {
-          var pymChild = new pym.Child({ polling: 500 });
-      }
-  </script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://pym.nprapps.org/pym.v1.min.js"
+    ></script>
+    <script>
+      window.onload = function () {
+        var pymChild = new pym.Child({ polling: 500 });
+      };
+    </script>
 
-  <!-- <style>
+    <!-- <style>
     html, body, #app {
       height: 100vh;
       margin: 0;
@@ -78,8 +112,8 @@
       opacity: 0.6;
     }
   </style> -->
-  <style>
-    /* html, body, #app {
+    <style>
+      /* html, body, #app {
       height: 100vh;
       margin: 0;
       padding: 0;
@@ -88,121 +122,139 @@
       background: #f9f9fc;
     } */
 
-    .search-buttons {
-      color: #0C1A4D; font-size: 24px; width: 24px; height: 24px;
-    }
+      .search-buttons {
+        color: #0c1a4d;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
 
-    .card-icons {
-      color: var(--primary-dark); font-size: 15px; width: 15px; height: 15px;
-    }
-  </style>
-</head>
-<body>
-  <div id="app">
-    <v-app>
-      <main class="v-main">
-      <v-container fluid class="v-container--search">
-
-        <!-- Search Bar -->
-        <div class="px-4 px-md-0 mt-md-9">
-        <div
-        class="position-relative search-bar-area search-bar"
-        @click="isActive = true"
-        v-click-outside="handleClickOutside"
-      >
-        <div class="custom-search-bar-filter">
-          <div class="custom-search-bar-filter__content">
-            <div
-              class="grow-wrap"
-              ref="textareaGrowWrap"
-              :class="{ active: isActive }"
-            >
-              <textarea
-                v-model="query"
-                name="text"
-                :maxlength="5000"
-                rows="1"
-                id="text"
-                placeholder="What are you looking for?"
-                @input="updateReplicatedValue"
-                @keydown="handleKeyDown"
-              ></textarea>
-            </div>
-          </div>
-          <div class="custom-search-bar-filter__append">
-            <div class="right-icons-container">
+      .card-icons {
+        color: var(--primary-dark);
+        font-size: 15px;
+        width: 15px;
+        height: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <v-app>
+        <main class="v-main">
+          <v-container fluid class="v-container--search">
+            <!-- Search Bar -->
+            <div class="px-4 px-md-0 mt-md-9">
               <div
-                class="w-[30px] h-[30px] custom-search-bar-filter__icon d-flex justify-center align-center"
-                v-if="(!query && !tempFile) || isListening === true"
+                class="position-relative search-bar-area search-bar"
+                @click="isActive = true"
+                v-click-outside="handleClickOutside"
               >
-
-                <i
-                class="v-icon material-symbols-outlined cursor-pointer"
-                class="search-icon semibold cursor-pointer"
-                class="search-buttons"
-                size="24"
-                onclick="onMicrophoneClick()"
-                aria-label="search"
-                >
-                  <!-- {{ isListening ? 'settings_voice' : 'mic' }} -->
-                  settings_voice
-                </i>
-              </div>
-              <div class="d-flex right-icons-container__append" v-else>
-                <i
-                class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon search-buttons"
-                size="24"
-                onclick="clearSearch()"
-                aria-label="clear"
-                >
-                  cancel
-                </i>
-                <v-btn
-                  aria-label="search"
-                  class="h-[30px]"
-                  size="small"
-                  @click="submit"
-                >
-                  <i class="material-icons v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true">arrow_forward_ios</i>
-                </v-btn>
+                <div class="custom-search-bar-filter">
+                  <div class="custom-search-bar-filter__content">
+                    <div
+                      class="grow-wrap"
+                      ref="textareaGrowWrap"
+                      :class="{ active: isActive }"
+                    >
+                      <textarea
+                        v-model="query"
+                        name="text"
+                        :maxlength="5000"
+                        rows="1"
+                        id="text"
+                        placeholder="What are you looking for?"
+                        @input="updateReplicatedValue"
+                        @keydown="handleKeyDown"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div class="custom-search-bar-filter__append">
+                    <div class="right-icons-container">
+                      <div
+                        class="w-[30px] h-[30px] custom-search-bar-filter__icon d-flex justify-center align-center"
+                        v-if="(!query && !tempFile) || isListening === true"
+                      >
+                        <i
+                          class="v-icon material-symbols-outlined cursor-pointer"
+                          class="search-icon semibold cursor-pointer"
+                          class="search-buttons"
+                          size="24"
+                          onclick="onMicrophoneClick()"
+                          aria-label="search"
+                        >
+                          <!-- {{ isListening ? 'settings_voice' : 'mic' }} -->
+                          settings_voice
+                        </i>
+                      </div>
+                      <div class="d-flex right-icons-container__append" v-else>
+                        <i
+                          class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon search-buttons"
+                          size="24"
+                          onclick="clearSearch()"
+                          aria-label="clear"
+                        >
+                          cancel
+                        </i>
+                        <v-btn
+                          aria-label="search"
+                          class="h-[30px]"
+                          size="small"
+                          @click="submit"
+                        >
+                          <i
+                            class="material-icons v-icon notranslate v-theme--light v-icon--size-default"
+                            aria-hidden="true"
+                            >arrow_forward_ios</i
+                          >
+                        </v-btn>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-        </div>
-      </div>
 
-        <v-row v-if="loading" class="d-flex ga-md-5 mx-0 search-content mt-md-2">
-          <v-col cols="12" md="4" class="search-content__result pa-4 px-md-0">
-            <v-skeleton-loader
-              class="mx-auto w-100 border"
-              elevation="12"
-              type="list-item-two-line, list-item-three-line"
-            ></v-skeleton-loader>
-            <v-skeleton-loader
-              class="mx-auto w-100 border mt-6"
-              elevation="12"
-              type="list-item-two-line, list-item-three-line"
-            ></v-skeleton-loader>
+            <v-row
+              v-if="loading"
+              class="d-flex ga-md-5 mx-0 search-content mt-md-2"
+            >
+              <v-col
+                cols="12"
+                md="4"
+                class="search-content__result pa-4 px-md-0"
+              >
+                <v-skeleton-loader
+                  class="mx-auto w-100 border"
+                  elevation="12"
+                  type="list-item-two-line, list-item-three-line"
+                ></v-skeleton-loader>
+                <v-skeleton-loader
+                  class="mx-auto w-100 border mt-6"
+                  elevation="12"
+                  type="list-item-two-line, list-item-three-line"
+                ></v-skeleton-loader>
 
-            <v-skeleton-loader
-              class="mx-auto w-100 border mt-6"
-              elevation="12"
-              type="list-item-two-line, list-item-three-line"
-            ></v-skeleton-loader>
-          </v-col>
-          <v-col cols="12" md="8" class="search-content__detail pa-4 relative">
-            <v-skeleton-loader
-              class="mx-auto w-100 border"
-              elevation="12"
-              theme="light"
-              type="avatar, list-item-three-line, list-item-three-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line"
-            />
-          </v-col>
-        </v-row>
+                <v-skeleton-loader
+                  class="mx-auto w-100 border mt-6"
+                  elevation="12"
+                  type="list-item-two-line, list-item-three-line"
+                ></v-skeleton-loader>
+              </v-col>
+              <v-col
+                cols="12"
+                md="8"
+                class="search-content__detail pa-4 relative"
+              >
+                <v-skeleton-loader
+                  class="mx-auto w-100 border"
+                  elevation="12"
+                  theme="light"
+                  type="avatar, list-item-three-line, list-item-three-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line"
+                />
+              </v-col>
+            </v-row>
 
-
-        <!-- <v-toolbar flat height="80" class="px-4 search-bar-container search-bar">
+            <!-- <v-toolbar flat height="80" class="px-4 search-bar-container search-bar">
           <v-form @submit.prevent="submit" class="w-100">
             <v-text-field
               v-model="query"
@@ -219,7 +271,7 @@
           </v-form>
         </v-toolbar> -->
 
-        <!-- <v-row v-if="loading" class="d-flex ga-md-5 mx-0 search-content mt-md-2">
+            <!-- <v-row v-if="loading" class="d-flex ga-md-5 mx-0 search-content mt-md-2">
           <v-col cols="12" md="4" class="search-content__result pa-4 px-md-0">
             <v-skeleton-loader
               class="mx-auto w-100 border"
@@ -248,37 +300,32 @@
           </v-col>
         </v-row> -->
 
-
-        <v-row
-        v-else
-        class="d-flex ga-md-5 mx-0 search-content mt-md-2"
-        :class="{ 'animation-slide': itemSelected === true }"
-      >
-        <v-col
-          v-show="!isFullscreen"
-          cols="12"
-          md="4"
-          class="search-content__result px-4 px-md-0"
-          ref="scrollSearchContentResultMobile"
-        >
-
-          <div class="d-flex flex-column search-content__result__area">
-            <div
-              class="scroll-area"
-              ref="scrollSearchContentResultDesktop"
-              v-if="fullResults"
+            <v-row
+              v-else
+              class="d-flex ga-md-5 mx-0 search-content mt-md-2"
+              :class="{ 'animation-slide': itemSelected === true }"
             >
-              <v-infinite-scroll
-
-                v-if="!reranking && fullResults.length > 0 && semanticResults.length > 0"
-                :items="semanticResults"
-                @load="loadMore"
-                class="scroll-panel"
-                color="primary"
-
-
+              <v-col
+                v-show="!isFullscreen"
+                cols="12"
+                md="4"
+                class="search-content__result px-4 px-md-0"
+                ref="scrollSearchContentResultMobile"
               >
-                <!-- <template v-for="(result, index) in collection" :key="index">
+                <div class="d-flex flex-column search-content__result__area">
+                  <div
+                    class="scroll-area"
+                    ref="scrollSearchContentResultDesktop"
+                    v-if="fullResults"
+                  >
+                    <v-infinite-scroll
+                      v-if="!reranking && fullResults.length > 0 && semanticResults.length > 0"
+                      :items="semanticResults"
+                      @load="loadMore"
+                      class="scroll-panel"
+                      color="primary"
+                    >
+                      <!-- <template v-for="(result, index) in collection" :key="index">
                   <div>
                     <CardResult
                       :result="result"
@@ -294,149 +341,183 @@
                   </div>
                 </template> -->
 
-                <template v-for="(result, index) in semanticResults" :key="result.code">
-<div>
-
-  <v-card flat class="card-result relative" :class="{
+                      <template
+                        v-for="(result, index) in semanticResults"
+                        :key="result.code"
+                      >
+                        <div>
+                          <v-card
+                            flat
+                            class="card-result relative"
+                            :class="{
     active: viewItem?.idno === result?.idno,
     'mt-3': index !== 0,
-  }" :link="false">
-    <div class="d-flex align-center mb-3 type-info">
+  }"
+                            :link="false"
+                          >
+                            <div class="d-flex align-center mb-3 type-info">
+                              <i
+                                class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon card-icons"
+                                size="15"
+                                onclick="clearSearch()"
+                                aria-label="clear"
+                              >
+                                {{ icons[result.type]?.name ?? 'more_horiz' }}
+                              </i>
 
-
-      <i
-      class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon card-icons"
-      size="15"
-      onclick="clearSearch()"
-      aria-label="clear"
-      >
-      {{ icons[result.type]?.name ?? 'more_horiz' }}
-      </i>
-
-      <!-- <v-icon-custom
+                              <!-- <v-icon-custom
         type="symbol"
         size="15"
         color="primary-dark"
         :outlined="icons[result.type]?.outlined ?? false"
         >{{ icons[result.type]?.name ?? 'more_horiz' }}</v-icon-custom
       > -->
-      <div class="text-xs text-capitalize">{{ result?.type }}</div>
-      <div v-if="result?.type_extra" class="text-xs text-capitalize ml-1">
-        [{{ result?.type_extra }}]
-      </div>
-    </div>
-    <v-card-title color="primary-dark" class="leading-1.3">{{
-      result?.name
-    }}</v-card-title>
-    <!-- <v-card-subtitle v-if="result?.sub_title">{{
+                              <div class="text-xs text-capitalize">
+                                {{ result?.type }}
+                              </div>
+                              <div
+                                v-if="result?.type_extra"
+                                class="text-xs text-capitalize ml-1"
+                              >
+                                [{{ result?.type_extra }}]
+                              </div>
+                            </div>
+                            <v-card-title
+                              color="primary-dark"
+                              class="leading-1.3"
+                              >{{ result?.name }}</v-card-title
+                            >
+                            <!-- <v-card-subtitle v-if="result?.sub_title">{{
       result?.sub_title ?? ''
     }}</v-card-subtitle> -->
-    <v-card-subtitle v-if="result?.code">{{
-      result?.code ?? ''
-    }}</v-card-subtitle>
-    <!-- <v-card-text v-if="result?.text">{{ result?.text ?? '-' }}</v-card-text> -->
-    <div class="mt-4 d-flex flex-wrap align-center text-body-3 categories">
-      <div
-        class="category-item clickable-fn"
-        v-if="result?.geographic_coverage?.length === 1"
-      >
-        <!-- geographic_coverage -->
-        <v-icon class="material-symbols-outlined">mdi-earth</v-icon>
-        <div>{{ result.geographic_coverage_title }}</div>
-      </div>
-      <v-menu
-        v-else-if="result?.geographic_coverage?.length > 1"
-        class="v-menu--none-shadow"
-        content-class="v-menu--country"
-        max-height="250"
-        scroll-strategy="close"
-      >
-        <template v-slot:activator="{ props }">
-          <div
-            class="category-item clickable-fn"
-            v-bind="props"
-            v-if="result?.geographic_coverage?.length"
-          >
-            <v-icon class="material-symbols-outlined">mdi-earth</v-icon>
-            <div>{{ result.geographic_coverage_title }}</div>
-          </div>
-        </template>
-        <div class="v-menu--country__content text-light-gray relative">
-          <div
-            v-for="(item, index) in result?.geographic_coverage"
-            :key="index"
-            class="v-menu--country__item pa-3"
-            :class="{
+                            <v-card-subtitle v-if="result?.code"
+                              >{{ result?.code ?? '' }}</v-card-subtitle
+                            >
+                            <!-- <v-card-text v-if="result?.text">{{ result?.text ?? '-' }}</v-card-text> -->
+                            <div
+                              class="mt-4 d-flex flex-wrap align-center text-body-3 categories"
+                            >
+                              <div
+                                class="category-item clickable-fn"
+                                v-if="result?.geographic_coverage?.length === 1"
+                              >
+                                <!-- geographic_coverage -->
+                                <v-icon class="material-symbols-outlined"
+                                  >mdi-earth</v-icon
+                                >
+                                <div>
+                                  {{ result.geographic_coverage_title }}
+                                </div>
+                              </div>
+                              <v-menu
+                                v-else-if="result?.geographic_coverage?.length > 1"
+                                class="v-menu--none-shadow"
+                                content-class="v-menu--country"
+                                max-height="250"
+                                scroll-strategy="close"
+                              >
+                                <template v-slot:activator="{ props }">
+                                  <div
+                                    class="category-item clickable-fn"
+                                    v-bind="props"
+                                    v-if="result?.geographic_coverage?.length"
+                                  >
+                                    <v-icon class="material-symbols-outlined"
+                                      >mdi-earth</v-icon
+                                    >
+                                    <div>
+                                      {{ result.geographic_coverage_title }}
+                                    </div>
+                                  </div>
+                                </template>
+                                <div
+                                  class="v-menu--country__content text-light-gray relative"
+                                >
+                                  <div
+                                    v-for="(item, index) in result?.geographic_coverage"
+                                    :key="index"
+                                    class="v-menu--country__item pa-3"
+                                    :class="{
               'text-purple': item.type === 'exist',
               'text-alert-color text-decoration-line-through':
                 item.type === 'un_exist',
             }"
-          >
-            {{ item.name }}
-          </div>
-        </div>
-      </v-menu>
+                                  >
+                                    {{ item.name }}
+                                  </div>
+                                </div>
+                              </v-menu>
 
-      <div class="category-item" v-if="result.time_coverage">
-        <v-icon class="material-symbols-outlined">mdi-calendar</v-icon>
-        <div>{{ result?.time_coverage }}</div>
-      </div>
+                              <div
+                                class="category-item"
+                                v-if="result.time_coverage"
+                              >
+                                <v-icon class="material-symbols-outlined"
+                                  >mdi-calendar</v-icon
+                                >
+                                <div>{{ result?.time_coverage }}</div>
+                              </div>
 
-      <!-- Authuring -->
-      <div
-        v-if="result?.source?.length === 1"
-        class="category-item clickable-fn"
-      >
-        <v-icon
-          v-if="result?.type === 'document'"
-          class="material-symbols-outlined"
-          >mdi-account-circle-outline</v-icon
-        >
-        <!-- <v-icon-custom
+                              <!-- Authuring -->
+                              <div
+                                v-if="result?.source?.length === 1"
+                                class="category-item clickable-fn"
+                              >
+                                <v-icon
+                                  v-if="result?.type === 'document'"
+                                  class="material-symbols-outlined"
+                                  >mdi-account-circle-outline</v-icon
+                                >
+                                <!-- <v-icon-custom
           v-else
           color="dark-gray"
           type="symbol"
           icon="account_balance"
           outlined
         ></v-icon-custom> -->
-        <div>{{ result?.source?.[0] }}</div>
-      </div>
-      <v-menu
-        v-else-if="result?.source?.length > 1"
-        class="v-menu--none-shadow"
-        content-class="v-menu--source"
-        max-height="250"
-        scroll-strategy="close"
-      >
-        <template v-slot:activator="{ props }">
-          <div class="category-item clickable-fn" v-bind="props">
-            <v-icon
-              v-if="result?.type === 'document'"
-              class="material-symbols-outlined"
-              >mdi-account-circle-outline</v-icon
-            >
-            <!-- <v-icon-custom
+                                <div>{{ result?.source?.[0] }}</div>
+                              </div>
+                              <v-menu
+                                v-else-if="result?.source?.length > 1"
+                                class="v-menu--none-shadow"
+                                content-class="v-menu--source"
+                                max-height="250"
+                                scroll-strategy="close"
+                              >
+                                <template v-slot:activator="{ props }">
+                                  <div
+                                    class="category-item clickable-fn"
+                                    v-bind="props"
+                                  >
+                                    <v-icon
+                                      v-if="result?.type === 'document'"
+                                      class="material-symbols-outlined"
+                                      >mdi-account-circle-outline</v-icon
+                                    >
+                                    <!-- <v-icon-custom
               v-else
               color="dark-gray"
               type="symbol"
               icon="account_balance"
               outlined
             ></v-icon-custom> -->
-            <div>{{ autheries_title }}</div>
-          </div>
-        </template>
-        <div class="v-menu--source__content text-light-gray">
-          <div
-            v-for="(item, index) in result?.source"
-            :key="index"
-            class="v-menu--source__item pa-3"
-          >
-            {{ item }}
-          </div>
-        </div>
-      </v-menu>
+                                    <div>{{ autheries_title }}</div>
+                                  </div>
+                                </template>
+                                <div
+                                  class="v-menu--source__content text-light-gray"
+                                >
+                                  <div
+                                    v-for="(item, index) in result?.source"
+                                    :key="index"
+                                    class="v-menu--source__item pa-3"
+                                  >
+                                    {{ item }}
+                                  </div>
+                                </div>
+                              </v-menu>
 
-      <!-- <div
+                              <!-- <div
         v-if="result.text"
         @click="handleDefinitionInfo"
         class="d-inline-flex align-center"
@@ -484,14 +565,14 @@
           </template>
         </v-card>
       </v-dialog> -->
-    </div>
-    <!-- <CardActions
+                            </div>
+                            <!-- <CardActions
       v-if="query.q"
       :result="result"
       :active="props.active"
       :filters="props.filters"
     /> -->
-    <!-- <div class="mt-3 d-flex align-center categories card-result-footer">
+                            <!-- <div class="mt-3 d-flex align-center categories card-result-footer">
       <CardRelevance />
       <div
         class="btn-relevant d-inline-flex align-center rounded-lg border-sm pa-2 cursor-pointer mr-2 card-result-footer-item clickable-fn"
@@ -528,7 +609,7 @@
       </div>
     </div> -->
 
-    <!-- <v-card
+                            <!-- <v-card
       class="card-result__relevant pa-4 rounded-lg clickable-fn"
       :class="{ active: active_relevant }"
       v-if="active_relevant"
@@ -565,13 +646,10 @@
         </div>
       </div>
     </v-card> -->
-  </v-card>
+                          </v-card>
+                        </div>
 
-
-</div>
-
-
-                  <!-- <v-card
+                        <!-- <v-card
                     class="mb-2 px-4 py-2 card-clickable"
                     :class="{
                       'low-sim': applyReranking
@@ -585,33 +663,33 @@
                     <div style="font-weight: 500;" :title="'Score: ' + item.sim + ' Reranking: ' + item.rerank_score">{{ index + 1 }}. {{ item.name }}</div>
                     <div class="text-caption text-muted">Code: {{ item.code }}</div>
                   </v-card> -->
-                </template>
+                      </template>
 
-                <template v-slot:empty>
-                  <div class="text-center text-light-gray text-sm mt-3">
-                    No more items!
+                      <template v-slot:empty>
+                        <div class="text-center text-light-gray text-sm mt-3">
+                          No more items!
+                        </div>
+                      </template>
+                    </v-infinite-scroll>
                   </div>
-                </template>
-              </v-infinite-scroll>
-            </div>
-          </div>
-        </v-col>
+                </div>
+              </v-col>
 
-        <v-col
-          :cols="isFullscreen ? 12 : 8"
-          class="search-content__detail px-4 mt-4 pa-md-4 bg-secondary-100 relative"
-        >
-          Hello world {{query}}
-          <!-- <DetailsPanel
+              <v-col
+                :cols="isFullscreen ? 12 : 8"
+                class="search-content__detail px-4 mt-4 pa-md-4 bg-secondary-100 relative"
+              >
+                Hello world {{query}}
+                <!-- <DetailsPanel
             :viewItem="viewItem"
             :width="width"
             :filters="filters"
             :query="query"
           /> -->
-        </v-col>
-      </v-row>
+              </v-col>
+            </v-row>
 
-        <!-- <v-row v-else no-gutters class="d-flex ga-md-5 mx-0 search-content mt-md-2">
+            <!-- <v-row v-else no-gutters class="d-flex ga-md-5 mx-0 search-content mt-md-2">
           <v-col cols="12" md="4" class="pa-4 d-flex flex-column" style="height: 98%;">
             <v-switch
               v-model="applyReranking"
@@ -747,267 +825,293 @@
             </v-card-actions>
           </v-card>
         </v-dialog> -->
-      </v-container>
-    </main>
-    </v-app>
-  </div>
+          </v-container>
+        </main>
+      </v-app>
+    </div>
 
-  <script type="module">
-    import { env, pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
-    env.allowRemoteModels = true;
+    <script type="module">
+      import {
+        env,
+        pipeline,
+      } from "https://cdn.jsdelivr.net/npm/@xenova/transformers";
+      env.allowRemoteModels = true;
 
-    const { createApp, ref, onMounted, nextTick, watch } = Vue;
-    const { createVuetify } = Vuetify;
-    const vuetify = createVuetify({
-      defaults: {},
-      icons: {
-        defaultSet: 'md',
-        sets: {
-          md: {
-            component: 'v-icon', // uses <v-icon> by default
+      const { createApp, ref, onMounted, nextTick, watch } = Vue;
+      const { createVuetify } = Vuetify;
+      const vuetify = createVuetify({
+        defaults: {},
+        icons: {
+          defaultSet: "md",
+          sets: {
+            md: {
+              component: "v-icon", // uses <v-icon> by default
+            },
           },
         },
-      },
-    });
+      });
 
-    let rerankWorker;
+      let rerankWorker;
 
-    // create once at top-level scope
-    const rerankWorkerRemote = new Worker('/ai-for-data-blog/semantic-search/js/search/rank.worker.js', { type: 'module' });
-    const rerankWorkerLocal = new Worker('/js/search/rank.worker.js', { type: 'module' });
+      // create once at top-level scope
+      const rerankWorkerRemote = new Worker(
+        "/ai-for-data-blog/semantic-search/js/search/rank.worker.js",
+        { type: "module" }
+      );
+      const rerankWorkerLocal = new Worker("/js/search/rank.worker.js", {
+        type: "module",
+      });
 
-    rerankWorker = rerankWorkerRemote
-    // rerankWorker = rerankWorkerLocal
+      // rerankWorker = rerankWorkerRemote
+      rerankWorker = rerankWorkerLocal;
 
-    createApp({
-      setup() {
-        const model_name = 'GIST-all-MiniLM-L6-v2';
-        const hf_organization = 'avsolatorio';
-        const query = ref('');
-        const tab = ref(0);
-        const selected = ref(null);
-        const showMobileModal = ref(false);
-        const wdi_data = ref([]);
-        const fullResults = ref([]);
-        const semanticResults = ref([]);
-        const loadedCount = ref(0);
-        const batchSize = 10;
-        const extractor = ref(null);
-        const loading = ref(false);
-        const applyReranking = ref(false);
-        const resultReranked = ref(false);
-        const reranking = ref(false);
-        const hasQueried = ref(false);
-        const threshold = 0.78;
-        const top_k = 20;
-        const isActive = ref(false);
-        const dtype = 'indicator';
+      createApp({
+        setup() {
+          const model_name = "GIST-all-MiniLM-L6-v2";
+          const hf_organization = "avsolatorio";
+          const query = ref("");
+          const tab = ref(0);
+          const selected = ref(null);
+          const showMobileModal = ref(false);
+          const wdi_data = ref([]);
+          const fullResults = ref([]);
+          const semanticResults = ref([]);
+          const loadedCount = ref(0);
+          const batchSize = 10;
+          const extractor = ref(null);
+          const loading = ref(false);
+          const applyReranking = ref(false);
+          const resultReranked = ref(false);
+          const reranking = ref(false);
+          const hasQueried = ref(false);
+          const threshold = 0.78;
+          const top_k = 20;
+          const isActive = ref(false);
+          const dtype = "indicator";
 
-        // Controls
-        const isFullscreen = ref(false);
-        const itemSelected = ref(false);
+          // Controls
+          const isFullscreen = ref(false);
+          const itemSelected = ref(false);
 
-        const loadExtractor = async () => {
-          if (!extractor.value) {
-            extractor.value = await pipeline("feature-extraction", `${hf_organization}/${model_name}`);
-          }
-        };
+          const loadExtractor = async () => {
+            if (!extractor.value) {
+              extractor.value = await pipeline(
+                "feature-extraction",
+                `${hf_organization}/${model_name}`
+              );
+            }
+          };
 
-        const getEmbedding = async (text) => {
-          await loadExtractor();
-          const result = await extractor.value.model(extractor.value.tokenizer(text));
-          return result.sentence_embedding.data;
-        };
+          const getEmbedding = async (text) => {
+            await loadExtractor();
+            const result = await extractor.value.model(
+              extractor.value.tokenizer(text)
+            );
+            return result.sentence_embedding.data;
+          };
 
-        const dotProduct = (a, b) =>
-          a.map((x, i) => x * b[i]).reduce((sum, val) => sum + val, 0);
+          const dotProduct = (a, b) =>
+            a.map((x, i) => x * b[i]).reduce((sum, val) => sum + val, 0);
 
-        const submit = async () => {
-          selected.value = null;
-          loadedCount.value = 0;
-          hasQueried.value = true;
-          resultReranked.value = false;
+          const submit = async () => {
+            selected.value = null;
+            loadedCount.value = 0;
+            hasQueried.value = true;
+            resultReranked.value = false;
 
-          const emb = await getEmbedding(query.value);
-          fullResults.value = wdi_data.value
-            .map(d => ({ ...d, type: dtype, sim: dotProduct(emb, d.embedding) }))
-            .sort((a, b) => b.sim - a.sim)
-            .filter(x => x.sim > 0.5);
+            const emb = await getEmbedding(query.value);
+            fullResults.value = wdi_data.value
+              .map((d) => ({
+                ...d,
+                type: dtype,
+                sim: dotProduct(emb, d.embedding),
+              }))
+              .sort((a, b) => b.sim - a.sim)
+              .filter((x) => x.sim > 0.5);
 
-          if (applyReranking.value) {
-            await rerank();
-          }
+            if (applyReranking.value) {
+              await rerank();
+            }
 
-          semanticResults.value = [];
-          await loadMore({ done: () => {} });
-          window.results = semanticResults.value;
-          window.query = query.value;
-          window.fullResults = fullResults.value;
-        };
+            semanticResults.value = [];
+            await loadMore({ done: () => {} });
+            window.results = semanticResults.value;
+            window.query = query.value;
+            window.fullResults = fullResults.value;
+          };
 
-        const rerank = async () => {
-          if (!query.value || query.value.trim() === "") {
-            console.log("Query is empty. Not changing anything...");
-            return;
-          }
+          const rerank = async () => {
+            if (!query.value || query.value.trim() === "") {
+              console.log("Query is empty. Not changing anything...");
+              return;
+            }
 
-          reranking.value = true;
-          const batch = fullResults.value.slice(0, top_k);
-          const documents = batch.map(x => x.name + "\n\n" + x.definition);
-          const reranked = await new Promise((resolve, reject) => {
+            reranking.value = true;
+            const batch = fullResults.value.slice(0, top_k);
+            const documents = batch.map((x) => x.name + "\n\n" + x.definition);
+            const reranked = await new Promise((resolve, reject) => {
               rerankWorker.onmessage = (e) => {
-                console.log('[Main thread] Got reranked:', e.data);
+                console.log("[Main thread] Got reranked:", e.data);
                 resolve(e.data);
               };
               rerankWorker.onerror = (err) => {
                 console.error("Worker error:", err);
                 reject(err);
               };
-              rerankWorker.postMessage({ query: query.value, documents, top_k });
+              rerankWorker.postMessage({
+                query: query.value,
+                documents,
+                top_k,
+              });
             });
 
-          console.log(reranked)
+            console.log(reranked);
 
-          for (let i = 0; i < top_k; i++) {
-            fullResults.value[i] = {
-              ...batch[reranked[i].corpus_id],
-              rerank_score: reranked[i].score
-            };
-          }
-
-          resultReranked.value = true;
-          reranking.value = false;
-        };
-
-        const mockApi = async (data, buffer) => {
-          const next = data.slice(buffer.length, buffer.length + batchSize);
-          return new Promise(resolve => setTimeout(() => resolve(next), 500));
-        };
-
-        const loadMore = async ({ done }) => {
-          loading.value = true;
-          const res = await mockApi(fullResults.value, semanticResults.value);
-          loading.value = false;
-
-          if (res.length === 0) {
-            done('empty');
-            return;
-          }
-          semanticResults.value.push(...res);
-          loadedCount.value = semanticResults.value.length;
-
-          if (selected.value === null) {
-            if (window.innerWidth >= 960) {
-              selectItem(res[0]);
+            for (let i = 0; i < top_k; i++) {
+              fullResults.value[i] = {
+                ...batch[reranked[i].corpus_id],
+                rerank_score: reranked[i].score,
+              };
             }
-          }
 
-          done('ok');
-        };
+            resultReranked.value = true;
+            reranking.value = false;
+          };
 
-        const selectItem = (item) => {
-          selected.value = item;
-          tab.value = 0;
-          if (window.innerWidth < 960) {
-            showMobileModal.value = true;
-          }
-        };
+          const mockApi = async (data, buffer) => {
+            const next = data.slice(buffer.length, buffer.length + batchSize);
+            return new Promise((resolve) =>
+              setTimeout(() => resolve(next), 500)
+            );
+          };
 
-        const closeMobileModal = () => {
-          showMobileModal.value = false;
-        };
+          const loadMore = async ({ done }) => {
+            loading.value = true;
+            const res = await mockApi(fullResults.value, semanticResults.value);
+            loading.value = false;
 
-        const clearSearch = () => {
-          query.value = '';
-          selected.value = null;
-          semanticResults.value = [];
-          hasQueried.value = false;
-        };
+            if (res.length === 0) {
+              done("empty");
+              return;
+            }
+            semanticResults.value.push(...res);
+            loadedCount.value = semanticResults.value.length;
 
-        const loadJSON = () => {
-          fetch(`https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${model_name}__wdi_embeddings.json`)
-            .then(res => res.json())
-            .then(data => {
-              wdi_data.value = data;
-              submit();
-            });
-        };
+            if (selected.value === null) {
+              if (window.innerWidth >= 960) {
+                selectItem(res[0]);
+              }
+            }
 
-        const sortTopKBy = (field) => {
-          const sorted = fullResults.value
-            .slice(0, top_k)
-            .sort((a, b) => (b[field] ?? 0) - (a[field] ?? 0));
+            done("ok");
+          };
 
-          fullResults.value = [...sorted, ...fullResults.value.slice(top_k)];
-        }
+          const selectItem = (item) => {
+            selected.value = item;
+            tab.value = 0;
+            if (window.innerWidth < 960) {
+              showMobileModal.value = true;
+            }
+          };
 
-        watch(applyReranking, async (newVal) => {
-          if (newVal) {
-            if (!resultReranked.value) {
-              await rerank();
+          const closeMobileModal = () => {
+            showMobileModal.value = false;
+          };
+
+          const clearSearch = () => {
+            query.value = "";
+            selected.value = null;
+            semanticResults.value = [];
+            hasQueried.value = false;
+          };
+
+          const loadJSON = () => {
+            fetch(
+              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${model_name}__wdi_embeddings.json`
+            )
+              .then((res) => res.json())
+              .then((data) => {
+                wdi_data.value = data;
+                submit();
+              });
+          };
+
+          const sortTopKBy = (field) => {
+            const sorted = fullResults.value
+              .slice(0, top_k)
+              .sort((a, b) => (b[field] ?? 0) - (a[field] ?? 0));
+
+            fullResults.value = [...sorted, ...fullResults.value.slice(top_k)];
+          };
+
+          watch(applyReranking, async (newVal) => {
+            if (newVal) {
+              if (!resultReranked.value) {
+                await rerank();
+              } else {
+                sortTopKBy("rerank_score");
+              }
             } else {
-              sortTopKBy("rerank_score");
+              sortTopKBy("sim");
+              console.log("Reranking turned off");
             }
-          } else {
-            sortTopKBy("sim");
-            console.log("Reranking turned off");
-          }
 
-          semanticResults.value = [];
-          await loadMore({ done: () => {} });
-        });
+            semanticResults.value = [];
+            await loadMore({ done: () => {} });
+          });
 
-        onMounted(() => {
-          loadJSON();
-        });
+          onMounted(() => {
+            loadJSON();
+          });
 
-        const handleKeyDown = (event) => {
-          if (event.key === 'Enter' && !event.shiftKey) {
-            // Prevent default behavior (adding a new line)
-            event.preventDefault()
-            submit()
-          }
-        }
+          const handleKeyDown = (event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              // Prevent default behavior (adding a new line)
+              event.preventDefault();
+              submit();
+            }
+          };
 
-        const icons = {
-          'microdata': { name: 'database', outlined: false },
-          'geospatial': { name: 'globe_asia', outlined: true },
-          'timeseries': { name: 'chart_data', outlined: true },
-          'table': { name: 'table', outlined: true },
-          'document': { name: 'article', outlined: false },
-          'image': { name: 'image', outlined: false },
-          'video': { name: 'videocam', outlined: false },
-          'script': { name: 'integration_instructions', outlined: false },
-          'indicator': { name: 'monitoring', outlined: false },
-        }
+          const icons = {
+            microdata: { name: "database", outlined: false },
+            geospatial: { name: "globe_asia", outlined: true },
+            timeseries: { name: "chart_data", outlined: true },
+            table: { name: "table", outlined: true },
+            document: { name: "article", outlined: false },
+            image: { name: "image", outlined: false },
+            video: { name: "videocam", outlined: false },
+            script: { name: "integration_instructions", outlined: false },
+            indicator: { name: "monitoring", outlined: false },
+          };
 
-        return {
-          query,
-          tab,
-          selected,
-          semanticResults,
-          selectItem,
-          clearSearch,
-          loadMore,
-          submit,
-          loadedCount,
-          loading,
-          hasQueried,
-          fullResults,
-          showMobileModal,
-          closeMobileModal,
-          threshold,
-          reranking,
-          applyReranking,
-          isActive,
-          itemSelected,
-          isFullscreen,
-          handleKeyDown,
-          icons
-        };
-      }
-    }).use(vuetify).mount('#app');
-  </script>
-</body>
+          return {
+            query,
+            tab,
+            selected,
+            semanticResults,
+            selectItem,
+            clearSearch,
+            loadMore,
+            submit,
+            loadedCount,
+            loading,
+            hasQueried,
+            fullResults,
+            showMobileModal,
+            closeMobileModal,
+            threshold,
+            reranking,
+            applyReranking,
+            isActive,
+            itemSelected,
+            isFullscreen,
+            handleKeyDown,
+            icons,
+          };
+        },
+      })
+        .use(vuetify)
+        .mount("#app");
+    </script>
+  </body>
 </html>
-
