@@ -393,7 +393,9 @@
                             <v-card-subtitle v-if="result?.code"
                               >{{ result?.code ?? '' }}</v-card-subtitle
                             >
-                            <!-- <v-card-text v-if="result?.text">{{ result?.text ?? '-' }}</v-card-text> -->
+                            <v-card-text v-if="result?.text"
+                              >{{ result?.text ?? '-' }}</v-card-text
+                            >
                             <div
                               class="mt-4 d-flex flex-wrap align-center text-body-3 categories"
                             >
@@ -888,6 +890,7 @@
           const top_k = 20;
           const isActive = ref(false);
           const dtype = "indicator";
+          const viewItem = ref(null);
 
           // Controls
           const isFullscreen = ref(false);
@@ -915,6 +918,7 @@
 
           const submit = async () => {
             selected.value = null;
+            viewItem.value = null;
             loadedCount.value = 0;
             hasQueried.value = true;
             resultReranked.value = false;
@@ -924,6 +928,8 @@
               .map((d) => ({
                 ...d,
                 type: dtype,
+                idno: d.code,
+                text: d.definition,
                 sim: dotProduct(emb, d.embedding),
               }))
               .sort((a, b) => b.sim - a.sim)
@@ -997,7 +1003,7 @@
             semanticResults.value.push(...res);
             loadedCount.value = semanticResults.value.length;
 
-            if (selected.value === null) {
+            if (viewItem.value === null) {
               if (window.innerWidth >= 960) {
                 selectItem(res[0]);
               }
@@ -1007,7 +1013,7 @@
           };
 
           const selectItem = (item) => {
-            selected.value = item;
+            viewItem.value = item;
             tab.value = 0;
             if (window.innerWidth < 960) {
               showMobileModal.value = true;
@@ -1020,7 +1026,7 @@
 
           const clearSearch = () => {
             query.value = "";
-            selected.value = null;
+            viewItem.value = null;
             semanticResults.value = [];
             hasQueried.value = false;
           };
@@ -1107,6 +1113,7 @@
             isFullscreen,
             handleKeyDown,
             icons,
+            viewItem,
           };
         },
       })
