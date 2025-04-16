@@ -40,9 +40,10 @@
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
     />
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
 
     <!-- <link href="/css/ids.min.css" rel="stylesheet" /> -->
-
     <link
       href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/universal.min.css"
       rel="stylesheet"
@@ -52,8 +53,6 @@
       rel="stylesheet"
     />
 
-    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
     <script
       type="text/javascript"
       src="https://pym.nprapps.org/pym.v1.min.js"
@@ -982,6 +981,85 @@
                       </div> -->
                     </div>
                   </div>
+
+                  <template v-if="viewItem?.type == 'indicator'">
+                    <div
+                      class="search-content__detail__description mx-n4 mx-md-0 pt-4 py-md-5 px-md-1 bg-white rounded-lg mt-4"
+                      ref="detailDescription"
+                    >
+                      <div
+                        class="d-flex ga-2 max-w-full flex-no-wrap overflow-hidden overflow-x-auto pb-2 px-4 px-md-4"
+                      >
+                        <v-btn
+                          variant="outlined"
+                          class="v-btn-icon v-btn--search"
+                          :class="{ active: btn.active }"
+                          v-for="(btn, index) in filteredBtnContents"
+                          :key="index"
+                          @click="handleFilter(btn, index)"
+                        >
+                          <v-icon-custom
+                            :size="16"
+                            type="symbol"
+                            :outlined="true"
+                            :icon="btn.icon"
+                          ></v-icon-custom>
+
+                          <span class="mx-1">{{ btn.text }}</span>
+                        </v-btn>
+                      </div>
+                      <div class="scroll-area mt-6 px-4 px-md-4">
+                        <div class="d-flex flex-column overflow-y-auto pr-2">
+                          <template v-if="active_tab === 'metadata'">
+                            <div>
+                              Test
+
+                              <v-btn
+                                @click="handleMetadataDownload(idno, metadata)"
+                                color="gray-600"
+                                class="mb-4"
+                              >
+                                <v-icon>mdi-download</v-icon>
+                                JSON
+                              </v-btn>
+                              <!-- <TemplatesParser
+                                :template="display_template.template"
+                                :data="metadata"
+                              ></TemplatesParser> -->
+                            </div>
+                          </template>
+
+                          <!-- <TabsIndicatorData
+                            v-show="active_tab === 'data'"
+                            :metadata="metadata"
+                            :idno="viewItem.idno"
+                            key="i_data"
+                            :frameHeight="`${detailDescriptionHeight - 250}px`"
+                          />
+                          <TabsIndicatorVisualizations
+                            v-show="active_tab === 'visualizations'"
+                            :metadata="metadata"
+                            :idno="viewItem.idno"
+                            key="i_visualizations"
+                            :frameHeight="`${detailDescriptionHeight - 250}px`"
+                          />
+                          <TabsIndicatorMetadata
+                            v-show="active_tab === 'metadata'"
+                            :metadata="metadata"
+                            :idno="viewItem.idno"
+                            key="i_metadata"
+                          />
+                          <TabsIndicatorQuickAnswer
+                            v-show="active_tab === 'quick_answer'"
+                            :metadata="metadata"
+                            :query="filters?.query"
+                            key="i_quick_answer"
+                            :frameHeight="`${detailDescriptionHeight - 145}px`"
+                          /> -->
+                        </div>
+                      </div>
+                    </div>
+                  </template>
                 </template>
                 <!-- <DetailsPanel
             :viewItem="viewItem"
@@ -1142,7 +1220,7 @@
         :outlined="outlined"
         :style="computedStyle"
       >
-        <slot>{{ icon }}</slot>
+        {{ icon }}
       </i>
 
       <v-icon
@@ -1160,7 +1238,7 @@
         :style="styles"
         :variant="variant"
       >
-        <slot>{{ icon }}</slot>
+        {{ icon }}
       </v-icon>
     </template>
 
@@ -1270,7 +1348,73 @@
 
           const scrollSearchContentResultMobile = ref(null);
           const scrollSearchContentResultDesktop = ref(null);
+          const btnContents = ref([
+            {
+              icon: "bolt",
+              text: "Quick answer",
+              key: "quick_answer",
+              active: true,
+            },
+            {
+              icon: "storage",
+              text: "Data",
+              key: "data",
+              active: false,
+            },
+            {
+              icon: "bar_chart_4_bars",
+              text: "Visualizations",
+              key: "visualizations",
+              active: false,
+            },
+            {
+              icon: "description",
+              text: "Metadata",
+              key: "metadata",
+              active: false,
+            },
+            // {
+            //   icon: 'router',
+            //   text: 'API',
+            //   key: 'api',
+            //   active: false,
+            // },
+            // {
+            //   icon: 'cached',
+            //   text: 'Usage stats',
+            //   key: 'usage_stats',
+            //   active: false,
+            // },
+            {
+              icon: "account_tree",
+              text: "See also",
+              key: "see_also",
+              active: false,
+            },
+          ]);
+          // Filter out the quick answer button if the query is empty
+          const filteredBtnContents = computed(() => {
+            // return props.filters?.query
 
+            // return queryParserStore.entities.geopolitical_entities.length > 0
+            //   ? btnContents.value
+            //   : btnContents.value.filter((btn) => btn.key !== "quick_answer");
+            return btnContents.value;
+          });
+
+          const active_tab = ref(filteredBtnContents.value[0].key);
+
+          const handleFilter = (btn, index) => {
+            btn.active = true;
+            active_tab.value = btn.key;
+            filteredBtnContents.value.forEach((btn, i) => {
+              if (i !== index) {
+                btn.active = false;
+              }
+            });
+          };
+
+          // handleFilter(filteredBtnContents.value[0], 0);
           // Controls
           const isFullscreen = ref(false);
           const itemSelected = ref(false);
@@ -1543,6 +1687,9 @@
             busy,
             width,
             authorities_title,
+            active_tab,
+            filteredBtnContents,
+            handleFilter,
           };
         },
       })
