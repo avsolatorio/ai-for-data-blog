@@ -220,6 +220,7 @@
                           onclick="clearSearch()"
                           aria-label="clear"
                         >
+
                           cancel
                         </i> -->
                         <v-btn
@@ -536,13 +537,13 @@
                                       class="material-symbols-outlined"
                                       >mdi-account-circle-outline</v-icon
                                     >
-                                    <!-- <v-icon-custom
-              v-else
-              color="dark-gray"
-              type="symbol"
-              icon="account_balance"
-              outlined
-            ></v-icon-custom> -->
+                                    <v-icon-custom
+                                      v-else
+                                      color="dark-gray"
+                                      type="symbol"
+                                      icon="account_balance"
+                                      outlined
+                                    ></v-icon-custom>
                                     <div>{{ autheries_title }}</div>
                                   </div>
                                 </template>
@@ -701,7 +702,7 @@
                       <v-btn
                         variant="outlined"
                         class="v-btn-icon v-btn--search"
-                        @click="fullscreenStore.setItemSelected(false)"
+                        @click="itemSelected = false"
                         v-if="width < 960"
                       >
                         <v-icon-custom
@@ -908,6 +909,8 @@
         class="v-icon material-symbols-outlined"
         :class="cls"
         v-if="type === 'symbol'"
+        :size="size"
+        :outlined="outlined"
         :style="computedStyle"
       >
         <slot>{{ icon }}</slot>
@@ -974,6 +977,7 @@
     </script>
 
     <script type="module">
+      import { useScroll, useWindowSize } from "https://esm.sh/@vueuse/core";
       import {
         env,
         pipeline,
@@ -985,9 +989,9 @@
       const vuetify = createVuetify({
         defaults: {},
         icons: {
-          defaultSet: "mdi",
+          defaultSet: "md",
           sets: {
-            mdi: {
+            md: {
               component: "v-icon", // uses <v-icon> by default
             },
           },
@@ -1033,11 +1037,26 @@
           const dtype = "indicator";
           const viewItem = ref(null);
           const busy = ref(false);
+          const { width } = useWindowSize();
+
+          const scrollSearchContentResultMobile = ref(null);
+          const scrollSearchContentResultDesktop = ref(null);
 
           // Controls
           const isFullscreen = ref(false);
           const itemSelected = ref(false);
 
+          watch(
+            () => width.value,
+            (value) => {
+              // get height of scrollSearchContentResultDesktop
+              if (scrollSearchContentResultDesktop.value) {
+                // scrollSearchContentResultDesktop.value.style.height = `${window.innerHeight}px`
+                infiniteHeight.value =
+                  scrollSearchContentResultDesktop.value.clientHeight ?? 0;
+              }
+            }
+          );
           const loadExtractor = async () => {
             if (!extractor.value) {
               extractor.value = await pipeline(
@@ -1151,7 +1170,7 @@
             loadedCount.value = semanticResults.value.length;
 
             if (viewItem.value === null) {
-              if (window.innerWidth >= 960) {
+              if (width.value >= 960) {
                 selectItem(res[0]);
               }
             }
@@ -1276,6 +1295,7 @@
             viewItem,
             handleResultSearchClick,
             busy,
+            width,
           };
         },
       })
