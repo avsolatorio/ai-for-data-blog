@@ -257,62 +257,12 @@
           class="search-content__result px-4 px-md-0"
           ref="scrollSearchContentResultMobile"
         >
-          <!-- Expansion content -->
-          <!-- <div
-            v-if="filters.query && showRelated"
-            class="expansion-relate px-4 px-md-0 mr-auto"
-          >
-            <div
-              class="expansion-relate__header text-primary-dark"
-              @click="isExpanded = !isExpanded"
-            >
-              <span class="expansion-relate__title medium">
-                Suggested queries
-              </span>
-              <v-icon
-                class="expansion-relate__header__icon"
-                :class="{ rotate: isExpanded }"
-                icon="md:keyboard_arrow_down"
-              ></v-icon>
-            </div>
-
-            <v-expand-transition>
-              <div class="expansion-relate__content" v-if="isExpanded">
-                <div class="py-2">
-                  <div
-                    class="d-flex expansion-relate__content__link semibold"
-                    v-for="history in relatedSearch?.['related'] ?? []"
-                    @click="handleRelatedSearch(history)"
-                  >
-                    <v-icon-custom icon="md:search" size="16"></v-icon-custom>
-                    <span class="ml-1">{{ history }}</span>
-                    <v-icon-custom
-                      class="ml-4 expansion-relate__content__arrow"
-                      icon="md:arrow_forward_ios"
-                      size="13"
-                    ></v-icon-custom>
-                  </div>
-                </div>
-              </div>
-            </v-expand-transition>
-          </div> -->
-
-          <!-- Search Filter -->
-          <!-- <div class="px-4 px-md-0">
-            <IdsSearchFilter
-              ref="searchFilter"
-              class="mt-4"
-              @change="handleChangeFilter"
-              :facets="dataFacet"
-              :iconsOnly="true"
-            />
-          </div> -->
 
           <div class="d-flex flex-column search-content__result__area">
             <div
               class="scroll-area"
               ref="scrollSearchContentResultDesktop"
-              v-if="collection"
+              v-if="fullResults"
             >
               <v-infinite-scroll
 
@@ -730,6 +680,14 @@
           loadJSON();
         });
 
+        const handleKeyDown = (event) => {
+          if (event.key === 'Enter' && !event.shiftKey) {
+            // Prevent default behavior (adding a new line)
+            event.preventDefault()
+            submit()
+          }
+        }
+
         return {
           query,
           tab,
@@ -750,7 +708,8 @@
           applyReranking,
           isActive,
           itemSelected,
-          isFullscreen
+          isFullscreen,
+          handleKeyDown
         };
       }
     }).use(vuetify).mount('#app');
