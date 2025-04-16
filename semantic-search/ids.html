@@ -122,6 +122,14 @@
       background: #f9f9fc;
     } */
 
+      :root {
+        --secondary-100: #f3f5fc;
+      }
+
+      .bg-secondary-100 {
+        background-color: var(--secondary-100);
+      }
+
       .search-buttons {
         color: #0c1a4d;
         font-size: 24px;
@@ -385,7 +393,7 @@
                             <v-card-title
                               color="primary-dark"
                               class="leading-1.3"
-                              >{{ result?.name }}</v-card-title
+                              >{{ result?.title }}</v-card-title
                             >
                             <!-- <v-card-subtitle v-if="result?.sub_title">{{
       result?.sub_title ?? ''
@@ -445,7 +453,7 @@
                 item.type === 'un_exist',
             }"
                                   >
-                                    {{ item.name }}
+                                    {{ item.title }}
                                   </div>
                                 </div>
                               </v-menu>
@@ -552,6 +560,166 @@
                 :cols="isFullscreen ? 12 : 8"
                 class="search-content__detail px-4 mt-4 pa-md-4 bg-secondary-100 relative"
               >
+                <template v-if="viewItem">
+                  <div class="search-content__detail__info ga-md-4">
+                    <div
+                      class="d-flex ga-md-4 flex-column flex-md-row flex-1-1-0"
+                    >
+                      <div class="search-content__detail__info__image">
+                        <template v-if="loading">
+                          <v-progress-circular
+                            :size="40"
+                            :width="4"
+                            indeterminate
+                            color="primary"
+                          />
+                        </template>
+                        <template v-else>
+                          <!-- :src="thumbnailURL ?? mockupImage" -->
+                          <img
+                            ref="thumbnailImage"
+                            src="https://data-compass.ihsn.org/files/thumbnails/thumbnail-s14220.jpeg"
+                            alt="image"
+                          />
+                          <!-- <img v-else :src="mockupImage" alt="image" /> -->
+                        </template>
+                      </div>
+                      <div
+                        class="search-content__detail__info__content relative"
+                      >
+                        <div
+                          class="d-flex align-center mb-3 type-info text-primary-dark"
+                        >
+                          <v-icon-custom
+                            type="symbol"
+                            :icon="icons[viewItem.type]?.name ?? 'more_horiz'"
+                            size="15"
+                            :outlined="icons[viewItem.type]?.outlined ?? false"
+                          ></v-icon-custom>
+                          <div class="ml-1 text-subtitle-2 text-capitalize">
+                            {{ viewItem.type }}
+                          </div>
+                          <div
+                            v-if="viewItem?.type_extra"
+                            class="text-subtitle-2 text-capitalize ml-1"
+                          >
+                            [{{ viewItem?.type_extra }}]
+                          </div>
+                        </div>
+
+                        <h6 class="text-primary-dark text-xl semibold">
+                          {{ viewItem.title }}
+                        </h6>
+
+                        <p
+                          class="text-charcoal text-sm medium mt-2"
+                          v-if="viewItem.sub_title"
+                        >
+                          <!-- TODO: remove mockup later -->
+                          {{ viewItem.sub_title }}
+                        </p>
+
+                        <div
+                          class="d-flex align-center flex-wrap text-gray-600 text-xs mt-3 ga-2"
+                        >
+                          <!-- TODO: Waiting data -->
+                          <!-- <div class="d-flex align-center">
+                            <v-icon-custom
+                              type="symbol"
+                              icon="lock_open"
+                              size="16"
+                              outlined
+                              class="mr-1"
+                            ></v-icon-custom>
+                            <span>Open Access</span>
+                          </div> -->
+
+                          <template v-if="viewItem.doi">
+                            <!-- <span class="mx-3">|</span> -->
+                            DOI:
+                            <a
+                              class="doi-link"
+                              :href="`https://doi.org/${viewItem.doi}`"
+                              target="_blank"
+                              >{{ viewItem.doi }}</a
+                            >
+                          </template>
+                        </div>
+
+                        <!-- <p class="text-xs medium text-primary-dark mt-4">Abstract:</p>
+                        <p class="text-xs mt-3 text-gray scroll-area abstract-scroll">
+                          {{
+                            viewItem.abstract ??
+                            'The 2009 MDHS was designed to provide data to monitor the population and health situation in Maldives.Specifically, the MDHS collected information on fertility levels and preferences, marriage, sexual activity.'
+                          }}
+                        </p> -->
+
+                        <DetailsHeaderInfo
+                          :viewItem="viewItem"
+                          :metadata="metadata"
+                          :width="width"
+                          :filters="filters"
+                        />
+                      </div>
+                    </div>
+                    <!-- Group buttons -->
+                    <div
+                      class="d-flex justify-space-between justify-md-end group-social-buttons"
+                    >
+                      <v-btn
+                        variant="outlined"
+                        class="v-btn-icon v-btn--search"
+                        @click="fullscreenStore.setItemSelected(false)"
+                        v-if="width < 960"
+                      >
+                        <v-icon-custom
+                          icon="chevron_backward"
+                          type="symbol"
+                          :size="20"
+                          outlined
+                        ></v-icon-custom>
+                      </v-btn>
+                      <div class="d-flex ga-2">
+                        <v-btn
+                          variant="outlined"
+                          class="v-btn-icon v-btn--search"
+                          v-for="(btn, index) in groupBTNs"
+                          :key="index"
+                          @click="handleGroupBTNFilter(btn, index)"
+                          :class="btn.class ? btn.class : ''"
+                          :aria-label="`Button ${
+                          !btn.switch ? btn.text : btn.isFullscreen ? btn.text2 : btn.text1
+                        }`"
+                        >
+                          <v-icon-custom
+                            :size="19"
+                            :type="btn.type ?? 'symbol'"
+                            :outlined="true"
+                            :icon="
+                            !btn.switch ? btn.icon : btn.isFullscreen ? btn.icon2 : btn.icon1
+                          "
+                          />
+                          <v-tooltip
+                            activator="parent"
+                            location="bottom"
+                            content-class="nav-menu-tooltip"
+                            :aria-label="`Tooltip ${
+                            !btn.switch ? btn.text : btn.isFullscreen ? btn.text2 : btn.text1
+                          }`"
+                          >
+                            <template #default>
+                              <span
+                                >{{ !btn.switch ? btn.text : btn.isFullscreen ?
+                                btn.text2 : btn.text1 }}</span
+                              >
+                            </template>
+                          </v-tooltip>
+                        </v-btn>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+
                 Hello world {{query}}
                 <!-- <DetailsPanel
             :viewItem="viewItem"
@@ -703,6 +871,76 @@
       </v-app>
     </div>
 
+    <template id="v-icon-custom-template">
+      <i
+        class="v-icon material-symbols-outlined"
+        :class="cls"
+        v-if="type === 'symbol'"
+        :style="computedStyle"
+      >
+        <slot>{{ icon }}</slot>
+      </i>
+
+      <v-icon
+        v-else
+        :class="cls"
+        :color="color"
+        :disabled="disabled"
+        :end="end"
+        :size="size"
+        :start="start"
+        :tag="tag"
+        :theme="theme"
+        :outlined="outlined"
+        :icon="icon"
+        :style="styles"
+        :variant="variant"
+      >
+        <slot>{{ icon }}</slot>
+      </v-icon>
+    </template>
+
+    <script>
+      const VIconCustom = Vue.defineComponent({
+        template: "#v-icon-custom-template",
+        props: {
+          icon: String,
+          class: [String, Array, Object],
+          mainClass: String,
+          type: {
+            type: String,
+            default: "mdi",
+          },
+          color: String,
+          disabled: Boolean,
+          end: Boolean,
+          size: [String, Number],
+          start: Boolean,
+          tag: String,
+          theme: String,
+          outlined: Boolean,
+          variant: String,
+          styles: Object,
+        },
+        computed: {
+          cls() {
+            return this.class;
+          },
+          computedStyle() {
+            const size =
+              typeof this.size === "string" ? parseInt(this.size) : this.size;
+            return {
+              color: this.color,
+              fontSize: size ? size + "px" : undefined,
+              width: size ? size + "px" : undefined,
+              height: size ? size + "px" : undefined,
+              ...(this.styles || {}),
+            };
+          },
+        },
+      });
+    </script>
+
     <script type="module">
       import {
         env,
@@ -800,6 +1038,7 @@
             fullResults.value = wdi_data.value
               .map((d) => ({
                 ...d,
+                title: d.name,
                 type: dtype,
                 idno: d.code,
                 text: d.definition,
@@ -828,7 +1067,7 @@
 
             reranking.value = true;
             const batch = fullResults.value.slice(0, top_k);
-            const documents = batch.map((x) => x.name + "\n\n" + x.definition);
+            const documents = batch.map((x) => x.title + "\n\n" + x.definition);
             const reranked = await new Promise((resolve, reject) => {
               rerankWorker.onmessage = (e) => {
                 console.log("[Main thread] Got reranked:", e.data);
@@ -1004,6 +1243,7 @@
         },
       })
         .use(vuetify)
+        .component("v-icon-custom", VIconCustom)
         .mount("#app");
     </script>
   </body>
