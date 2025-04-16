@@ -91,6 +91,10 @@
     .search-buttons {
       color: #0C1A4D; font-size: 24px; width: 24px; height: 24px;
     }
+
+    .card-icons {
+      color: var(--primary-dark); font-size: 15px; width: 15px; height: 15px;
+    }
   </style>
 </head>
 <body>
@@ -290,8 +294,284 @@
                   </div>
                 </template> -->
 
-                <div v-for="(item, index) in semanticResults" :key="item.code">
-                  <v-card
+                <template v-for="(result, index) in semanticResults" :key="result.code">
+<div>
+
+  <v-card flat class="card-result relative" :class="{
+    active: viewItem?.idno === result?.idno,
+    'mt-3': index !== 0,
+  }" :link="false">
+    <div class="d-flex align-center mb-3 type-info">
+
+
+      <i
+      class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon card-icons"
+      size="15"
+      onclick="clearSearch()"
+      aria-label="clear"
+      >
+      {{ icons[result.type]?.name ?? 'more_horiz' }}
+      </i>
+
+      <!-- <v-icon-custom
+        type="symbol"
+        size="15"
+        color="primary-dark"
+        :outlined="icons[result.type]?.outlined ?? false"
+        >{{ icons[result.type]?.name ?? 'more_horiz' }}</v-icon-custom
+      > -->
+      <div class="text-xs text-capitalize">{{ result?.type }}</div>
+      <div v-if="result?.type_extra" class="text-xs text-capitalize ml-1">
+        [{{ result?.type_extra }}]
+      </div>
+    </div>
+    <v-card-title color="primary-dark" class="leading-1.3">{{
+      result?.name
+    }}</v-card-title>
+    <!-- <v-card-subtitle v-if="result?.sub_title">{{
+      result?.sub_title ?? ''
+    }}</v-card-subtitle> -->
+    <v-card-subtitle v-if="result?.code">{{
+      result?.code ?? ''
+    }}</v-card-subtitle>
+    <!-- <v-card-text v-if="result?.text">{{ result?.text ?? '-' }}</v-card-text> -->
+    <div class="mt-4 d-flex flex-wrap align-center text-body-3 categories">
+      <div
+        class="category-item clickable-fn"
+        v-if="result?.geographic_coverage?.length === 1"
+      >
+        <!-- geographic_coverage -->
+        <v-icon class="material-symbols-outlined">mdi-earth</v-icon>
+        <div>{{ result.geographic_coverage_title }}</div>
+      </div>
+      <v-menu
+        v-else-if="result?.geographic_coverage?.length > 1"
+        class="v-menu--none-shadow"
+        content-class="v-menu--country"
+        max-height="250"
+        scroll-strategy="close"
+      >
+        <template v-slot:activator="{ props }">
+          <div
+            class="category-item clickable-fn"
+            v-bind="props"
+            v-if="result?.geographic_coverage?.length"
+          >
+            <v-icon class="material-symbols-outlined">mdi-earth</v-icon>
+            <div>{{ result.geographic_coverage_title }}</div>
+          </div>
+        </template>
+        <div class="v-menu--country__content text-light-gray relative">
+          <div
+            v-for="(item, index) in result?.geographic_coverage"
+            :key="index"
+            class="v-menu--country__item pa-3"
+            :class="{
+              'text-purple': item.type === 'exist',
+              'text-alert-color text-decoration-line-through':
+                item.type === 'un_exist',
+            }"
+          >
+            {{ item.name }}
+          </div>
+        </div>
+      </v-menu>
+
+      <div class="category-item" v-if="result.time_coverage">
+        <v-icon class="material-symbols-outlined">mdi-calendar</v-icon>
+        <div>{{ result?.time_coverage }}</div>
+      </div>
+
+      <!-- Authuring -->
+      <div
+        v-if="result?.source?.length === 1"
+        class="category-item clickable-fn"
+      >
+        <v-icon
+          v-if="result?.type === 'document'"
+          class="material-symbols-outlined"
+          >mdi-account-circle-outline</v-icon
+        >
+        <!-- <v-icon-custom
+          v-else
+          color="dark-gray"
+          type="symbol"
+          icon="account_balance"
+          outlined
+        ></v-icon-custom> -->
+        <div>{{ result?.source?.[0] }}</div>
+      </div>
+      <v-menu
+        v-else-if="result?.source?.length > 1"
+        class="v-menu--none-shadow"
+        content-class="v-menu--source"
+        max-height="250"
+        scroll-strategy="close"
+      >
+        <template v-slot:activator="{ props }">
+          <div class="category-item clickable-fn" v-bind="props">
+            <v-icon
+              v-if="result?.type === 'document'"
+              class="material-symbols-outlined"
+              >mdi-account-circle-outline</v-icon
+            >
+            <!-- <v-icon-custom
+              v-else
+              color="dark-gray"
+              type="symbol"
+              icon="account_balance"
+              outlined
+            ></v-icon-custom> -->
+            <div>{{ autheries_title }}</div>
+          </div>
+        </template>
+        <div class="v-menu--source__content text-light-gray">
+          <div
+            v-for="(item, index) in result?.source"
+            :key="index"
+            class="v-menu--source__item pa-3"
+          >
+            {{ item }}
+          </div>
+        </div>
+      </v-menu>
+
+      <!-- <div
+        v-if="result.text"
+        @click="handleDefinitionInfo"
+        class="d-inline-flex align-center"
+        title="Definition"
+      >
+        <v-icon icon="material-symbols-outlined" class="mr-0"
+          >mdi-information-outline</v-icon
+        >
+        <div>Definition</div>
+      </div>
+
+      <v-dialog
+        width="auto"
+        v-model="active_definition"
+        class="card-result__relevant__dialog"
+      >
+        <v-card class="card-result__relevant__dialog__box">
+          <template v-slot:default>
+            <div>
+              <div class="card-result__relevant__dialog__header">
+                <div class="card-result__relevant__dialog__header__title">
+                  Definition
+                </div>
+                <div>
+                  <div
+                    class="card-result__relevant__dialog__header__close"
+                    @click="handleDefinitionInfo"
+                  >
+                    <v-icon-custom
+                      class="medium cursor-pointer"
+                      size="24"
+                      type="symbol"
+                      outlined
+                      >cancel</v-icon-custom
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="card-result__relevant__dialog__body">
+                <div class="card-result__relevant__dialog__body__description">
+                  <span v-html="md.render(result.text)"></span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </v-card>
+      </v-dialog> -->
+    </div>
+    <!-- <CardActions
+      v-if="query.q"
+      :result="result"
+      :active="props.active"
+      :filters="props.filters"
+    /> -->
+    <!-- <div class="mt-3 d-flex align-center categories card-result-footer">
+      <CardRelevance />
+      <div
+        class="btn-relevant d-inline-flex align-center rounded-lg border-sm pa-2 cursor-pointer mr-2 card-result-footer-item clickable-fn"
+        @click="handleRelevantClick"
+      >
+        <BaseIcon class="mr-1" size="14" name="world_bank" />
+        <div>How is this relevant?</div>
+      </div>
+      <div
+        class="d-inline-flex align-center rounded-lg border-sm cursor-pointer card-result-footer-item"
+        v-if="active === true"
+      >
+        <div class="pa-2 clickable-fn">
+          <v-icon-custom
+            size="15"
+            type="symbol"
+            :class="{ 'text-primary': result?.like === 'like' }"
+            :outlined="result?.like === 'like' ? false : true"
+            @click="handleLike(result, 'like')"
+            >thumb_up</v-icon-custom
+          >
+        </div>
+        <v-divider vertical></v-divider>
+        <div class="pa-2 clickable-fn">
+          <v-icon-custom
+            size="15"
+            type="symbol"
+            :class="{ 'text-primary': result?.like === 'unlike' }"
+            :outlined="result?.like === 'unlike' ? false : true"
+            @click="handleLike(result, 'unlike')"
+            >thumb_down</v-icon-custom
+          >
+        </div>
+      </div>
+    </div> -->
+
+    <!-- <v-card
+      class="card-result__relevant pa-4 rounded-lg clickable-fn"
+      :class="{ active: active_relevant }"
+      v-if="active_relevant"
+      v-click-outside="handleRelevantClick"
+    >
+      <div class="card-result__relevant__header">
+        <div class="card-result__relevant__header__title">
+          Explanation of relevance
+        </div>
+        <div class="card-result__relevant__header__close">
+          <v-icon-custom
+            class="medium"
+            size="20"
+            type="symbol"
+            outlined
+            @click="handleRelevantClick"
+            >cancel</v-icon-custom
+          >
+        </div>
+      </div>
+      <div class="card-result__relevant__content mt-1">
+        <div class="card-result__relevant__content__description">
+          <v-progress-linear
+            v-if="relevance_loading"
+            :size="40"
+            :width="4"
+            indeterminate
+            color="primary"
+            class="mt-5"
+          />
+          <p class="text mt-3 text-gray scroll-area abstract-scroll">
+            {{ relevance_explanation }}
+          </p>
+        </div>
+      </div>
+    </v-card> -->
+  </v-card>
+
+
+</div>
+
+
+                  <!-- <v-card
                     class="mb-2 px-4 py-2 card-clickable"
                     :class="{
                       'low-sim': applyReranking
@@ -304,8 +584,8 @@
                   >
                     <div style="font-weight: 500;" :title="'Score: ' + item.sim + ' Reranking: ' + item.rerank_score">{{ index + 1 }}. {{ item.name }}</div>
                     <div class="text-caption text-muted">Code: {{ item.code }}</div>
-                  </v-card>
-                </div>
+                  </v-card> -->
+                </template>
 
                 <template v-slot:empty>
                   <div class="text-center text-light-gray text-sm mt-3">
@@ -496,8 +776,8 @@
     const rerankWorkerRemote = new Worker('/ai-for-data-blog/semantic-search/js/search/rank.worker.js', { type: 'module' });
     const rerankWorkerLocal = new Worker('/js/search/rank.worker.js', { type: 'module' });
 
-    // rerankWorker = rerankWorkerRemote
-    rerankWorker = rerankWorkerLocal
+    rerankWorker = rerankWorkerRemote
+    // rerankWorker = rerankWorkerLocal
 
     createApp({
       setup() {
@@ -521,6 +801,7 @@
         const threshold = 0.78;
         const top_k = 20;
         const isActive = ref(false);
+        const dtype = 'indicator';
 
         // Controls
         const isFullscreen = ref(false);
@@ -549,7 +830,7 @@
 
           const emb = await getEmbedding(query.value);
           fullResults.value = wdi_data.value
-            .map(d => ({ ...d, sim: dotProduct(emb, d.embedding) }))
+            .map(d => ({ ...d, type: dtype, sim: dotProduct(emb, d.embedding) }))
             .sort((a, b) => b.sim - a.sim)
             .filter(x => x.sim > 0.5);
 
@@ -688,6 +969,18 @@
           }
         }
 
+        const icons = {
+          'microdata': { name: 'database', outlined: false },
+          'geospatial': { name: 'globe_asia', outlined: true },
+          'timeseries': { name: 'chart_data', outlined: true },
+          'table': { name: 'table', outlined: true },
+          'document': { name: 'article', outlined: false },
+          'image': { name: 'image', outlined: false },
+          'video': { name: 'videocam', outlined: false },
+          'script': { name: 'integration_instructions', outlined: false },
+          'indicator': { name: 'monitoring', outlined: false },
+        }
+
         return {
           query,
           tab,
@@ -709,7 +1002,8 @@
           isActive,
           itemSelected,
           isFullscreen,
-          handleKeyDown
+          handleKeyDown,
+          icons
         };
       }
     }).use(vuetify).mount('#app');
