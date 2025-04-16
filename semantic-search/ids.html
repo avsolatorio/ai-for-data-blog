@@ -544,7 +544,7 @@
                                       icon="account_balance"
                                       outlined
                                     ></v-icon-custom>
-                                    <div>{{ autheries_title }}</div>
+                                    <div>{{ authorities_title }}</div>
                                   </div>
                                 </template>
                                 <div
@@ -687,12 +687,247 @@
                           }}
                         </p> -->
 
-                        <DetailsHeaderInfo
+                        <!-- <DetailsHeaderInfo
                           :viewItem="viewItem"
                           :metadata="metadata"
                           :width="width"
                           :filters="filters"
-                        />
+                        /> -->
+
+                        <!-- DetailsHeaderInfo -->
+
+                        <div
+                          class="d-flex text-dark-gray text-xs mt-4 align-center flex-wrap medium"
+                        >
+                          <section
+                            class="d-flex align-center"
+                            v-if="viewItem.geographic_coverage?.length"
+                          >
+                            <div
+                              class="d-flex py-1"
+                              v-if="viewItem.geographic_coverage?.length === 1"
+                            >
+                              <v-icon-custom
+                                type="symbol"
+                                icon="globe_asia"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span
+                                >{{ viewItem.geographic_coverage_title }}</span
+                              >
+                            </div>
+                            <v-menu
+                              v-else-if="viewItem?.geographic_coverage?.length > 1"
+                              class="v-menu--none-shadow"
+                              content-class="v-menu--country"
+                              max-height="250"
+                              scroll-strategy="close"
+                            >
+                              <template v-slot:activator="{ props }">
+                                <div
+                                  class="d-flex align-center py-1 cursor-pointer"
+                                  v-bind="props"
+                                  v-if="viewItem?.geographic_coverage?.length"
+                                >
+                                  <!-- <v-icon class="material-symbols-outlined"
+                                    >mdi-earth</v-icon
+                                  > -->
+                                  <i
+                                    class="mdi-earth mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                    size="15"
+                                    aria-hidden="true"
+                                  ></i>
+                                  <div>
+                                    {{ viewItem.geographic_coverage_title ?
+                                    viewItem.geographic_coverage_title :
+                                    "Countries" }}
+                                  </div>
+                                </div>
+                              </template>
+                              <div
+                                class="v-menu--country__content text-light-gray relative"
+                              >
+                                <div
+                                  v-for="(item, index) in viewItem?.geographic_coverage"
+                                  :key="index"
+                                  class="v-menu--country__item pa-3"
+                                  :class="{
+                                      'text-purple': item.type === 'exist',
+                                      'text-alert-color': item.type === 'un_exist',
+                                    }"
+                                >
+                                  {{ item.name }}
+                                </div>
+                              </div>
+                            </v-menu>
+                          </section>
+
+                          <section
+                            class="d-flex align-center"
+                            v-if="viewItem.time_coverage"
+                          >
+                            <span
+                              v-if="viewItem.geographic_coverage?.length"
+                              class="mx-2"
+                              >|</span
+                            >
+                            <div class="d-flex py-1">
+                              <v-icon-custom
+                                type="symbol"
+                                icon="calendar_today"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{ viewItem.time_coverage }}</span>
+                            </div>
+                          </section>
+
+                          <section
+                            class="d-flex align-center"
+                            v-if="viewItem.source?.length && viewItem.type !== 'document'"
+                          >
+                            <span class="mx-2">|</span>
+                            <div
+                              class="d-flex py-1 align-center cursor-pointer"
+                              v-if="viewItem?.source?.length === 1"
+                            >
+                              <v-icon-custom
+                                type="symbol"
+                                icon="account_balance"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{ authorities_title }}</span>
+                            </div>
+                            <v-menu
+                              v-else-if="viewItem?.source?.length > 1"
+                              class="v-menu--none-shadow"
+                              content-class="v-menu--source"
+                              max-height="250"
+                              scroll-strategy="close"
+                            >
+                              <template v-slot:activator="{ props }">
+                                <div
+                                  class="d-flex py-1 align-center cursor-pointer"
+                                  v-bind="props"
+                                >
+                                  <v-icon-custom
+                                    type="symbol"
+                                    icon="account_balance"
+                                    size="15"
+                                    class="mr-1"
+                                    outlined
+                                  ></v-icon-custom>
+
+                                  <div>{{ authorities_title }}</div>
+                                </div>
+                              </template>
+                              <div
+                                class="v-menu--source__content text-light-gray"
+                              >
+                                <div
+                                  v-for="(item, index) in viewItem?.source"
+                                  :key="index"
+                                  class="v-menu--source__item pa-3"
+                                >
+                                  {{ item }}
+                                </div>
+                              </div>
+                            </v-menu>
+                          </section>
+
+                          <section
+                            class="d-flex align-center"
+                            v-else-if="viewItem.source?.length"
+                          >
+                            <span class="mx-2">|</span>
+                            <div
+                              class="d-flex py-1 align-center cursor-pointer"
+                              v-if="viewItem?.source?.length === 1"
+                            >
+                              <v-icon-custom
+                                type="symbol"
+                                icon="account_circle"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{ authorities_title }}</span>
+                            </div>
+                            <v-menu
+                              v-else-if="viewItem?.source?.length > 1"
+                              class="v-menu--none-shadow"
+                              content-class="v-menu--source"
+                              max-height="250"
+                              scroll-strategy="close"
+                            >
+                              <template v-slot:activator="{ props }">
+                                <div
+                                  class="d-flex py-1 align-center cursor-pointer"
+                                  v-bind="props"
+                                >
+                                  <v-icon-custom
+                                    type="symbol"
+                                    icon="account_circle"
+                                    size="15"
+                                    class="mr-1"
+                                    outlined
+                                  ></v-icon-custom>
+                                  <div>{{ authorities_title }}</div>
+                                </div>
+                              </template>
+                              <div
+                                class="v-menu--source__content text-light-gray"
+                              >
+                                <div
+                                  v-for="(item, index) in viewItem?.source"
+                                  :key="index"
+                                  class="v-menu--source__item pa-3"
+                                >
+                                  {{ item }}
+                                </div>
+                              </div>
+                            </v-menu>
+                          </section>
+
+                          <section
+                            class="d-flex align-center"
+                            v-if="viewItem.collection?.length"
+                          >
+                            <span class="mx-2">|</span>
+                            <div class="d-flex py-1">
+                              <v-icon-custom
+                                type="symbol"
+                                icon="folder"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{ viewItem.collection }}</span>
+                            </div>
+                          </section>
+
+                          <section
+                            class="d-flex align-center"
+                            v-if="viewItem.dimensions?.length"
+                          >
+                            <span class="mx-2">|</span>
+                            <div class="d-flex py-1">
+                              <v-icon-custom
+                                type="symbol"
+                                icon="resize"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{ viewItem.dimensions?.join(', ') }}</span>
+                            </div>
+                          </section>
+                        </div>
                       </div>
                     </div>
                     <!-- Group buttons -->
@@ -712,7 +947,7 @@
                           outlined
                         ></v-icon-custom>
                       </v-btn>
-                      <div class="d-flex ga-2">
+                      <!-- <div class="d-flex ga-2">
                         <v-btn
                           variant="outlined"
                           class="v-btn-icon v-btn--search"
@@ -748,7 +983,7 @@
                             </template>
                           </v-tooltip>
                         </v-btn>
-                      </div>
+                      </div> -->
                     </div>
                   </div>
                 </template>
@@ -982,7 +1217,7 @@
       } from "https://cdn.jsdelivr.net/npm/@xenova/transformers";
       env.allowRemoteModels = true;
 
-      const { createApp, ref, onMounted, nextTick, watch } = Vue;
+      const { createApp, ref, onMounted, nextTick, watch, computed } = Vue;
       const { createVuetify } = Vuetify;
       const vuetify = createVuetify({
         defaults: {},
@@ -1055,6 +1290,23 @@
               }
             }
           );
+
+          const authorities_title = computed(() => {
+            let name = "-";
+            if (viewItem.value?.source?.length === 1) {
+              name = viewItem.value?.source[0];
+            }
+
+            if (viewItem.value?.source?.length > 1) {
+              name = `${viewItem.value?.source[0]} (+${
+                viewItem.value?.source?.length - 1
+              })`;
+            }
+            return name;
+          });
+          window.authorities_title = authorities_title;
+          window.viewItem = viewItem;
+
           const loadExtractor = async () => {
             if (!extractor.value) {
               extractor.value = await pipeline(
@@ -1294,6 +1546,7 @@
             handleResultSearchClick,
             busy,
             width,
+            authorities_title,
           };
         },
       })
