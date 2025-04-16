@@ -39,6 +39,15 @@
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
     />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
 
     <!-- <link href="/css/ids.min.css" rel="stylesheet" /> -->
 
@@ -195,14 +204,24 @@
                         </i>
                       </div>
                       <div class="d-flex right-icons-container__append" v-else>
-                        <i
+                        <v-icon-custom
+                          size="24"
+                          icon="cancel"
+                          type="symbol"
+                          class="v-icon--clickable v-btn--close custom-search-bar-filter__icon"
+                          outlined
+                          aria-label="clear"
+                          @click="clearSearch"
+                        ></v-icon-custom>
+
+                        <!-- <i
                           class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon search-buttons"
                           size="24"
                           onclick="clearSearch()"
                           aria-label="clear"
                         >
                           cancel
-                        </i>
+                        </i> -->
                         <v-btn
                           aria-label="search"
                           class="h-[30px]"
@@ -412,9 +431,14 @@
                                 v-if="result?.geographic_coverage?.length === 1"
                               >
                                 <!-- geographic_coverage -->
-                                <v-icon class="material-symbols-outlined"
+                                <!-- <v-icon class="material-symbols-outlined"
                                   >mdi-earth</v-icon
-                                >
+                                > -->
+                                <i
+                                  class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                  aria-hidden="true"
+                                ></i>
+
                                 <div>
                                   {{ result.geographic_coverage_title }}
                                 </div>
@@ -432,9 +456,13 @@
                                     v-bind="props"
                                     v-if="result?.geographic_coverage?.length"
                                   >
-                                    <v-icon class="material-symbols-outlined"
+                                    <!-- <v-icon class="material-symbols-outlined"
                                       >mdi-earth</v-icon
-                                    >
+                                    > -->
+                                    <i
+                                      class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                      aria-hidden="true"
+                                    ></i>
                                     <div>
                                       {{ result.geographic_coverage_title }}
                                     </div>
@@ -462,9 +490,13 @@
                                 class="category-item"
                                 v-if="result.time_coverage"
                               >
-                                <v-icon class="material-symbols-outlined"
+                                <!-- <v-icon class="material-symbols-outlined"
                                   >mdi-calendar</v-icon
-                                >
+                                > -->
+                                <i
+                                  class="mdi mdi-calendar v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                  aria-hidden="true"
+                                ></i>
                                 <div>{{ result?.time_coverage }}</div>
                               </div>
 
@@ -953,9 +985,9 @@
       const vuetify = createVuetify({
         defaults: {},
         icons: {
-          defaultSet: "md",
+          defaultSet: "mdi",
           sets: {
-            md: {
+            mdi: {
               component: "v-icon", // uses <v-icon> by default
             },
           },
@@ -1038,10 +1070,11 @@
             fullResults.value = wdi_data.value
               .map((d) => ({
                 ...d,
-                title: d.name,
-                type: dtype,
-                idno: d.code,
-                text: d.definition,
+                // title: d.name,
+                // type: dtype,
+                // idno: d.code,
+                // text: d.definition,
+                source: [d.source],
                 sim: dotProduct(emb, d.embedding),
               }))
               .sort((a, b) => b.sim - a.sim)
@@ -1067,7 +1100,8 @@
 
             reranking.value = true;
             const batch = fullResults.value.slice(0, top_k);
-            const documents = batch.map((x) => x.title + "\n\n" + x.definition);
+            // const documents = batch.map((x) => x.title + "\n\n" + x.definition);
+            const documents = batch.map((x) => x.title + "\n\n" + x.text);
             const reranked = await new Promise((resolve, reject) => {
               rerankWorker.onmessage = (e) => {
                 console.log("[Main thread] Got reranked:", e.data);
@@ -1145,8 +1179,11 @@
           };
 
           const loadJSON = () => {
+            // fetch(
+            //   `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${model_name}__wdi_embeddings.json`
+            // )
             fetch(
-              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${model_name}__wdi_embeddings.json`
+              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__005__embeddings.json`
             )
               .then((res) => res.json())
               .then((data) => {
