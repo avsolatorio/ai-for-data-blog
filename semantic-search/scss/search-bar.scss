@@ -1,0 +1,65 @@
+// components/search/search-bar.vue
+.search-bar-area {
+    position: relative;
+    height: 54px;
+    width: 100%;
+    border-radius: 8px;
+    z-index: 1;
+    .v-input {
+      background-color: var(--background);
+    }
+  }
+
+  .search-file {
+    position: absolute;
+    top: 10px;
+    left: 62px;
+    background-color: var(--gray-100);
+    color: var(--primary-dark);
+    padding: 4px 6px;
+
+    // .text-caption {
+    /* max-width: 120px;
+      white-space: no-wrap;
+      text-overflow: ellipsis;
+      overflow: hidden; */
+    // }
+
+    .v-icon {
+      color: var(--purple);
+    }
+
+    .remove-file {
+      padding: 2.4px;
+      width: 24px;
+      height: 24px;
+      border: 1px solid transparent;
+      transition: 0.3s;
+
+      &:hover {
+        border-color: var(--purple);
+      }
+    }
+
+    &__name {
+      max-width: 250px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      @media screen and (max-width: 768px) {
+        max-width: 150px;
+      }
+    }
+  }
+
+  .fadeHeight-enter-active,
+  .fadeHeight-leave-active {
+    transition: all 0.2s;
+    max-height: 230px;
+  }
+
+  .fadeHeight-enter,
+  .fadeHeight-leave-to {
+    opacity: 0;
+    max-height: 0px;
+  }

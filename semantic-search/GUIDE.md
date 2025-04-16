@@ -98,3 +98,21 @@ cd search/
 
 # parcel build search.html --dist-dir=build/
 ```
+
+## Creating the CSS package
+
+We use the IDS styles which are compiled from the SCSS files in the `scss/` directory. We copy the styles from the components from the IDS app and compile them into a single CSS file.
+
+For the `universal.min.css` styles, see the `compile_universal_style.sh` script in the IDS repo.
+
+First install the sass compiler.
+
+```bash
+pnpm add -D sass
+```
+
+Then compile the SCSS files to CSS.
+
+```bash
+pnpm sass scss/ids.scss css/ids.min.css --style=compressed
+```

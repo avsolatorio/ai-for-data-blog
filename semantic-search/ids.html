@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Semantic Indicator Search</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Lightweight IDS</title>
   <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet" />
   <link href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/universal.min.css" rel="stylesheet" />
@@ -11,6 +11,11 @@
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/splitpanes@latest/dist/splitpanes.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <link href="/css/ids.min.css" rel="stylesheet" />
+
+  <!-- <link href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/ids.min.css" rel="stylesheet" /> -->
 
   <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
@@ -74,6 +79,15 @@
     }
   </style> -->
   <style>
+    /* html, body, #app {
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Roboto', sans-serif;
+      background: #f9f9fc;
+    } */
+
     .search-buttons {
       color: #0C1A4D; font-size: 24px; width: 24px; height: 24px;
     }
@@ -82,26 +96,17 @@
 <body>
   <div id="app">
     <v-app>
+      <main class="v-main">
       <v-container fluid class="v-container--search">
+
+        <!-- Search Bar -->
+        <div class="px-4 px-md-0 mt-md-9">
         <div
-        class="position-relative search-bar-area"
+        class="position-relative search-bar-area search-bar"
         @click="isActive = true"
         v-click-outside="handleClickOutside"
       >
         <div class="custom-search-bar-filter">
-          <!-- <div class="custom-search-bar-filter__prepend">
-            <div
-              class="w-[30px] h-[30px] custom-search-bar-filter__icon rounded-lg d-flex justify-center align-center btn-icon"
-            >
-              <i
-              class="v-icon material-symbols-outlined cursor-pointer"
-              class="search-buttons"
-              onclick="onChooseFile()"
-              >
-                attach_file
-              </i>
-            </div>
-          </div> -->
           <div class="custom-search-bar-filter__content">
             <div
               class="grow-wrap"
@@ -131,6 +136,7 @@
                 class="v-icon material-symbols-outlined cursor-pointer"
                 class="search-icon semibold cursor-pointer"
                 class="search-buttons"
+                size="24"
                 onclick="onMicrophoneClick()"
                 aria-label="search"
                 >
@@ -140,73 +146,56 @@
               </div>
               <div class="d-flex right-icons-container__append" v-else>
                 <i
-                class="v-icon material-symbols-outlined cursor-pointer"
-                class="v-icon--clickable v-btn--close custom-search-bar-filter__icon"
-                class="search-buttons"
+                class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon search-buttons"
+                size="24"
                 onclick="clearSearch()"
                 aria-label="clear"
                 >
-                  <!-- {{ isListening ? 'settings_voice' : 'mic' }} -->
                   cancel
                 </i>
-
-                <!-- <v-icon
-                  size="24"
-                  icon="cancel"
-                  type="symbol"
-                  class="v-icon--clickable v-btn--close custom-search-bar-filter__icon"
-                  outlined
-                  aria-label="clear"
-                  @click="onClearClick"
-                ></v-icon> -->
-
                 <v-btn
                   aria-label="search"
                   class="h-[30px]"
                   size="small"
                   @click="submit"
                 >
-                  <v-icon>md:arrow_forward_ios</v-icon>
+                  <i class="material-icons v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true">arrow_forward_ios</i>
                 </v-btn>
               </div>
             </div>
           </div>
         </div>
-
-        <div
-          class="search-file rounded-lg text-primary-dark d-flex ga-1 justify-space-between align-center"
-          style="z-index: 999"
-          v-if="tempFile"
-        >
-          <!-- <div
-            class="text-caption !text-sm search-file__name"
-            v-if="tempFile?.name?.length < 200"
-          >
-            {{ tempFile?.name }}
-          </div> -->
-          <v-tooltip activator="parent" location="bottom left">
-            <template #activator>
-              <div class="search-file__name text-caption">
-                {{ tempFile.name }}
-              </div>
-            </template>
-            <span>{{ tempFile.name }}</span>
-          </v-tooltip>
-          <div
-            @click="removeFile"
-            class="rounded cursor-pointer d-flex align-center justify-center remove-file ml-1"
-          >
-            <v-icon
-              icon="delete"
-              size="19"
-              type="symbol"
-              outlined
-            ></v-icon>
-          </div>
         </div>
-        <!-- </v-expand-transition> -->
       </div>
 
+        <v-row v-if="loading" class="d-flex ga-md-5 mx-0 search-content mt-md-2">
+          <v-col cols="12" md="4" class="search-content__result pa-4 px-md-0">
+            <v-skeleton-loader
+              class="mx-auto w-100 border"
+              elevation="12"
+              type="list-item-two-line, list-item-three-line"
+            ></v-skeleton-loader>
+            <v-skeleton-loader
+              class="mx-auto w-100 border mt-6"
+              elevation="12"
+              type="list-item-two-line, list-item-three-line"
+            ></v-skeleton-loader>
+
+            <v-skeleton-loader
+              class="mx-auto w-100 border mt-6"
+              elevation="12"
+              type="list-item-two-line, list-item-three-line"
+            ></v-skeleton-loader>
+          </v-col>
+          <v-col cols="12" md="8" class="search-content__detail pa-4 relative">
+            <v-skeleton-loader
+              class="mx-auto w-100 border"
+              elevation="12"
+              theme="light"
+              type="avatar, list-item-three-line, list-item-three-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line"
+            />
+          </v-col>
+        </v-row>
 
 
         <!-- <v-toolbar flat height="80" class="px-4 search-bar-container search-bar">
@@ -255,7 +244,144 @@
           </v-col>
         </v-row> -->
 
-        <v-row v-else no-gutters class="d-flex ga-md-5 mx-0 search-content mt-md-2">
+
+        <v-row
+        v-else
+        class="d-flex ga-md-5 mx-0 search-content mt-md-2"
+        :class="{ 'animation-slide': itemSelected === true }"
+      >
+        <v-col
+          v-show="!isFullscreen"
+          cols="12"
+          md="4"
+          class="search-content__result px-4 px-md-0"
+          ref="scrollSearchContentResultMobile"
+        >
+          <!-- Expansion content -->
+          <!-- <div
+            v-if="filters.query && showRelated"
+            class="expansion-relate px-4 px-md-0 mr-auto"
+          >
+            <div
+              class="expansion-relate__header text-primary-dark"
+              @click="isExpanded = !isExpanded"
+            >
+              <span class="expansion-relate__title medium">
+                Suggested queries
+              </span>
+              <v-icon
+                class="expansion-relate__header__icon"
+                :class="{ rotate: isExpanded }"
+                icon="md:keyboard_arrow_down"
+              ></v-icon>
+            </div>
+
+            <v-expand-transition>
+              <div class="expansion-relate__content" v-if="isExpanded">
+                <div class="py-2">
+                  <div
+                    class="d-flex expansion-relate__content__link semibold"
+                    v-for="history in relatedSearch?.['related'] ?? []"
+                    @click="handleRelatedSearch(history)"
+                  >
+                    <v-icon-custom icon="md:search" size="16"></v-icon-custom>
+                    <span class="ml-1">{{ history }}</span>
+                    <v-icon-custom
+                      class="ml-4 expansion-relate__content__arrow"
+                      icon="md:arrow_forward_ios"
+                      size="13"
+                    ></v-icon-custom>
+                  </div>
+                </div>
+              </div>
+            </v-expand-transition>
+          </div> -->
+
+          <!-- Search Filter -->
+          <!-- <div class="px-4 px-md-0">
+            <IdsSearchFilter
+              ref="searchFilter"
+              class="mt-4"
+              @change="handleChangeFilter"
+              :facets="dataFacet"
+              :iconsOnly="true"
+            />
+          </div> -->
+
+          <div class="d-flex flex-column search-content__result__area">
+            <div
+              class="scroll-area"
+              ref="scrollSearchContentResultDesktop"
+              v-if="collection"
+            >
+              <v-infinite-scroll
+
+                v-if="!reranking && fullResults.length > 0 && semanticResults.length > 0"
+                :items="semanticResults"
+                @load="loadMore"
+                class="scroll-panel"
+                color="primary"
+
+
+              >
+                <!-- <template v-for="(result, index) in collection" :key="index">
+                  <div>
+                    <CardResult
+                      :result="result"
+                      :filters="filters"
+                      @like="handleLike"
+                      :class="{
+                        active: viewItem.idno === result.idno,
+                        'mt-3': index !== 0,
+                      }"
+                      :active="viewItem.idno === result.idno"
+                      @click="(e: any) => handleResultSearchClick(e, result)"
+                    />
+                  </div>
+                </template> -->
+
+                <div v-for="(item, index) in semanticResults" :key="item.code">
+                  <v-card
+                    class="mb-2 px-4 py-2 card-clickable"
+                    :class="{
+                      'low-sim': applyReranking
+                        ? (item.rerank_score != null ? item.rerank_score < 0.15 : item.sim < threshold)
+                        : item.sim < threshold
+                    }"
+                    @click="selectItem(item)"
+                    :elevation="selected === item ? 2 : 0"
+                    :style="{ border: selected === item ? '2px solid #2196f3' : '1px solid #ddd' }"
+                  >
+                    <div style="font-weight: 500;" :title="'Score: ' + item.sim + ' Reranking: ' + item.rerank_score">{{ index + 1 }}. {{ item.name }}</div>
+                    <div class="text-caption text-muted">Code: {{ item.code }}</div>
+                  </v-card>
+                </div>
+
+                <template v-slot:empty>
+                  <div class="text-center text-light-gray text-sm mt-3">
+                    No more items!
+                  </div>
+                </template>
+              </v-infinite-scroll>
+            </div>
+          </div>
+        </v-col>
+
+        <v-col
+          :cols="isFullscreen ? 12 : 8"
+          class="search-content__detail px-4 mt-4 pa-md-4 bg-secondary-100 relative"
+        >
+          Hello world {{query}}
+          <!-- <DetailsPanel
+            :viewItem="viewItem"
+            :width="width"
+            :filters="filters"
+            :query="query"
+          /> -->
+        </v-col>
+      </v-row>
+
+        <!-- <v-row v-else no-gutters class="d-flex ga-md-5 mx-0 search-content mt-md-2">
           <v-col cols="12" md="4" class="pa-4 d-flex flex-column" style="height: 98%;">
             <v-switch
               v-model="applyReranking"
@@ -390,8 +516,9 @@
               </v-btn>
             </v-card-actions>
           </v-card>
-        </v-dialog>
+        </v-dialog> -->
       </v-container>
+    </main>
     </v-app>
   </div>
 
@@ -401,7 +528,17 @@
 
     const { createApp, ref, onMounted, nextTick, watch } = Vue;
     const { createVuetify } = Vuetify;
-    const vuetify = createVuetify();
+    const vuetify = createVuetify({
+      defaults: {},
+      icons: {
+        defaultSet: 'md',
+        sets: {
+          md: {
+            component: 'v-icon', // uses <v-icon> by default
+          },
+        },
+      },
+    });
 
     let rerankWorker;
 
@@ -434,6 +571,10 @@
         const threshold = 0.78;
         const top_k = 20;
         const isActive = ref(false);
+
+        // Controls
+        const isFullscreen = ref(false);
+        const itemSelected = ref(false);
 
         const loadExtractor = async () => {
           if (!extractor.value) {
@@ -607,7 +748,9 @@
           threshold,
           reranking,
           applyReranking,
-          isActive
+          isActive,
+          itemSelected,
+          isFullscreen
         };
       }
     }).use(vuetify).mount('#app');
