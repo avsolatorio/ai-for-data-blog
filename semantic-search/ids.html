@@ -10,6 +10,7 @@
   <link href="https://cdn.jsdelivr.net/npm/material-design-icons-iconfont@7.0.1/dist/material-design-icons.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/splitpanes@latest/dist/splitpanes.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 
   <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
@@ -19,7 +20,7 @@
       }
   </script>
 
-  <style>
+  <!-- <style>
     html, body, #app {
       height: 100vh;
       margin: 0;
@@ -71,13 +72,144 @@
     .low-sim {
       opacity: 0.6;
     }
+  </style> -->
+  <style>
+    .search-buttons {
+      color: #0C1A4D; font-size: 24px; width: 24px; height: 24px;
+    }
   </style>
 </head>
 <body>
   <div id="app">
     <v-app>
-      <v-container fluid class="pa-4 pa-md-10 d-flex flex-column" style="height: 100%;">
-        <v-toolbar flat height="80" class="px-4 search-bar-container">
+      <v-container fluid class="v-container--search">
+        <div
+        class="position-relative search-bar-area"
+        @click="isActive = true"
+        v-click-outside="handleClickOutside"
+      >
+        <div class="custom-search-bar-filter">
+          <!-- <div class="custom-search-bar-filter__prepend">
+            <div
+              class="w-[30px] h-[30px] custom-search-bar-filter__icon rounded-lg d-flex justify-center align-center btn-icon"
+            >
+              <i
+              class="v-icon material-symbols-outlined cursor-pointer"
+              class="search-buttons"
+              onclick="onChooseFile()"
+              >
+                attach_file
+              </i>
+            </div>
+          </div> -->
+          <div class="custom-search-bar-filter__content">
+            <div
+              class="grow-wrap"
+              ref="textareaGrowWrap"
+              :class="{ active: isActive }"
+            >
+              <textarea
+                v-model="query"
+                name="text"
+                :maxlength="5000"
+                rows="1"
+                id="text"
+                placeholder="What are you looking for?"
+                @input="updateReplicatedValue"
+                @keydown="handleKeyDown"
+              ></textarea>
+            </div>
+          </div>
+          <div class="custom-search-bar-filter__append">
+            <div class="right-icons-container">
+              <div
+                class="w-[30px] h-[30px] custom-search-bar-filter__icon d-flex justify-center align-center"
+                v-if="(!query && !tempFile) || isListening === true"
+              >
+
+                <i
+                class="v-icon material-symbols-outlined cursor-pointer"
+                class="search-icon semibold cursor-pointer"
+                class="search-buttons"
+                onclick="onMicrophoneClick()"
+                aria-label="search"
+                >
+                  <!-- {{ isListening ? 'settings_voice' : 'mic' }} -->
+                  settings_voice
+                </i>
+              </div>
+              <div class="d-flex right-icons-container__append" v-else>
+                <i
+                class="v-icon material-symbols-outlined cursor-pointer"
+                class="v-icon--clickable v-btn--close custom-search-bar-filter__icon"
+                class="search-buttons"
+                onclick="clearSearch()"
+                aria-label="clear"
+                >
+                  <!-- {{ isListening ? 'settings_voice' : 'mic' }} -->
+                  cancel
+                </i>
+
+                <!-- <v-icon
+                  size="24"
+                  icon="cancel"
+                  type="symbol"
+                  class="v-icon--clickable v-btn--close custom-search-bar-filter__icon"
+                  outlined
+                  aria-label="clear"
+                  @click="onClearClick"
+                ></v-icon> -->
+
+                <v-btn
+                  aria-label="search"
+                  class="h-[30px]"
+                  size="small"
+                  @click="submit"
+                >
+                  <v-icon>md:arrow_forward_ios</v-icon>
+                </v-btn>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="search-file rounded-lg text-primary-dark d-flex ga-1 justify-space-between align-center"
+          style="z-index: 999"
+          v-if="tempFile"
+        >
+          <!-- <div
+            class="text-caption !text-sm search-file__name"
+            v-if="tempFile?.name?.length < 200"
+          >
+            {{ tempFile?.name }}
+          </div> -->
+          <v-tooltip activator="parent" location="bottom left">
+            <template #activator>
+              <div class="search-file__name text-caption">
+                {{ tempFile.name }}
+              </div>
+            </template>
+            <span>{{ tempFile.name }}</span>
+          </v-tooltip>
+          <div
+            @click="removeFile"
+            class="rounded cursor-pointer d-flex align-center justify-center remove-file ml-1"
+          >
+            <v-icon
+              icon="delete"
+              size="19"
+              type="symbol"
+              outlined
+            ></v-icon>
+          </div>
+        </div>
+        <!-- </v-expand-transition> -->
+      </div>
+
+
+
+        <!-- <v-toolbar flat height="80" class="px-4 search-bar-container search-bar">
           <v-form @submit.prevent="submit" class="w-100">
             <v-text-field
               v-model="query"
@@ -92,9 +224,38 @@
               class="flex-grow-1"
             ></v-text-field>
           </v-form>
-        </v-toolbar>
+        </v-toolbar> -->
 
-        <v-row no-gutters class="flex-grow-1" style="height: 98%;">
+        <!-- <v-row v-if="loading" class="d-flex ga-md-5 mx-0 search-content mt-md-2">
+          <v-col cols="12" md="4" class="search-content__result pa-4 px-md-0">
+            <v-skeleton-loader
+              class="mx-auto w-100 border"
+              elevation="12"
+              type="list-item-two-line, list-item-three-line"
+            ></v-skeleton-loader>
+            <v-skeleton-loader
+              class="mx-auto w-100 border mt-6"
+              elevation="12"
+              type="list-item-two-line, list-item-three-line"
+            ></v-skeleton-loader>
+
+            <v-skeleton-loader
+              class="mx-auto w-100 border mt-6"
+              elevation="12"
+              type="list-item-two-line, list-item-three-line"
+            ></v-skeleton-loader>
+          </v-col>
+          <v-col cols="12" md="8" class="search-content__detail pa-4 relative">
+            <v-skeleton-loader
+              class="mx-auto w-100 border"
+              elevation="12"
+              theme="light"
+              type="avatar, list-item-three-line, list-item-three-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line"
+            />
+          </v-col>
+        </v-row> -->
+
+        <v-row v-else no-gutters class="d-flex ga-md-5 mx-0 search-content mt-md-2">
           <v-col cols="12" md="4" class="pa-4 d-flex flex-column" style="height: 98%;">
             <v-switch
               v-model="applyReranking"
@@ -155,9 +316,9 @@
 
                   <v-window v-model="tab" class="mt-4">
                     <v-window-item>
-                      <!-- <v-btn class="mb-3" variant="outlined" density="comfortable" prepend-icon="mdi-download">
+                      <v-btn class="mb-3" variant="outlined" density="comfortable" prepend-icon="mdi-download">
                         JSON
-                      </v-btn> -->
+                      </v-btn>
                       <h4 class="mb-2">Indicator description</h4>
 
                       <p><strong>Definition:</strong> {{ selected.definition }}</p>
@@ -272,6 +433,7 @@
         const hasQueried = ref(false);
         const threshold = 0.78;
         const top_k = 20;
+        const isActive = ref(false);
 
         const loadExtractor = async () => {
           if (!extractor.value) {
@@ -444,7 +606,8 @@
           closeMobileModal,
           threshold,
           reranking,
-          applyReranking
+          applyReranking,
+          isActive
         };
       }
     }).use(vuetify).mount('#app');
