@@ -170,6 +170,15 @@
       .doi-link:hover {
         text-decoration: underline;
       }
+
+      .pdf-link {
+        color: var(--primary-dark);
+      }
+
+      .pdf-link:hover {
+        color: var(--primary);
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
@@ -1006,6 +1015,51 @@
                               </v-row>
                             </v-container>
                           </template>
+
+                          <template v-if="active_tab === 'view' && metadata">
+                            <div
+                              :style="`height: 80vh;`"
+                              v-if="pdfURL && typeof pdfURL === 'string'"
+                            >
+                              <div class="mb-2">
+                                The document is available from
+                                <a
+                                  class="pdf-link"
+                                  :href="pdfURL"
+                                  target="_blank"
+                                  >here</a
+                                >.
+                              </div>
+
+                              <iframe
+                                ref="iframe"
+                                width="100%"
+                                height="100%"
+                                type="application/pdf"
+                                :src="'https://docs.google.com/gview?url=' + pdfURL + '&embedded=true'"
+                                frameborder="0"
+                              ></iframe>
+                            </div>
+                            <v-container v-else>
+                              <v-row justify="center">
+                                <v-col cols="12" md="6">
+                                  <v-alert
+                                    outlined
+                                    color="lighten"
+                                    icon="mdi-alert"
+                                    border="left"
+                                    elevation="2"
+                                  >
+                                    <span
+                                      >No link to this document is
+                                      available.</span
+                                    >
+                                  </v-alert>
+                                </v-col>
+                              </v-row>
+                            </v-container>
+                          </template>
+
                           <!-- <TabsDocumentChat
                             v-show="active_tab === 'chat'"
                             :idno="viewItem.idno"
@@ -1413,6 +1467,8 @@
           const busy = ref(false);
           const { width } = useWindowSize();
           const pageLoading = ref(true);
+          const metadata = ref(null);
+          const pdfURL = ref(null);
 
           const scrollSearchContentResultMobile = ref(null);
           const scrollSearchContentResultDesktop = ref(null);
@@ -1709,6 +1765,7 @@
             if (window.innerWidth < 960) {
               showMobileModal.value = true;
             }
+            loadMetadata();
           };
 
           const closeMobileModal = () => {
@@ -1736,6 +1793,20 @@
               .then((data) => {
                 wdi_data.value = data;
                 submit();
+              });
+          };
+
+          // https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/metadata/document/document_6200517.json
+
+          const loadMetadata = () => {
+            fetch(
+              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/metadata/${dtype}/${dtype}_${viewItem.value.idno}.json`
+            )
+              .then((res) => res.json())
+              .then((data) => {
+                metadata.value = data;
+                window.metadata = metadata.value;
+                pdfURL.value = metadata.value?.document_description?.url;
               });
           };
 
@@ -1783,6 +1854,7 @@
             itemSelected.value = true;
             viewItem.value = result;
             window.viewItem = viewItem.value;
+            loadMetadata();
           };
 
           const icons = {
@@ -1830,6 +1902,8 @@
             handleFilter,
             format_authorities_title,
             pageLoading,
+            metadata,
+            pdfURL,
           };
         },
       })
