@@ -550,7 +550,10 @@
                                       icon="account_balance"
                                       outlined
                                     ></v-icon-custom>
-                                    <div>{{ authorities_title }}</div>
+                                    <!-- <div>{{ authorities_title }}</div> -->
+                                    <div>
+                                      {{ format_authorities_title(result) }}
+                                    </div>
                                   </div>
                                 </template>
                                 <div
@@ -1021,7 +1024,24 @@
                         class="scroll-area mt-6 px-4 px-md-4"
                       >
                         <div class="d-flex flex-column overflow-y-auto pr-2">
-                          Hello
+                          <template v-if="active_tab === 'abstract'">
+                            <v-container>
+                              <v-row class="justify-center">
+                                <v-col cols="11">
+                                  <v-card-title class="text-h6"
+                                    >Abstract</v-card-title
+                                  >
+                                </v-col>
+                                <v-col cols="11">
+                                  <v-card-text>
+                                    <!-- <span v-html="metadata.document_description?.abstract"></span> -->
+                                    <span v-html="viewItem?.abstract"></span>
+                                    viewItem
+                                  </v-card-text>
+                                </v-col>
+                              </v-row>
+                            </v-container>
+                          </template>
                           <!-- <TabsDocumentChat
                             v-show="active_tab === 'chat'"
                             :idno="viewItem.idno"
@@ -1568,19 +1588,22 @@
             }
           );
 
-          const authorities_title = computed(() => {
+          const format_authorities_title = (item) => {
             let name = "-";
-            if (viewItem.value?.source?.length === 1) {
-              name = viewItem.value?.source[0];
+            if (item?.source?.length === 1) {
+              name = item?.source[0];
             }
 
-            if (viewItem.value?.source?.length > 1) {
-              name = `${viewItem.value?.source[0]} (+${
-                viewItem.value?.source?.length - 1
-              })`;
+            if (item?.source?.length > 1) {
+              name = `${item?.source[0]} (+${item?.source?.length - 1})`;
             }
             return name;
+          };
+
+          const authorities_title = computed(() => {
+            return format_authorities_title(viewItem.value);
           });
+
           window.authorities_title = authorities_title;
           window.viewItem = viewItem;
 
@@ -1830,6 +1853,7 @@
             active_tab,
             filteredBtnContents,
             handleFilter,
+            format_authorities_title,
           };
         },
       })
