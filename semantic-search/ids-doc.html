@@ -160,6 +160,16 @@
         align-items: center;
         z-index: 9999;
       }
+
+      .doi-link {
+        color: var(--primary-dark);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .doi-link:hover {
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
@@ -1260,7 +1270,7 @@
         <div v-if="pageLoading" class="full-page-loading">
           <v-progress-circular
             :size="70"
-            color="purple"
+            color="var(--purple)"
             width="5"
             indeterminate
           ></v-progress-circular>
