@@ -147,6 +147,18 @@
         width: 15px;
         height: 15px;
       }
+      .full-page-loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.75);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
     </style>
   </head>
   <body>
@@ -276,53 +288,6 @@
                 />
               </v-col>
             </v-row>
-
-            <!-- <v-toolbar flat height="80" class="px-4 search-bar-container search-bar">
-          <v-form @submit.prevent="submit" class="w-100">
-            <v-text-field
-              v-model="query"
-              placeholder="Search indicators"
-              prepend-inner-icon="mdi-magnify"
-              append-inner-icon="mdi-close-circle"
-              @click:append-inner="clearSearch"
-              hide-details
-              single-line
-              variant="outlined"
-              density="comfortable"
-              class="flex-grow-1"
-            ></v-text-field>
-          </v-form>
-        </v-toolbar> -->
-
-            <!-- <v-row v-if="loading" class="d-flex ga-md-5 mx-0 search-content mt-md-2">
-          <v-col cols="12" md="4" class="search-content__result pa-4 px-md-0">
-            <v-skeleton-loader
-              class="mx-auto w-100 border"
-              elevation="12"
-              type="list-item-two-line, list-item-three-line"
-            ></v-skeleton-loader>
-            <v-skeleton-loader
-              class="mx-auto w-100 border mt-6"
-              elevation="12"
-              type="list-item-two-line, list-item-three-line"
-            ></v-skeleton-loader>
-
-            <v-skeleton-loader
-              class="mx-auto w-100 border mt-6"
-              elevation="12"
-              type="list-item-two-line, list-item-three-line"
-            ></v-skeleton-loader>
-          </v-col>
-          <v-col cols="12" md="8" class="search-content__detail pa-4 relative">
-            <v-skeleton-loader
-              class="mx-auto w-100 border"
-              elevation="12"
-              theme="light"
-              type="avatar, list-item-three-line, list-item-three-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line"
-            />
-          </v-col>
-        </v-row> -->
-
             <v-row
               v-else
               class="d-flex ga-md-5 mx-0 search-content mt-md-2"
@@ -348,22 +313,7 @@
                       class="scroll-panel"
                       color="primary"
                     >
-                      <!-- <template v-for="(result, index) in collection" :key="index">
-                  <div>
-                    <CardResult
-                      :result="result"
-                      :filters="filters"
-                      @like="handleLike"
-                      :class="{
-                        active: viewItem.idno === result.idno,
-                        'mt-3': index !== 0,
-                      }"
-                      :active="viewItem.idno === result.idno"
-                      @click="(e: any) => handleResultSearchClick(e, result)"
-                    />
-                  </div>
-                </template> -->
-
+                      <!-- CardResult -->
                       <template
                         v-for="(result, index) in semanticResults"
                         :key="result.code"
@@ -699,15 +649,7 @@
                           }}
                         </p> -->
 
-                        <!-- <DetailsHeaderInfo
-                          :viewItem="viewItem"
-                          :metadata="metadata"
-                          :width="width"
-                          :filters="filters"
-                        /> -->
-
                         <!-- DetailsHeaderInfo -->
-
                         <div
                           class="d-flex text-dark-gray text-xs mt-4 align-center flex-wrap medium"
                         >
@@ -1313,6 +1255,15 @@
         </v-dialog> -->
           </v-container>
         </main>
+
+        <div v-if="pageLoading" class="full-page-loading">
+          <v-progress-circular
+            :size="70"
+            color="purple"
+            width="5"
+            indeterminate
+          ></v-progress-circular>
+        </div>
       </v-app>
     </div>
 
@@ -1450,6 +1401,7 @@
           const viewItem = ref(null);
           const busy = ref(false);
           const { width } = useWindowSize();
+          const pageLoading = ref(true);
 
           const scrollSearchContentResultMobile = ref(null);
           const scrollSearchContentResultDesktop = ref(null);
@@ -1670,6 +1622,7 @@
             window.query = query.value;
             window.fullResults = fullResults.value;
             busy.value = false;
+            pageLoading.value = false;
           };
 
           const rerank = async () => {
@@ -1865,6 +1818,7 @@
             filteredBtnContents,
             handleFilter,
             format_authorities_title,
+            pageLoading,
           };
         },
       })
