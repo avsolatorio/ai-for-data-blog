@@ -992,6 +992,69 @@
                       </div> -->
                     </div>
                   </div>
+                  <template v-if="viewItem?.type == 'document'">
+                    <div
+                      class="search-content__detail__description mx-n4 mx-md-0 pt-4 py-md-5 px-md-1 bg-white rounded-lg mt-4"
+                    >
+                      <div
+                        class="d-flex ga-2 max-w-full flex-no-wrap overflow-hidden overflow-x-auto pb-2 px-4 px-md-4"
+                      >
+                        <v-btn
+                          variant="outlined"
+                          class="v-btn-icon v-btn--search"
+                          :class="{ active: btn.active }"
+                          v-for="(btn, index) in filteredBtnContents"
+                          :key="index"
+                          @click="handleFilter(btn, index)"
+                        >
+                          <v-icon-custom
+                            :size="16"
+                            type="symbol"
+                            :outlined="true"
+                            :icon="btn.icon"
+                          ></v-icon-custom>
+                          <span class="mx-1">{{ btn.text }}</span>
+                        </v-btn>
+                      </div>
+                      <div
+                        ref="scrollArea"
+                        class="scroll-area mt-6 px-4 px-md-4"
+                      >
+                        <div class="d-flex flex-column overflow-y-auto pr-2">
+                          Hello
+                          <!-- <TabsDocumentChat
+                            v-show="active_tab === 'chat'"
+                            :idno="viewItem.idno"
+                            :pdfUrl="metadata?.document_description?.url"
+                            key="d_chat"
+                            :parentHeight="containerHeight"
+                          />
+                          <TabsDocumentAbstract
+                            v-show="active_tab === 'abstract'"
+                            :metadata="metadata"
+                            key="d_abstract"
+                          />
+                          <TabsDocumentMetadata
+                            v-show="active_tab === 'metadata'"
+                            :metadata="metadata"
+                            :idno="viewItem.idno"
+                            key="d_metadata"
+                          />
+                          <TabsDocumentView
+                            v-show="active_tab === 'view'"
+                            :pdfURL="metadata?.document_description?.url"
+                            key="d_view"
+                          />
+                          <TabsDocumentDataSnapshot
+                            v-show="active_tab === 'data_snapshot'"
+                            :idno="viewItem.idno"
+                            :pdfURL="metadata?.document_description?.url"
+                            key="d_data_snapshot"
+                          /> -->
+                        </div>
+                      </div>
+                    </div>
+                  </template>
 
                   <template v-if="viewItem?.type == 'indicator'">
                     <div
@@ -1352,7 +1415,7 @@
           const threshold = 0.78;
           const top_k = 20;
           const isActive = ref(false);
-          const dtype = "indicator";
+          const dtype = "document";
           const viewItem = ref(null);
           const busy = ref(false);
           const { width } = useWindowSize();
@@ -1365,24 +1428,28 @@
               text: "Quick answer",
               key: "quick_answer",
               active: true,
+              type: "indicator",
             },
             {
               icon: "storage",
               text: "Data",
               key: "data",
               active: false,
+              type: "indicator",
             },
             {
               icon: "bar_chart_4_bars",
               text: "Visualizations",
               key: "visualizations",
               active: false,
+              type: "indicator",
             },
             {
               icon: "description",
               text: "Metadata",
               key: "metadata",
               active: false,
+              type: "indicator",
             },
             // {
             //   icon: 'router',
@@ -1401,6 +1468,64 @@
               text: "See also",
               key: "see_also",
               active: false,
+              type: "indicator",
+            },
+            // Documents
+            {
+              icon: "note",
+              text: "Abstract",
+              key: "abstract",
+              active: true,
+              type: "document",
+            },
+            {
+              icon: "bolt",
+              text: "View",
+              key: "view",
+              active: false,
+              type: "document",
+            },
+            {
+              icon: "robot_2",
+              text: "Chat",
+              key: "chat",
+              active: false,
+              type: "document",
+            },
+            {
+              icon: "document_scanner",
+              text: "Data Snapshot",
+              key: "data_snapshot",
+              active: false,
+              type: "document",
+            },
+            {
+              icon: "scan",
+              text: "Metadata",
+              key: "metadata",
+              active: false,
+              type: "document",
+            },
+            {
+              icon: "line_style",
+              text: "Topics",
+              key: "topics",
+              active: false,
+              type: "document",
+            },
+            {
+              icon: "cached",
+              text: "Usage stats",
+              key: "usage_stats",
+              active: false,
+              type: "document",
+            },
+            {
+              icon: "account_tree",
+              text: "See also",
+              key: "see_also",
+              active: false,
+              type: "document",
             },
           ]);
           // Filter out the quick answer button if the query is empty
@@ -1410,7 +1535,8 @@
             // return queryParserStore.entities.geopolitical_entities.length > 0
             //   ? btnContents.value
             //   : btnContents.value.filter((btn) => btn.key !== "quick_answer");
-            return btnContents.value;
+
+            return btnContents.value.filter((btn) => btn.type === dtype);
           });
 
           const active_tab = ref(filteredBtnContents.value[0].key);
