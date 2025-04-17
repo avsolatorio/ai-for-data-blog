@@ -1285,7 +1285,8 @@
 
       createApp({
         setup() {
-          const model_name = "GIST-all-MiniLM-L6-v2";
+          // const model_name = "GIST-all-MiniLM-L6-v2";
+          const model_name = "GIST-small-Embedding-v0";
           const hf_organization = "avsolatorio";
           const query = ref("");
           const tab = ref(0);
@@ -1646,8 +1647,12 @@
             // fetch(
             //   `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__005__embeddings.json`
             // )
+            // fetch(
+            //   `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__005__doc_embeddings.json`
+            // )
+
             fetch(
-              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__005__doc_embeddings.json`
+              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__004__doc_embeddings.json`
             )
               .then((res) => res.json())
               .then((data) => {
