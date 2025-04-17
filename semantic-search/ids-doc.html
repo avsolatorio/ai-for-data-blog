@@ -469,7 +469,7 @@
                                 <div>{{ result?.time_coverage }}</div>
                               </div>
 
-                              <!-- Authuring -->
+                              <!-- Authoring -->
                               <div
                                 v-if="result?.source?.length === 1"
                                 class="category-item clickable-fn"
@@ -544,21 +544,6 @@
                             </div>
                           </v-card>
                         </div>
-
-                        <!-- <v-card
-                    class="mb-2 px-4 py-2 card-clickable"
-                    :class="{
-                      'low-sim': applyReranking
-                        ? (item.rerank_score != null ? item.rerank_score < 0.15 : item.sim < threshold)
-                        : item.sim < threshold
-                    }"
-                    @click="selectItem(item)"
-                    :elevation="selected === item ? 2 : 0"
-                    :style="{ border: selected === item ? '2px solid #2196f3' : '1px solid #ddd' }"
-                  >
-                    <div style="font-weight: 500;" :title="'Score: ' + item.sim + ' Reranking: ' + item.rerank_score">{{ index + 1 }}. {{ item.name }}</div>
-                    <div class="text-caption text-muted">Code: {{ item.code }}</div>
-                  </v-card> -->
                       </template>
 
                       <template v-slot:empty>
@@ -575,6 +560,7 @@
                 :cols="isFullscreen ? 12 : 8"
                 class="search-content__detail px-4 mt-4 pa-md-4 bg-secondary-100 relative"
               >
+                <!-- DetailsPanel -->
                 <template v-if="viewItem">
                   <div class="search-content__detail__info ga-md-4">
                     <div
@@ -1173,151 +1159,8 @@
                     </div>
                   </template>
                 </template>
-                <!-- <DetailsPanel
-            :viewItem="viewItem"
-            :width="width"
-            :filters="filters"
-            :query="query"
-          /> -->
               </v-col>
             </v-row>
-
-            <!-- <v-row v-else no-gutters class="d-flex ga-md-5 mx-0 search-content mt-md-2">
-          <v-col cols="12" md="4" class="pa-4 d-flex flex-column" style="height: 98%;">
-            <v-switch
-              v-model="applyReranking"
-              :label="`Reranking: ${applyReranking ? 'ON' : 'OFF'}`"
-              hide-details
-            ></v-switch>
-            <span v-if="reranking">Reranking results...</span>
-
-            <v-sheet class="d-flex flex-column" style="height: 100%;">
-              <v-infinite-scroll
-                v-if="!reranking && fullResults.length > 0 && semanticResults.length > 0"
-                :items="semanticResults"
-                @load="loadMore"
-                class="scroll-panel"
-                color="primary"
-              >
-                <div v-for="(item, index) in semanticResults" :key="item.code">
-                  <v-card
-                    class="mb-2 px-4 py-2 card-clickable"
-                    :class="{
-                      'low-sim': applyReranking
-                        ? (item.rerank_score != null ? item.rerank_score < 0.15 : item.sim < threshold)
-                        : item.sim < threshold
-                    }"
-                    @click="selectItem(item)"
-                    :elevation="selected === item ? 2 : 0"
-                    :style="{ border: selected === item ? '2px solid #2196f3' : '1px solid #ddd' }"
-                  >
-                    <div style="font-weight: 500;" :title="'Score: ' + item.sim + ' Reranking: ' + item.rerank_score">{{ index + 1 }}. {{ item.name }}</div>
-                    <div class="text-caption text-muted">Code: {{ item.code }}</div>
-                  </v-card>
-                </div>
-                <template v-slot:empty>
-                  <v-alert v-if="!loading && hasQueried" type="info">No more results</v-alert>
-                </template>
-              </v-infinite-scroll>
-              <v-card v-else-if="reranking" flat class="d-flex justify-center align-center" style="height: 100%;">
-                <v-progress-circular indeterminate color="primary" size="48" />
-              </v-card>
-              <v-card v-else flat class="d-flex justify-center align-center" style="height: 100%;">
-                <v-progress-circular indeterminate color="primary" size="48" />
-              </v-card>
-            </v-sheet>
-          </v-col>
-
-          <v-col cols="0" md="8" class="pa-4 d-flex flex-column desktop-only content-panel" style="height: 100%;">
-            <v-sheet class="d-flex flex-column scroll-panel">
-              <v-card v-if="selected" flat class="pa-4 d-flex flex-column" style="height: 100%;">
-                <div>
-                  <h2 class="text-primary-dark text-xl semibold mb-1">{{ selected.name }}</h2>
-                  <div class="text-caption mb-4 text-muted">
-                    <v-icon size="16" class="mr-1" icon="mdi-identifier" /> Code: {{ selected.code }}
-                  </div>
-
-                  <v-tabs v-model="tab" color="primary" density="comfortable">
-                    <v-tab>Metadata</v-tab>
-                  </v-tabs>
-
-                  <v-window v-model="tab" class="mt-4">
-                    <v-window-item>
-                      <v-btn class="mb-3" variant="outlined" density="comfortable" prepend-icon="mdi-download">
-                        JSON
-                      </v-btn>
-                      <h4 class="mb-2">Indicator description</h4>
-
-                      <p><strong>Definition:</strong> {{ selected.definition }}</p>
-                    </v-window-item>
-                  </v-window>
-                </div>
-
-                <div class="mt-4" style="flex-grow: 1;">
-                  <h4 class="mt-4">Chart</h4>
-                  <v-card flat class="h-100 d-flex justify-center">
-                    <v-card-text class="flex-grow-1 pa-0 d-flex justify-center">
-                      <div style="max-width: 100%; text-align: center;">
-                        <iframe
-                          :src="`https://data.worldbank.org/share/widget?indicators=${selected.code}&locations=1W&start=1984&view=chart`"
-                          width="675"
-                          height="450"
-                          frameborder="0"
-                          scrolling="yes"
-                          style="border: none; max-width: 100%;"
-                        ></iframe>
-                      </div>
-                    </v-card-text>
-                  </v-card>
-                </div>
-              </v-card>
-
-              <v-card v-else flat class="d-flex justify-center align-center" style="height: 100%;">
-                <v-progress-circular indeterminate color="primary" size="48" />
-              </v-card>
-
-            </v-sheet>
-          </v-col>
-        </v-row>
-
-        <v-dialog v-model="showMobileModal" fullscreen transition="dialog-bottom-transition">
-          <v-card v-if="selected" flat class="pa-0 d-flex flex-column" style="height: 100%;">
-            <v-toolbar flat color="primary" dark>
-              <v-btn icon @click="closeMobileModal">
-                <v-icon>mdi-close</v-icon>
-              </v-btn>
-              <v-toolbar-title>Indicator Details</v-toolbar-title>
-            </v-toolbar>
-
-            <v-card-text class="scroll-panel pa-4" style="flex: 1 1 auto;">
-              <h2 class="text-primary-dark text-xl semibold mb-1">{{ selected.name }}</h2>
-              <div class="text-caption mb-4 text-muted">
-                <v-icon size="16" class="mr-1" icon="mdi-identifier" /> Code: {{ selected.code }}
-              </div>
-              <h4 class="mb-2">Definition</h4>
-              <p>{{ selected.definition }}</p>
-              <h4 class="mt-4 mb-4">Chart</h4>
-              <v-container class="d-flex justify-center pa-0">
-                <div style="max-width: 100%; text-align: center;">
-                  <iframe
-                    :src="`https://data.worldbank.org/share/widget?indicators=${selected.code}&locations=1W&start=1984&view=chart`"
-                    width="675"
-                    height="450"
-                    frameborder="0"
-                    scrolling="yes"
-                    style="border: none; max-width: 100%;"
-                  ></iframe>
-                </div>
-              </v-container>
-            </v-card-text>
-
-            <v-card-actions class="pa-4 justify-end">
-              <v-btn @click="closeMobileModal" color="primary" variant="flat" prepend-icon="mdi-arrow-left">
-                Back to Results
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog> -->
           </v-container>
         </main>
 
