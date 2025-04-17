@@ -1665,22 +1665,38 @@
             hasQueried.value = true;
             resultReranked.value = false;
 
-            const emb = await getEmbedding(query.value);
-            fullResults.value = wdi_data.value
-              .map((d) => ({
-                ...d,
-                // title: d.name,
-                // type: dtype,
-                // idno: d.code,
-                // text: d.definition,
-                // source: [d.source],
-                sim: dotProduct(emb, d.embedding),
-              }))
-              .sort((a, b) => b.sim - a.sim)
-              .filter((x) => x.sim > 0.5);
+            if (query.value) {
+              const emb = await getEmbedding(query.value);
+              fullResults.value = wdi_data.value
+                .map((d) => ({
+                  ...d,
+                  // title: d.name,
+                  // type: dtype,
+                  // idno: d.code,
+                  // text: d.definition,
+                  // source: [d.source],
+                  sim: dotProduct(emb, d.embedding),
+                }))
+                .sort((a, b) => b.sim - a.sim)
+                .filter((x) => x.sim > 0.5);
 
-            if (applyReranking.value) {
-              await rerank();
+              if (applyReranking.value) {
+                await rerank();
+              }
+            } else {
+              // If query is empty return result sorted by most recent first.
+              fullResults.value = wdi_data.value.sort((a, b) => {
+                const tA = a.time_coverage;
+                const tB = b.time_coverage;
+
+                if (tA < tB) {
+                  return 1;
+                }
+                if (tA > tB) {
+                  return -1;
+                }
+                return 0;
+              });
             }
 
             semanticResults.value = [];
@@ -1777,6 +1793,7 @@
             viewItem.value = null;
             semanticResults.value = [];
             hasQueried.value = false;
+            submit();
           };
 
           const loadJSON = () => {
