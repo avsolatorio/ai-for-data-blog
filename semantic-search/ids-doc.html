@@ -410,12 +410,12 @@
                               class="leading-1.3"
                               >{{ result?.title }}</v-card-title
                             >
-                            <!-- <v-card-subtitle v-if="result?.sub_title">{{
-      result?.sub_title ?? ''
-    }}</v-card-subtitle> -->
-                            <v-card-subtitle v-if="result?.code"
-                              >{{ result?.code ?? '' }}</v-card-subtitle
+                            <v-card-subtitle v-if="result?.sub_title"
+                              >{{ result?.sub_title ?? '' }}</v-card-subtitle
                             >
+                            <!-- <v-card-subtitle v-if="result?.code"
+                              >{{ result?.code ?? '' }}</v-card-subtitle
+                            > -->
                             <v-card-text v-if="result?.text"
                               >{{ result?.text ?? '-' }}</v-card-text
                             >
@@ -501,11 +501,16 @@
                                 v-if="result?.source?.length === 1"
                                 class="category-item clickable-fn"
                               >
-                                <v-icon
+                                <!-- <v-icon
                                   v-if="result?.type === 'document'"
                                   class="material-symbols-outlined"
                                   >mdi-account-circle-outline</v-icon
-                                >
+                                > -->
+                                <i
+                                  v-if="result?.type === 'document'"
+                                  class="mdi-account-circle-outline mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                  aria-hidden="true"
+                                ></i>
                                 <v-icon-custom
                                   v-else
                                   color="dark-gray"
@@ -527,11 +532,17 @@
                                     class="category-item clickable-fn"
                                     v-bind="props"
                                   >
-                                    <v-icon
+                                    <!-- <v-icon
                                       v-if="result?.type === 'document'"
                                       class="material-symbols-outlined"
                                       >mdi-account-circle-outline</v-icon
-                                    >
+                                    > -->
+
+                                    <i
+                                      v-if="result?.type === 'document'"
+                                      class="mdi-account-circle-outline mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                      aria-hidden="true"
+                                    ></i>
                                     <v-icon-custom
                                       v-else
                                       color="dark-gray"
@@ -1483,7 +1494,7 @@
                 // type: dtype,
                 // idno: d.code,
                 // text: d.definition,
-                source: [d.source],
+                // source: [d.source],
                 sim: dotProduct(emb, d.embedding),
               }))
               .sort((a, b) => b.sim - a.sim)
@@ -1510,7 +1521,7 @@
             reranking.value = true;
             const batch = fullResults.value.slice(0, top_k);
             // const documents = batch.map((x) => x.title + "\n\n" + x.definition);
-            const documents = batch.map((x) => x.title + "\n\n" + x.text);
+            const documents = batch.map((x) => x.title + "\n\n" + x.abstract);
             const reranked = await new Promise((resolve, reject) => {
               rerankWorker.onmessage = (e) => {
                 console.log("[Main thread] Got reranked:", e.data);
@@ -1591,8 +1602,11 @@
             // fetch(
             //   `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${model_name}__wdi_embeddings.json`
             // )
+            // fetch(
+            //   `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__005__embeddings.json`
+            // )
             fetch(
-              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__005__embeddings.json`
+              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__005__doc_embeddings.json`
             )
               .then((res) => res.json())
               .then((data) => {
