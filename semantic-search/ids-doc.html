@@ -1800,7 +1800,7 @@
 
           const loadMetadata = () => {
             fetch(
-              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/metadata/${dtype}/${dtype}_${viewItem.value.idno}.json`
+              `https://avsolatorio.github.io/ids-metadata/data/metadata/${dtype}/${dtype}_${viewItem.value.idno}.json`
             )
               .then((res) => res.json())
               .then((data) => {
@@ -1850,6 +1850,9 @@
             // const exist = detectClassName(event.target, "clickable-fn");
 
             // if (exist) return;
+            if (result?.idno === viewItem.value?.idno) {
+              return;
+            }
 
             itemSelected.value = true;
             viewItem.value = result;
