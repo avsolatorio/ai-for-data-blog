@@ -1,0 +1,451 @@
+{
+  "type": "document",
+  "metadata_information": {
+    "title": "Inequality is bad for the poor",
+    "idno": "6200517",
+    "producers": [
+      {
+        "name": "Library",
+        "abbr": "ITSKI",
+        "affiliation": "World Bank",
+        "role": "Curation"
+      }
+    ],
+    "production_date": "2024/05/12",
+    "version": "R script, from D&R API, generated on 2024-05-12"
+  },
+  "document_description": {
+    "title_statement": {
+      "idno": "6200517",
+      "title": "Inequality is bad for the poor",
+      "sub_title": "",
+      "alternate_title": "",
+      "translated_title": ""
+    },
+    "authors": [
+      {
+        "first_name": "",
+        "initial": "",
+        "last_name": "",
+        "affiliation": "",
+        "full_name": "Ravallion,Martin"
+      }
+    ],
+    "date_created": "2005/08/01",
+    "date_available": "2010/07/01",
+    "date_published": "2010/07/01",
+    "identifiers": [
+      {
+        "type": "World Bank D&R",
+        "identifier": "6200517"
+      },
+      {
+        "type": "World Bank ID",
+        "identifier": "090224b0828a7f45"
+      },
+      {
+        "type": "World Bank Chronical ID",
+        "identifier": "090224b0828a7f45"
+      },
+      {
+        "type": "DOI",
+        "identifier": ""
+      }
+    ],
+    "type": "Policy Research Working Paper",
+    "abstract": "It has been argued that inequality should be of little concern in poor countries on the grounds that (1) absolute poverty in terms of consumption (or income) is the overriding issue in poor countries, and (2) the only thing that really matters to reducing absolute income poverty is the rate of economic growth. The author takes (1) as given but questions (2). He argues that there are a number of ways in which the extent of inequality in a society, and how it evolves over time, influences the extent of poverty today and the prospects for rapid poverty reduction in the future.",
+    "ref_country": [
+      {
+        "name": "World",
+        "code": "WLD"
+      }
+    ],
+    "spatial_coverage": "The World Region",
+    "languages": [
+      {
+        "name": "english",
+        "code": "en"
+      }
+    ],
+    "volume": "1",
+    "number": "WPS3677",
+    "url": "http://documents.worldbank.org/curated/en/456501468330044447/pdf/wps3677.pdf",
+    "contacts": [
+      {
+        "name": "Documents and Reports Help Desk",
+        "affiliation": "World Bank",
+        "email": "documents@worldbank.org",
+        "uri": "https://documents.worldbank.org/en/publication/documents-reports/faqs"
+      }
+    ],
+    "usage_terms": "See World Bank Access to Information (https://www.worldbank.org/en/access-to-information)",
+    "disclaimer": "The Policy Research Working Paper Series disseminates the findings of work in progress to encourage the exchange of ideas about development issues. An objective of the series is to get the findings out quickly, even if the presentations are less than fully polished. The papers carry the names of the authors and should be cited accordingly. The findings, interpretations, and conclusions expressed in this paper are entirely those of the authors. They do not necessarily represent the views of the International Bank for Reconstruction and Development/World Bank and its affiliated organizations, or those of the Executive Directors of the World Bank or the governments they represent.",
+    "security_classification": "Public",
+    "keywords": [
+      {
+        "id": "",
+        "name": "rate of poverty reduction",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "headcount index",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "growth elasticity of poverty",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "marginal product of capital",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "headcount index of poverty",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "class of poverty measure",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "high inequality country",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "increase in inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "impact on poverty",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "rural economic growth",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "measure of inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "inequality will",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "high poverty rate",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "poverty & inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "rate of change",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "local economic activity",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "high growth rate",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "cumulative distribution function",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "consumption per person",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "inequality and growth",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "average household income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "rural area",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "credit market failure",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "poverty rate today",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "aggregate fiscal constraint",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "reduction in poverty",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "decline in poverty",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "rural living standard",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "share of state",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "capital market failures",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "human capital development",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "access to infrastructure",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "rate of inflation",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "human resource development",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "gdp growth rate",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "evolution of inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "household survey data",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "changing income distribution",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "constant of proportionality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "terms of consumption",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "extent of poverty",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "absolute poverty measures",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "low growth rate",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "urban economic growth",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "poverty gap index",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "depth of poverty",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "absolute growth rate",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "panel data set",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "rising inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "standard error",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "primary sector",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "measurement error",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "agricultural growth",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "regression coefficient",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "comparability problem",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "tertiary sector",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "higher growth",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "geographic pattern",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "relative inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "correlation coefficient",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "log gini",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "economic expansion",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "balanced growth",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "rural income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "reducing inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "future research",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "significant correlation",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "sectoral composition",
+        "vocabulary": "World Bank"
+      }
+    ],
+    "themes": [],
+    "reproducibility": {
+      "statement": "",
+      "links": [
+        {
+          "uri": "",
+          "description": ""
+        }
+      ]
+    },
+    "pricing": "Free"
+  },
+  "provenance": [
+    {
+      "origin_description": {
+        "harvest_date": "2024-05-12",
+        "altered": false,
+        "base_url": "https://documents.worldbank.org/en/publication/documents-reports/api",
+        "identifier": "",
+        "date_stamp": "2024-05-12 16:45:09",
+        "metadata_namespace": "WB_DOCREP"
+      }
+    }
+  ],
+  "schematype": "document"
+}

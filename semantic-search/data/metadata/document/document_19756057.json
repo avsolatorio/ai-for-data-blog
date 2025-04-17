@@ -1,0 +1,748 @@
+{
+  "type": "document",
+  "metadata_information": {
+    "title": "Inequality is bad for growth of the poor (but not for that of the rich)",
+    "idno": "19756057",
+    "producers": [
+      {
+        "name": "Library",
+        "abbr": "ITSKI",
+        "affiliation": "World Bank",
+        "role": "Curation"
+      }
+    ],
+    "production_date": "2024/05/12",
+    "version": "R script, from D&R API, generated on 2024-05-12"
+  },
+  "document_description": {
+    "title_statement": {
+      "idno": "19756057",
+      "title": "Inequality is bad for growth of the poor (but not for that of the rich)",
+      "sub_title": "",
+      "alternate_title": "",
+      "translated_title": ""
+    },
+    "authors": [
+      {
+        "first_name": "",
+        "initial": "",
+        "last_name": "",
+        "affiliation": "",
+        "full_name": "Milanovic,Branko L."
+      },
+      {
+        "first_name": "",
+        "initial": "",
+        "last_name": "",
+        "affiliation": "",
+        "full_name": "Van Der Weide,Roy"
+      }
+    ],
+    "date_created": "2014/07/01",
+    "date_available": "2014/07/01",
+    "date_published": "2014/07/01",
+    "identifiers": [
+      {
+        "type": "World Bank D&R",
+        "identifier": "19756057"
+      },
+      {
+        "type": "World Bank ID",
+        "identifier": "090224b0828b98fa"
+      },
+      {
+        "type": "World Bank Chronical ID",
+        "identifier": "090224b0828b98fa"
+      },
+      {
+        "type": "DOI",
+        "identifier": ""
+      }
+    ],
+    "type": "Policy Research Working Paper",
+    "abstract": "The paper assesses the impact of overall inequality, as well as inequality among the poor and among the rich, on the growth rates along various percentiles of the income distribution. The analysis uses micro-census data from U.S. states covering the period from 1960 to 2010. The paper finds evidence that high levels of inequality reduce the income growth of the poor and, if anything, help the growth of the rich. When inequality is deconstructed into bottom and top inequality, the analysis finds that it is mostly top inequality that is holding back growth at the bottom.",
+    "ref_country": [
+      {
+        "name": "World",
+        "code": "WLD"
+      }
+    ],
+    "spatial_coverage": "The World Region",
+    "languages": [
+      {
+        "name": "english",
+        "code": "en"
+      }
+    ],
+    "volume": "1",
+    "number": "WPS6963",
+    "url": "http://documents.worldbank.org/curated/en/888731468331207447/pdf/WPS6963.pdf",
+    "contacts": [
+      {
+        "name": "Documents and Reports Help Desk",
+        "affiliation": "World Bank",
+        "email": "documents@worldbank.org",
+        "uri": "https://documents.worldbank.org/en/publication/documents-reports/faqs"
+      }
+    ],
+    "usage_terms": "See World Bank Access to Information (https://www.worldbank.org/en/access-to-information)",
+    "disclaimer": "The Policy Research Working Paper Series disseminates the findings of work in progress to encourage the exchange of ideas about development issues. An objective of the series is to get the findings out quickly, even if the presentations are less than fully polished. The papers carry the names of the authors and should be cited accordingly. The findings, interpretations, and conclusions expressed in this paper are entirely those of the authors. They do not necessarily represent the views of the International Bank for Reconstruction and Development/World Bank and its affiliated organizations, or those of the Executive Directors of the World Bank or the governments they represent.",
+    "security_classification": "Public",
+    "keywords": [
+      {
+        "id": "",
+        "name": "inequality and growth",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "household per capita income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "annual per capita growth rate",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "effect of inequality on growth",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "per capita income growth",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "total inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "poverty & inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "labor force participation rate",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "female labor force participation",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "marginal propensity to save",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "state income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "inequality of opportunity",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "source of income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "federal tax system",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "measure of inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "source income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "credit market imperfection",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "median voter hypothesis",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "lack of interest",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "net rental income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "degree of heterogeneity",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "degree of variation",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "real growth rate",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "method of moments",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "share of woman",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "high growth rate",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "share of children",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "school of thought",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "supplemental security income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "incentives for investment",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "high tax rate",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "development research group",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "aggregate income data",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "robustness check",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "standard deviation",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "negative relationship",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "real income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "dynamic panel",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "negative effect",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "income inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "financial crisis",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "survey data",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "household survey",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "median income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "statistical significance",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "positive impact",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "higher inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "subsequent growth",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "empirical evidence",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "capital accumulation",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "political instability",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "credit constraint",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "incidence curve",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "summary statistic",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "inequality measure",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "fixed effect",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "income increase",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "market income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "data quality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "negative correlation",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "nonlinear relationship",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "gross income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "unemployment compensation",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "fiscal data",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "child support",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "school year",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "education variable",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "open access",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "development policy",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "negative sign",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "employment status",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "human capital",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "independent variable",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "negative coefficient",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "public good",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "public goods",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "financial market",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "cross-country data",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "parental education",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "social instability",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "aggregate savings",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "regression diagnostics",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "residual inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "ethnic fragmentation",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "civil strife",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "public assistance",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "inequality-growth relationship",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "longitudinal survey",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "public education",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "regional control",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "geographical region",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "urban infrastructure",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "middle class",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "unequal society",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "inequality level",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "empirical study",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "econometric procedure",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "social security",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "redistributive policy",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "positive relationship",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "public health",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "household data",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "gender gap",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "single source",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "rising inequality",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "disposable income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "federal deficit",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "education attainment",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "welfare payment",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "disability pension",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "empirical result",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "household size",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "infrastructure spending",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "distribution change",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "ethnic composition",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "sampling error",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "political process",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "inequality change",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "government spending",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "regressive tax",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "education level",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "household income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "self-employment income",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "individual level",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "panel data",
+        "vocabulary": "World Bank"
+      },
+      {
+        "id": "",
+        "name": "individual question",
+        "vocabulary": "World Bank"
+      }
+    ],
+    "themes": [],
+    "reproducibility": {
+      "statement": "",
+      "links": [
+        {
+          "uri": "",
+          "description": ""
+        }
+      ]
+    },
+    "pricing": "Free"
+  },
+  "provenance": [
+    {
+      "origin_description": {
+        "harvest_date": "2024-05-12",
+        "altered": false,
+        "base_url": "https://documents.worldbank.org/en/publication/documents-reports/api",
+        "identifier": "",
+        "date_stamp": "2024-05-12 13:37:47",
+        "metadata_namespace": "WB_DOCREP"
+      }
+    }
+  ],
+  "schematype": "document"
+}
