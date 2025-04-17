@@ -147,6 +147,19 @@
         width: 15px;
         height: 15px;
       }
+
+      .full-page-loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.75);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
     </style>
   </head>
   <body>
@@ -1215,6 +1228,15 @@
         </v-dialog> -->
           </v-container>
         </main>
+
+        <div v-if="pageLoading" class="full-page-loading">
+          <v-progress-circular
+            :size="70"
+            color="purple"
+            width="5"
+            indeterminate
+          ></v-progress-circular>
+        </div>
       </v-app>
     </div>
 
@@ -1352,6 +1374,7 @@
           const viewItem = ref(null);
           const busy = ref(false);
           const { width } = useWindowSize();
+          const pageLoading = ref(true);
 
           const scrollSearchContentResultMobile = ref(null);
           const scrollSearchContentResultDesktop = ref(null);
@@ -1506,6 +1529,7 @@
             window.query = query.value;
             window.fullResults = fullResults.value;
             busy.value = false;
+            pageLoading.value = false;
           };
 
           const rerank = async () => {
@@ -1697,6 +1721,7 @@
             active_tab,
             filteredBtnContents,
             handleFilter,
+            pageLoading,
           };
         },
       })
