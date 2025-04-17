@@ -410,8 +410,11 @@
                               class="leading-1.3"
                               >{{ result?.title }}</v-card-title
                             >
-                            <v-card-subtitle v-if="result?.sub_title"
+                            <!-- <v-card-subtitle v-if="result?.sub_title"
                               >{{ result?.sub_title ?? '' }}</v-card-subtitle
+                            > -->
+                            <v-card-subtitle v-if="result?.idno"
+                              >{{ result?.idno ?? '' }}</v-card-subtitle
                             >
                             <!-- <v-card-subtitle v-if="result?.code"
                               >{{ result?.code ?? '' }}</v-card-subtitle
@@ -743,11 +746,19 @@
                                   <!-- <v-icon class="material-symbols-outlined"
                                     >mdi-earth</v-icon
                                   > -->
-                                  <i
+                                  <!-- <i
                                     class="mdi-earth mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
                                     size="15"
                                     aria-hidden="true"
-                                  ></i>
+                                  ></i> -->
+
+                                  <v-icon-custom
+                                    type="symbol"
+                                    icon="globe_asia"
+                                    size="15"
+                                    class="mr-1"
+                                    outlined
+                                  ></v-icon-custom>
                                   <div>
                                     {{ viewItem.geographic_coverage_title ?
                                     viewItem.geographic_coverage_title :
