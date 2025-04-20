@@ -1292,7 +1292,7 @@
           const tab = ref(0);
           const selected = ref(null);
           const showMobileModal = ref(false);
-          const wdi_data = ref([]);
+          const dataEmbeddings = ref([]);
           const fullResults = ref([]);
           const semanticResults = ref([]);
           const loadedCount = ref(0);
@@ -1511,7 +1511,7 @@
 
             if (query.value) {
               const emb = await getEmbedding(query.value);
-              fullResults.value = wdi_data.value
+              fullResults.value = dataEmbeddings.value
                 .map((d) => ({
                   ...d,
                   // title: d.name,
@@ -1529,7 +1529,7 @@
               }
             } else {
               // If query is empty return result sorted by most recent first.
-              fullResults.value = wdi_data.value.sort((a, b) => {
+              fullResults.value = dataEmbeddings.value.sort((a, b) => {
                 const tA = a.time_coverage;
                 const tB = b.time_coverage;
 
@@ -1656,7 +1656,7 @@
             )
               .then((res) => res.json())
               .then((data) => {
-                wdi_data.value = data;
+                dataEmbeddings.value = data;
                 submit();
               });
           };
