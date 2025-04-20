@@ -993,9 +993,10 @@
                                 </v-col>
                                 <v-col cols="11">
                                   <v-card-text>
-                                    <!-- <span v-html="metadata.document_description?.abstract"></span> -->
-                                    <span v-html="viewItem?.abstract"></span>
-                                    viewItem
+                                    <span
+                                      v-html="metadata?.document_description?.abstract"
+                                    ></span>
+                                    <!-- <span v-html="viewItem?.abstract"></span> -->
                                   </v-card-text>
                                 </v-col>
                               </v-row>
@@ -1172,6 +1173,23 @@
             indeterminate
           ></v-progress-circular>
         </div>
+
+        <div v-if="loadingModel" class="full-page-loading">
+          <v-row align-content="center" class="fill-height" justify="center">
+            <v-col class="text-subtitle-1 text-center" cols="12">
+              {{ loadingModelText }}
+            </v-col>
+            <v-col cols="6">
+              <v-progress-linear
+                color="deep-purple-accent-4"
+                :size="70"
+                height="6"
+                indeterminate
+                rounded
+              ></v-progress-linear>
+            </v-col>
+          </v-row>
+        </div>
       </v-app>
     </div>
 
@@ -1269,20 +1287,22 @@
         },
       });
 
+      const useRerank = false;
       let rerankWorker;
 
-      // create once at top-level scope
-      const rerankWorkerRemote = new Worker(
-        "/ai-for-data-blog/semantic-search/js/search/rank.worker.js",
-        { type: "module" }
-      );
-      const rerankWorkerLocal = new Worker("/js/search/rank.worker.js", {
-        type: "module",
-      });
+      if (useRerank) {
+        // create once at top-level scope
+        const rerankWorkerRemote = new Worker(
+          "/ai-for-data-blog/semantic-search/js/search/rank.worker.js",
+          { type: "module" }
+        );
+        const rerankWorkerLocal = new Worker("/js/search/rank.worker.js", {
+          type: "module",
+        });
 
-      // rerankWorker = rerankWorkerRemote
-      rerankWorker = rerankWorkerLocal;
-
+        // rerankWorker = rerankWorkerRemote
+        rerankWorker = rerankWorkerLocal;
+      }
       createApp({
         setup() {
           // const model_name = "GIST-all-MiniLM-L6-v2";
@@ -1313,6 +1333,8 @@
           const pageLoading = ref(true);
           const metadata = ref(null);
           const pdfURL = ref(null);
+          const loadingModel = ref(false);
+          const loadingModelText = ref(null);
 
           const scrollSearchContentResultMobile = ref(null);
           const scrollSearchContentResultDesktop = ref(null);
@@ -1481,12 +1503,23 @@
           window.authorities_title = authorities_title;
           window.viewItem = viewItem;
 
+          // const loadModelCallback = async (progress) => {
+          //   const prog = parseInt(progress.progress)
+
+          // }
+
           const loadExtractor = async () => {
             if (!extractor.value) {
+              loadingModelText.value = "Loading AI model...";
+              loadingModel.value = true;
+
               extractor.value = await pipeline(
                 "feature-extraction",
-                `${hf_organization}/${model_name}`
+                `${hf_organization}/${model_name}`,
+                { device: "webgpu" }
               );
+              // loadingModelText.value = "Loading AI model..."
+              loadingModel.value = false;
             }
           };
 
@@ -1524,7 +1557,7 @@
                 .sort((a, b) => b.sim - a.sim)
                 .filter((x) => x.sim > 0.5);
 
-              if (applyReranking.value) {
+              if (applyReranking.value && useRerank) {
                 await rerank();
               }
             } else {
@@ -1684,7 +1717,9 @@
           };
 
           watch(applyReranking, async (newVal) => {
-            if (newVal) {
+            if (!useRerank) {
+              console.log("Reranking not activated...");
+            } else if (newVal) {
               if (!resultReranked.value) {
                 await rerank();
               } else {
@@ -1772,6 +1807,8 @@
             pageLoading,
             metadata,
             pdfURL,
+            loadingModel,
+            loadingModelText,
           };
         },
       })
