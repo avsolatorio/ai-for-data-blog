@@ -1165,34 +1165,56 @@
           </v-container>
         </main>
 
-        <div v-if="pageLoading" class="full-page-loading">
-          <v-progress-circular
-            :size="70"
-            color="var(--purple)"
-            width="5"
-            indeterminate
-          ></v-progress-circular>
-        </div>
-
-        <div v-if="loadingModel" class="full-page-loading">
+        <div v-if="pageLoading || loadingModel" class="full-page-loading">
           <v-row align-content="center" class="fill-height" justify="center">
             <v-col class="text-subtitle-1 text-center" cols="12">
-              {{ loadingModelText }}
+              {{ loadingMessage }}
             </v-col>
             <v-col cols="6">
+              <!-- <v-progress-circular
+                v-if="pageLoading"
+                :size="70"
+                color="var(--purple)"
+                width="5"
+                indeterminate
+              ></v-progress-circular> -->
+
               <v-progress-linear
+                color="var(--purple)"
+                :size="70"
+                height="6"
+                indeterminate
+                rounded
+              ></v-progress-linear>
+
+              <!-- <v-progress-linear
+                v-if="pageLoading"
                 color="deep-purple-accent-4"
                 :size="70"
                 height="6"
                 indeterminate
                 rounded
               ></v-progress-linear>
+
+              <v-progress-linear
+                v-if="loadingModel"
+                color="deep-purple-accent-4"
+                :size="70"
+                height="6"
+                v-model="loadingModelProgress"
+                rounded
+              ></v-progress-linear> -->
             </v-col>
           </v-row>
         </div>
       </v-app>
     </div>
 
+    <div
+      id="firstLoading"
+      class="full-page-loading"
+      style="background-color: #f3f5fc; z-index: 999999 !important"
+    ></div>
     <template id="v-icon-custom-template">
       <i
         class="v-icon material-symbols-outlined"
@@ -1334,7 +1356,8 @@
           const metadata = ref(null);
           const pdfURL = ref(null);
           const loadingModel = ref(false);
-          const loadingModelText = ref(null);
+          const loadingMessage = ref("Loading data...");
+          const loadingModelProgress = ref(0);
 
           const scrollSearchContentResultMobile = ref(null);
           const scrollSearchContentResultDesktop = ref(null);
@@ -1503,19 +1526,25 @@
           window.authorities_title = authorities_title;
           window.viewItem = viewItem;
 
-          // const loadModelCallback = async (progress) => {
-          //   const prog = parseInt(progress.progress)
-
-          // }
+          const loadModelCallback = async (progress) => {
+            console.log("progress", progress);
+            if (progress.status != "progress") {
+              loadingMessage.value = "";
+            }
+            const prog = parseInt(progress.progress);
+            loadingModelProgress.value = prog;
+            loadingMessage.value = "Loading AI model...";
+          };
 
           const loadExtractor = async () => {
             if (!extractor.value) {
-              loadingModelText.value = "Loading AI model...";
               loadingModel.value = true;
+              loadingMessage.value = "Loading AI model...";
 
               extractor.value = await pipeline(
                 "feature-extraction",
                 `${hf_organization}/${model_name}`,
+                // { device: "webgpu", progress_callback: loadModelCallback }
                 { device: "webgpu" }
               );
               // loadingModelText.value = "Loading AI model..."
@@ -1756,8 +1785,8 @@
 
             itemSelected.value = true;
             viewItem.value = result;
-            window.viewItem = viewItem.value;
             loadMetadata();
+            // window.viewItem = viewItem.value;
           };
 
           const icons = {
@@ -1771,6 +1800,9 @@
             script: { name: "integration_instructions", outlined: false },
             indicator: { name: "monitoring", outlined: false },
           };
+
+          // Clear block page
+          document.getElementById("firstLoading").remove();
 
           return {
             query,
@@ -1808,7 +1840,8 @@
             metadata,
             pdfURL,
             loadingModel,
-            loadingModelText,
+            loadingMessage,
+            loadingModelProgress,
           };
         },
       })
