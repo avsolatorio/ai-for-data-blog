@@ -117,6 +117,97 @@
         text-decoration: underline;
       }
 
+      .pdf-viewer-wrap {
+        position: relative;
+        height: 80vh;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .pdf-viewer-wrap.pdf-viewer-external {
+        height: auto;
+        min-height: 0;
+      }
+
+      .pdf-viewer-external-card {
+        padding: 1.25rem;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 8px;
+      }
+
+      .pdf-viewer-external-msg {
+        margin: 0;
+        font-size: 0.9375rem;
+        color: rgba(0, 0, 0, 0.75);
+        line-height: 1.5;
+      }
+
+      .pdf-link-button {
+        font-weight: 500;
+      }
+
+      .pdf-viewer-links {
+        flex-shrink: 0;
+        font-size: 0.875rem;
+      }
+
+      .pdf-viewer-links-sep {
+        margin: 0 0.5rem;
+        color: rgba(0, 0, 0, 0.4);
+      }
+
+      .pdf-viewer-timeout-msg {
+        flex-shrink: 0;
+        padding: 0.5rem 0;
+        font-size: 0.8125rem;
+        color: rgba(0, 0, 0, 0.7);
+      }
+
+      .pdf-viewer-loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 2;
+        font-size: 0.875rem;
+        color: rgba(0, 0, 0, 0.7);
+      }
+
+      .pdf-viewer-loading-hint {
+        font-size: 0.75rem;
+        color: rgba(0, 0, 0, 0.5);
+        margin-top: 0.25rem;
+      }
+
+      .pdf-viewer-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(0, 0, 0, 0.1);
+        border-top-color: var(--primary-dark, #0c1a4d);
+        border-radius: 50%;
+        animation: pdf-viewer-spin 0.8s linear infinite;
+        margin-bottom: 0.75rem;
+      }
+
+      @keyframes pdf-viewer-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .pdf-viewer-iframe {
+        flex: 1;
+        min-height: 0;
+        border: none;
+      }
+
       .metadata-document .metadata-section-title {
         letter-spacing: 0.02em;
         text-transform: capitalize;
@@ -984,26 +1075,44 @@
 
                           <template v-if="active_tab === 'view' && metadata">
                             <div
-                              :style="`height: 80vh;`"
+                              class="pdf-viewer-wrap"
                               v-if="pdfURL && typeof pdfURL === 'string'"
                             >
-                              <div class="mb-2">
-                                The document is available from
+                              <div class="pdf-viewer-links mb-2">
                                 <a
                                   class="pdf-link"
                                   :href="pdfURL"
                                   target="_blank"
-                                  >here</a
-                                >.
+                                  rel="noopener noreferrer"
+                                >Open PDF directly</a>
+                                <span class="pdf-viewer-links-sep">·</span>
+                                <a
+                                  class="pdf-link"
+                                  :href="'https://docs.google.com/gview?url=' + encodeURIComponent(pdfURL) + '&embedded=true'"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >Open with Google Viewer</a>
+                              </div>
+
+                              <div v-if="pdfLoadTimeout" class="pdf-viewer-timeout-msg">
+                                <p>If the PDF didn’t load above, use the links above to open it in a new tab.</p>
+                              </div>
+
+                              <div class="pdf-viewer-loading" v-if="pdfLoading">
+                                <div class="pdf-viewer-spinner"></div>
+                                <p>Loading PDF…</p>
+                                <p class="pdf-viewer-loading-hint">This may take a moment for large documents.</p>
                               </div>
 
                               <iframe
-                                ref="iframe"
+                                ref="pdfIframe"
+                                class="pdf-viewer-iframe"
                                 width="100%"
                                 height="100%"
-                                type="application/pdf"
-                                :src="'https://docs.google.com/gview?url=' + pdfURL + '&embedded=true'"
+                                :src="pdfIframeSrc"
                                 frameborder="0"
+                                title="PDF document"
+                                @load="onPdfIframeLoad"
                               ></iframe>
                             </div>
                             <v-container v-else>
@@ -1431,6 +1540,25 @@
           const pageLoading = ref(true);
           const metadata = ref(null);
           const pdfURL = ref(null);
+          const pdfLoading = ref(false);
+          const pdfLoadTimeout = ref(false);
+          const pdfLoadTimeoutId = ref(null);
+          const pdfViewLoaded = ref(false);
+          const pdfURLSameOrigin = computed(() => {
+            const url = pdfURL.value;
+            if (!url || typeof url !== "string") return false;
+            try {
+              return new URL(url, window.location.href).origin === window.location.origin;
+            } catch {
+              return false;
+            }
+          });
+          const pdfIframeSrc = computed(() => {
+            const url = pdfURL.value;
+            if (!url || typeof url !== "string") return "";
+            if (pdfURLSameOrigin.value) return url;
+            return "https://docs.google.com/gview?url=" + encodeURIComponent(url) + "&embedded=true";
+          });
           const loadingModel = ref(false);
           const loadingMessage = ref("Loading data...");
           const loadingModelProgress = ref(0);
@@ -1722,8 +1850,47 @@
               .then((data) => {
                 metadata.value = data;
                 pdfURL.value = metadata.value?.document_description?.url;
+                pdfViewLoaded.value = false;
               });
           };
+
+          const onPdfIframeLoad = () => {
+            pdfLoading.value = false;
+            pdfViewLoaded.value = true;
+            if (pdfLoadTimeoutId.value) {
+              clearTimeout(pdfLoadTimeoutId.value);
+              pdfLoadTimeoutId.value = null;
+            }
+          };
+
+          watch(
+            () => [active_tab.value, pdfURL.value],
+            ([tab, url]) => {
+              if (pdfLoadTimeoutId.value) {
+                clearTimeout(pdfLoadTimeoutId.value);
+                pdfLoadTimeoutId.value = null;
+              }
+              if (!url) {
+                pdfLoading.value = false;
+                pdfLoadTimeout.value = false;
+                pdfViewLoaded.value = false;
+                return;
+              }
+              if (tab === "view" && !pdfViewLoaded.value) {
+                pdfLoading.value = true;
+                pdfLoadTimeout.value = false;
+                pdfLoadTimeoutId.value = setTimeout(() => {
+                  pdfLoading.value = false;
+                  pdfLoadTimeout.value = true;
+                  pdfLoadTimeoutId.value = null;
+                }, 50000);
+              } else if (tab !== "view") {
+                pdfLoading.value = false;
+                pdfLoadTimeout.value = false;
+              }
+            },
+            { immediate: true }
+          );
 
           const sortTopKBy = (field) => {
             const sorted = fullResults.value
@@ -1921,6 +2088,11 @@
             pageLoading,
             metadata,
             pdfURL,
+            pdfURLSameOrigin,
+            pdfIframeSrc,
+            pdfLoading,
+            pdfLoadTimeout,
+            onPdfIframeLoad,
             loadingModel,
             loadingMessage,
             loadingModelProgress,
