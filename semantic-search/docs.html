@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <title>Document Search</title>
+    <!-- Vuetify 3 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Material Design Icons (MDI) -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Material Design Icons Iconfont (Classic) -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/material-design-icons-iconfont@7.0.1/dist/material-design-icons.css"
+      rel="stylesheet"
+    />
+
+    <!-- Splitpanes styles -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/splitpanes@latest/dist/splitpanes.css"
+      rel="stylesheet"
+    />
+
+    <!-- Google Fonts: Material Symbols & Material Icons -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
+
+    <link
+      href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/universal.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/ids.min.css"
+      rel="stylesheet"
+    />
+
+    <script
+      type="text/javascript"
+      src="https://pym.nprapps.org/pym.v1.min.js"
+    ></script>
+    <script>
+      window.onload = function () {
+        var pymChild = new pym.Child({ polling: 500 });
+      };
+    </script>
+
+    <style>
+      :root {
+        --secondary-100: #f3f5fc;
+      }
+
+      .bg-secondary-100 {
+        background-color: var(--secondary-100);
+      }
+
+      .search-buttons {
+        color: #0c1a4d;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .card-icons {
+        color: var(--primary-dark);
+        font-size: 15px;
+        width: 15px;
+        height: 15px;
+      }
+
+      .full-page-loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.75);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+
+      .doi-link {
+        color: var(--primary-dark);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .doi-link:hover {
+        text-decoration: underline;
+      }
+
+      .pdf-link {
+        color: var(--primary-dark);
+      }
+
+      .pdf-link:hover {
+        color: var(--primary);
+        text-decoration: underline;
+      }
+
+      .metadata-document .metadata-section-title {
+        letter-spacing: 0.02em;
+        text-transform: capitalize;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        padding-bottom: 0.35rem;
+      }
+
+      .metadata-document .metadata-row {
+        line-height: 1.5;
+      }
+
+      .metadata-document .metadata-row .metadata-label {
+        width: 10rem;
+        min-width: 10rem;
+        flex-shrink: 0;
+        padding-right: 0.5rem;
+      }
+
+      .metadata-document .metadata-row .metadata-value {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .metadata-document .metadata-row-pills .metadata-value {
+        display: block;
+      }
+
+      .metadata-document .metadata-html {
+        display: block;
+        word-break: break-word;
+      }
+
+      .metadata-document .metadata-nested {
+        padding-left: 1rem;
+        margin-top: 0.25rem;
+        border-left: 2px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .metadata-document .metadata-nested-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 0 0.5rem;
+        margin-bottom: 0.35rem;
+        line-height: 1.45;
+      }
+
+      .metadata-document .metadata-nested-row .metadata-label {
+        min-width: 8rem;
+        flex-shrink: 0;
+        font-size: 0.75rem;
+        opacity: 0.85;
+      }
+
+      .metadata-document .metadata-array-item {
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      }
+
+      .metadata-document .metadata-array-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+
+      .metadata-document .metadata-pills-block {
+        display: block;
+        padding-left: 1rem;
+        border-left: 2px solid rgba(0, 0, 0, 0.08);
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .metadata-document .metadata-pills-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .metadata-document .metadata-pills-vocabulary {
+        letter-spacing: 0.02em;
+      }
+
+      .metadata-document .metadata-pills-list {
+        gap: 0.35rem;
+      }
+
+      .metadata-document .metadata-pill {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--primary-dark, #0c1a4d);
+        background: rgba(12, 26, 77, 0.08);
+        border-radius: 9999px;
+        border: 1px solid rgba(12, 26, 77, 0.12);
+      }
+
+      .metadata-document .metadata-authors-inline {
+        padding-left: 1rem;
+        border-left: 2px solid rgba(0, 0, 0, 0.08);
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.25rem 0;
+        line-height: 1.7;
+      }
+
+      .metadata-document .metadata-authors-item {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0;
+      }
+
+      .metadata-document .metadata-authors-name {
+        font-weight: 500;
+        color: var(--primary-dark, #0c1a4d);
+        font-size: 0.9375rem;
+      }
+
+      .metadata-document .metadata-authors-sep {
+        color: rgba(0, 0, 0, 0.4);
+        font-weight: 600;
+        font-size: 1rem;
+        padding: 0 0.6rem;
+        user-select: none;
+        vertical-align: middle;
+      }
+
+      .metadata-document .metadata-namecode-inline {
+        padding-left: 1rem;
+        border-left: 2px solid rgba(0, 0, 0, 0.08);
+        width: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.25rem 0;
+        line-height: 1.6;
+      }
+
+      .metadata-document .metadata-namecode-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .metadata-document .metadata-namecode-code {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        color: var(--primary-dark, #0c1a4d);
+        background: rgba(12, 26, 77, 0.08);
+        padding: 0.2rem 0.45rem;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+
+      .metadata-document .metadata-namecode-name {
+        font-weight: 500;
+        font-size: 0.875rem;
+        color: var(--primary-dark, #0c1a4d);
+      }
+
+      .metadata-document .metadata-namecode-sep {
+        color: rgba(0, 0, 0, 0.35);
+        font-weight: 600;
+        font-size: 0.75rem;
+        padding: 0 0.35rem;
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <v-app>
+        <main class="v-main">
+          <v-container fluid class="v-container--search">
+            <!-- Search Bar -->
+            <div class="px-4 px-md-0 mt-md-9">
+              <div
+                class="position-relative search-bar-area search-bar"
+                @click="isActive = true"
+                v-click-outside="handleClickOutside"
+              >
+                <div class="custom-search-bar-filter">
+                  <div class="custom-search-bar-filter__content">
+                    <div
+                      class="grow-wrap"
+                      ref="textareaGrowWrap"
+                      :class="{ active: isActive }"
+                    >
+                      <textarea
+                        v-model="query"
+                        name="text"
+                        :maxlength="5000"
+                        rows="1"
+                        id="text"
+                        placeholder="What are you looking for?"
+                        @input="updateReplicatedValue"
+                        @keydown="handleKeyDown"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div class="custom-search-bar-filter__append">
+                    <div class="right-icons-container">
+                      <div
+                        class="w-[30px] h-[30px] custom-search-bar-filter__icon d-flex justify-center align-center"
+                        v-if="(!query && !tempFile) || isListening === true"
+                      >
+                        <i
+                          class="v-icon material-symbols-outlined cursor-pointer search-icon semibold search-buttons"
+                          size="24"
+                          onclick="onMicrophoneClick()"
+                          aria-label="Voice search"
+                        >
+                          settings_voice
+                        </i>
+                      </div>
+                      <div class="d-flex right-icons-container__append" v-else>
+                        <v-icon-custom
+                          size="24"
+                          icon="cancel"
+                          type="symbol"
+                          class="v-icon--clickable v-btn--close custom-search-bar-filter__icon"
+                          outlined
+                          aria-label="clear"
+                          @click="clearSearch"
+                        ></v-icon-custom>
+                        <v-btn
+                          aria-label="search"
+                          class="h-[30px]"
+                          size="small"
+                          @click="submit"
+                        >
+                          <i
+                            class="material-icons v-icon notranslate v-theme--light v-icon--size-default"
+                            aria-hidden="true"
+                            >arrow_forward_ios</i
+                          >
+                        </v-btn>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <v-row
+              v-if="busy"
+              class="d-flex ga-md-5 mx-0 search-content mt-md-2"
+            >
+              <v-col
+                cols="12"
+                md="4"
+                class="search-content__result pa-4 px-md-0"
+              >
+                <v-skeleton-loader
+                  class="mx-auto w-100 border"
+                  elevation="12"
+                  type="list-item-two-line, list-item-three-line"
+                ></v-skeleton-loader>
+                <v-skeleton-loader
+                  class="mx-auto w-100 border mt-6"
+                  elevation="12"
+                  type="list-item-two-line, list-item-three-line"
+                ></v-skeleton-loader>
+
+                <v-skeleton-loader
+                  class="mx-auto w-100 border mt-6"
+                  elevation="12"
+                  type="list-item-two-line, list-item-three-line"
+                ></v-skeleton-loader>
+              </v-col>
+              <v-col
+                cols="12"
+                md="8"
+                class="search-content__detail pa-4 relative"
+              >
+                <v-skeleton-loader
+                  class="mx-auto w-100 border"
+                  elevation="12"
+                  theme="light"
+                  type="avatar, list-item-three-line, list-item-three-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line"
+                />
+              </v-col>
+            </v-row>
+            <v-row
+              v-else
+              class="d-flex ga-md-5 mx-0 search-content mt-md-2"
+              :class="{ 'animation-slide': itemSelected === true }"
+            >
+              <v-col
+                v-show="!isFullscreen"
+                cols="12"
+                md="4"
+                class="search-content__result px-4 px-md-0"
+                ref="scrollSearchContentResultMobile"
+              >
+                <div class="d-flex flex-column search-content__result__area">
+                  <div
+                    class="scroll-area"
+                    ref="scrollSearchContentResultDesktop"
+                    v-if="fullResults"
+                  >
+                    <v-infinite-scroll
+                      v-if="!reranking && fullResults.length > 0 && semanticResults.length > 0"
+                      :items="semanticResults"
+                      @load="loadMore"
+                      class="scroll-panel"
+                      color="primary"
+                    >
+                      <!-- CardResult -->
+                      <template
+                        v-for="(result, index) in semanticResults"
+                        :key="result.code"
+                      >
+                        <div @click="(e) => handleResultSearchClick(e, result)">
+                          <v-card
+                            flat
+                            class="card-result relative"
+                            :class="{
+    active: viewItem?.idno === result?.idno,
+    'mt-3': index !== 0,
+  }"
+                            :link="false"
+                          >
+                            <div class="d-flex align-center mb-3 type-info">
+                              <i
+                                class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon card-icons"
+                                size="15"
+                                onclick="clearSearch()"
+                                aria-label="clear"
+                              >
+                                {{ icons[result.type]?.name ?? 'more_horiz' }}
+                              </i>
+                              <div class="text-xs text-capitalize">
+                                {{ result?.type }}
+                              </div>
+                              <div
+                                v-if="result?.type_extra"
+                                class="text-xs text-capitalize ml-1"
+                              >
+                                [{{ result?.type_extra }}]
+                              </div>
+                            </div>
+                            <v-card-title
+                              color="primary-dark"
+                              class="leading-1.3"
+                              >{{ result?.title }}</v-card-title
+                            >
+                            <v-card-subtitle v-if="result?.sub_title"
+                              >{{ result?.sub_title ?? '' }}</v-card-subtitle
+                            >
+                            <v-card-text v-if="result?.text"
+                              >{{ result?.text ?? '-' }}</v-card-text
+                            >
+                            <div
+                              class="mt-4 d-flex flex-wrap align-center text-body-3 categories"
+                            >
+                              <div
+                                v-if="result?.geographic_coverage?.length === 1"
+                                class="category-item"
+                              >
+                                <i
+                                  class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                  aria-hidden="true"
+                                ></i>
+                                <div>{{ formatGeographicCoverageForInline(result.geographic_coverage)[0] }}</div>
+                              </div>
+                              <v-menu
+                                v-else-if="result?.geographic_coverage?.length > 1"
+                                class="v-menu--none-shadow"
+                                content-class="v-menu--country"
+                                max-height="250"
+                                scroll-strategy="close"
+                              >
+                                <template v-slot:activator="{ props }">
+                                  <div
+                                    class="category-item clickable-fn"
+                                    v-bind="props"
+                                  >
+                                    <i
+                                      class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                      aria-hidden="true"
+                                    ></i>
+                                    <div>
+                                      {{ formatGeographicCoverageForInline(result.geographic_coverage)[0] }} (+{{ result.geographic_coverage.length - 1 }})
+                                    </div>
+                                  </div>
+                                </template>
+                                <div
+                                  class="v-menu--country__content text-light-gray relative"
+                                >
+                                  <div
+                                    v-for="(item, index) in result?.geographic_coverage"
+                                    :key="index"
+                                    class="v-menu--country__item pa-3"
+                                    :class="{
+                                      'text-purple': item?.type === 'exist',
+                                      'text-alert-color': item?.type === 'un_exist',
+                                    }"
+                                  >
+                                    {{ typeof item === 'string' ? item : (item?.title ?? item?.name ?? '') }}
+                                  </div>
+                                </div>
+                              </v-menu>
+
+                              <div
+                                class="category-item"
+                                v-if="result.time_coverage"
+                              >
+                                <i
+                                  class="mdi mdi-calendar v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                  aria-hidden="true"
+                                ></i>
+                                <div>{{ result?.time_coverage }}</div>
+                              </div>
+
+                              <div
+                                v-if="result?.source?.length === 1"
+                                class="category-item clickable-fn"
+                              >
+                                <i
+                                  v-if="result?.type === 'document'"
+                                  class="mdi-account-circle-outline mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                  aria-hidden="true"
+                                ></i>
+                                <v-icon-custom
+                                  v-else
+                                  color="dark-gray"
+                                  type="symbol"
+                                  icon="account_balance"
+                                  outlined
+                                ></v-icon-custom>
+                                <div>{{ result?.source?.[0] }}</div>
+                              </div>
+                              <v-menu
+                                v-else-if="result?.source?.length > 1"
+                                class="v-menu--none-shadow"
+                                content-class="v-menu--source"
+                                max-height="250"
+                                scroll-strategy="close"
+                              >
+                                <template v-slot:activator="{ props }">
+                                  <div
+                                    class="category-item clickable-fn"
+                                    v-bind="props"
+                                  >
+                                    <i
+                                      v-if="result?.type === 'document'"
+                                      class="mdi-account-circle-outline mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                      aria-hidden="true"
+                                    ></i>
+                                    <v-icon-custom
+                                      v-else
+                                      color="dark-gray"
+                                      type="symbol"
+                                      icon="account_balance"
+                                      outlined
+                                    ></v-icon-custom>
+                                    <div>
+                                      {{ format_authorities_title(result) }}
+                                    </div>
+                                  </div>
+                                </template>
+                                <div
+                                  class="v-menu--source__content text-light-gray"
+                                >
+                                  <div
+                                    v-for="(item, index) in result?.source"
+                                    :key="index"
+                                    class="v-menu--source__item pa-3"
+                                  >
+                                    {{ item }}
+                                  </div>
+                                </div>
+                              </v-menu>
+                            </div>
+                          </v-card>
+                        </div>
+                      </template>
+
+                      <template v-slot:empty>
+                        <div class="text-center text-light-gray text-sm mt-3">
+                          No more items!
+                        </div>
+                      </template>
+                    </v-infinite-scroll>
+                  </div>
+                </div>
+              </v-col>
+
+              <v-col
+                :cols="isFullscreen ? 12 : 8"
+                class="search-content__detail px-4 mt-4 pa-md-4 bg-secondary-100 relative"
+              >
+                <!-- DetailsPanel -->
+                <template v-if="viewItem">
+                  <div class="search-content__detail__info ga-md-4">
+                    <div
+                      class="d-flex ga-md-4 flex-column flex-md-row flex-1-1-0"
+                    >
+                      <div class="search-content__detail__info__image">
+                        <template v-if="loading">
+                          <v-progress-circular
+                            :size="40"
+                            :width="4"
+                            indeterminate
+                            color="primary"
+                          />
+                        </template>
+                        <template v-else>
+                          <img
+                            ref="thumbnailImage"
+                            src="https://data-compass.ihsn.org/files/thumbnails/thumbnail-s14220.jpeg"
+                            alt="Document thumbnail"
+                          />
+                        </template>
+                      </div>
+                      <div
+                        class="search-content__detail__info__content relative"
+                      >
+                        <div
+                          class="d-flex align-center mb-3 type-info text-primary-dark"
+                        >
+                          <v-icon-custom
+                            type="symbol"
+                            :icon="icons[viewItem.type]?.name ?? 'more_horiz'"
+                            size="15"
+                            :outlined="icons[viewItem.type]?.outlined ?? false"
+                          ></v-icon-custom>
+                          <div class="ml-1 text-subtitle-2 text-capitalize">
+                            {{ viewItem.type }}
+                          </div>
+                          <div
+                            v-if="viewItem?.type_extra"
+                            class="text-subtitle-2 text-capitalize ml-1"
+                          >
+                            [{{ viewItem?.type_extra }}]
+                          </div>
+                        </div>
+
+                        <h6 class="text-primary-dark text-xl semibold">
+                          {{ viewItem.title }}
+                        </h6>
+
+                        <p
+                          class="text-charcoal text-sm medium mt-2"
+                          v-if="viewItem.sub_title"
+                        >
+                          {{ viewItem.sub_title }}
+                        </p>
+
+                        <div
+                          class="d-flex align-center flex-wrap text-gray-600 text-xs mt-3 ga-2"
+                        >
+                          <template v-if="viewItem.doi">
+                            DOI:
+                            <a
+                              class="doi-link"
+                              :href="`https://doi.org/${viewItem.doi}`"
+                              target="_blank"
+                              >{{ viewItem.doi }}</a
+                            >
+                          </template>
+                        </div>
+
+                        <div
+                          class="d-flex text-dark-gray text-xs mt-4 align-center flex-wrap medium"
+                        >
+                          <section
+                            class="d-flex align-center"
+                            v-if="viewItem.geographic_coverage?.length"
+                          >
+                            <div
+                              class="d-flex py-1"
+                              v-if="viewItem.geographic_coverage?.length === 1"
+                            >
+                              <v-icon-custom
+                                type="symbol"
+                                icon="globe_asia"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{
+                                formatGeographicCoverageForInline(viewItem.geographic_coverage)[0]
+                              }}</span>
+                            </div>
+                            <v-menu
+                              v-else-if="viewItem?.geographic_coverage?.length > 1"
+                              class="v-menu--none-shadow"
+                              content-class="v-menu--country"
+                              max-height="250"
+                              scroll-strategy="close"
+                            >
+                              <template v-slot:activator="{ props }">
+                                <div
+                                  class="d-flex align-center py-1 cursor-pointer"
+                                  v-bind="props"
+                                >
+                                  <v-icon-custom
+                                    type="symbol"
+                                    icon="globe_asia"
+                                    size="15"
+                                    class="mr-1"
+                                    outlined
+                                  ></v-icon-custom>
+                                  <div>
+                                    {{ formatGeographicCoverageForInline(viewItem.geographic_coverage)[0] }} (+{{ viewItem.geographic_coverage.length - 1 }})
+                                  </div>
+                                </div>
+                              </template>
+                              <div
+                                class="v-menu--country__content text-light-gray relative"
+                              >
+                                <div
+                                  v-for="(item, index) in viewItem?.geographic_coverage"
+                                  :key="index"
+                                  class="v-menu--country__item pa-3"
+                                  :class="{
+                                    'text-purple': item?.type === 'exist',
+                                    'text-alert-color': item?.type === 'un_exist',
+                                  }"
+                                >
+                                  {{ typeof item === 'string' ? item : (item?.title ?? item?.name ?? '') }}
+                                </div>
+                              </div>
+                            </v-menu>
+                          </section>
+
+                          <section
+                            class="d-flex align-center"
+                            v-if="viewItem.time_coverage"
+                          >
+                            <span
+                              v-if="viewItem.geographic_coverage?.length"
+                              class="mx-2"
+                              >|</span
+                            >
+                            <div class="d-flex py-1">
+                              <v-icon-custom
+                                type="symbol"
+                                icon="calendar_today"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{ viewItem.time_coverage }}</span>
+                            </div>
+                          </section>
+
+                          <section
+                            class="d-flex align-center"
+                            v-if="viewItem.source?.length && viewItem.type !== 'document'"
+                          >
+                            <span class="mx-2">|</span>
+                            <div
+                              class="d-flex py-1 align-center cursor-pointer"
+                              v-if="viewItem?.source?.length === 1"
+                            >
+                              <v-icon-custom
+                                type="symbol"
+                                icon="account_balance"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{ authorities_title }}</span>
+                            </div>
+                            <v-menu
+                              v-else-if="viewItem?.source?.length > 1"
+                              class="v-menu--none-shadow"
+                              content-class="v-menu--source"
+                              max-height="250"
+                              scroll-strategy="close"
+                            >
+                              <template v-slot:activator="{ props }">
+                                <div
+                                  class="d-flex py-1 align-center cursor-pointer"
+                                  v-bind="props"
+                                >
+                                  <v-icon-custom
+                                    type="symbol"
+                                    icon="account_balance"
+                                    size="15"
+                                    class="mr-1"
+                                    outlined
+                                  ></v-icon-custom>
+
+                                  <div>{{ authorities_title }}</div>
+                                </div>
+                              </template>
+                              <div
+                                class="v-menu--source__content text-light-gray"
+                              >
+                                <div
+                                  v-for="(item, index) in viewItem?.source"
+                                  :key="index"
+                                  class="v-menu--source__item pa-3"
+                                >
+                                  {{ item }}
+                                </div>
+                              </div>
+                            </v-menu>
+                          </section>
+
+                          <section
+                            class="d-flex align-center"
+                            v-else-if="viewItem.source?.length"
+                          >
+                            <span class="mx-2">|</span>
+                            <div
+                              class="d-flex py-1 align-center cursor-pointer"
+                              v-if="viewItem?.source?.length === 1"
+                            >
+                              <v-icon-custom
+                                type="symbol"
+                                icon="account_circle"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{ authorities_title }}</span>
+                            </div>
+                            <v-menu
+                              v-else-if="viewItem?.source?.length > 1"
+                              class="v-menu--none-shadow"
+                              content-class="v-menu--source"
+                              max-height="250"
+                              scroll-strategy="close"
+                            >
+                              <template v-slot:activator="{ props }">
+                                <div
+                                  class="d-flex py-1 align-center cursor-pointer"
+                                  v-bind="props"
+                                >
+                                  <v-icon-custom
+                                    type="symbol"
+                                    icon="account_circle"
+                                    size="15"
+                                    class="mr-1"
+                                    outlined
+                                  ></v-icon-custom>
+                                  <div>{{ authorities_title }}</div>
+                                </div>
+                              </template>
+                              <div
+                                class="v-menu--source__content text-light-gray"
+                              >
+                                <div
+                                  v-for="(item, index) in viewItem?.source"
+                                  :key="index"
+                                  class="v-menu--source__item pa-3"
+                                >
+                                  {{ item }}
+                                </div>
+                              </div>
+                            </v-menu>
+                          </section>
+
+                          <section
+                            class="d-flex align-center"
+                            v-if="viewItem.collection?.length"
+                          >
+                            <span class="mx-2">|</span>
+                            <div class="d-flex py-1">
+                              <v-icon-custom
+                                type="symbol"
+                                icon="folder"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{ viewItem.collection }}</span>
+                            </div>
+                          </section>
+
+                          <section
+                            class="d-flex align-center"
+                            v-if="viewItem.dimensions?.length"
+                          >
+                            <span class="mx-2">|</span>
+                            <div class="d-flex py-1">
+                              <v-icon-custom
+                                type="symbol"
+                                icon="resize"
+                                size="15"
+                                class="mr-1"
+                                outlined
+                              ></v-icon-custom>
+                              <span>{{ viewItem.dimensions?.join(', ') }}</span>
+                            </div>
+                          </section>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Group buttons -->
+                    <div
+                      class="d-flex justify-space-between justify-md-end group-social-buttons"
+                    >
+                      <v-btn
+                        variant="outlined"
+                        class="v-btn-icon v-btn--search"
+                        @click="itemSelected = false"
+                        v-if="width < 960"
+                      >
+                        <v-icon-custom
+                          icon="chevron_backward"
+                          type="symbol"
+                          :size="20"
+                          outlined
+                        ></v-icon-custom>
+                      </v-btn>
+                    </div>
+                  </div>
+                  <template v-if="viewItem?.type == 'document'">
+                    <div
+                      class="search-content__detail__description mx-n4 mx-md-0 pt-4 py-md-5 px-md-1 bg-white rounded-lg mt-4"
+                    >
+                      <div
+                        class="d-flex ga-2 max-w-full flex-no-wrap overflow-hidden overflow-x-auto pb-2 px-4 px-md-4"
+                      >
+                        <v-btn
+                          variant="outlined"
+                          class="v-btn-icon v-btn--search"
+                          :class="{ active: btn.active }"
+                          v-for="(btn, index) in filteredBtnContents"
+                          :key="index"
+                          @click="handleFilter(btn, index)"
+                        >
+                          <v-icon-custom
+                            :size="16"
+                            type="symbol"
+                            :outlined="true"
+                            :icon="btn.icon"
+                          ></v-icon-custom>
+                          <span class="mx-1">{{ btn.text }}</span>
+                        </v-btn>
+                      </div>
+                      <div
+                        ref="scrollArea"
+                        class="scroll-area mt-6 px-4 px-md-4"
+                      >
+                        <div class="d-flex flex-column overflow-y-auto pr-2">
+                          <template v-if="active_tab === 'abstract'">
+                            <v-container>
+                              <v-row class="justify-center">
+                                <v-col cols="11">
+                                  <v-card-title class="text-h6"
+                                    >Abstract</v-card-title
+                                  >
+                                </v-col>
+                                <v-col cols="11">
+                                  <v-card-text>
+                                    <span
+                                      v-html="metadata?.document_description?.abstract"
+                                    ></span>
+                                  </v-card-text>
+                                </v-col>
+                              </v-row>
+                            </v-container>
+                          </template>
+
+                          <template v-if="active_tab === 'view' && metadata">
+                            <div
+                              :style="`height: 80vh;`"
+                              v-if="pdfURL && typeof pdfURL === 'string'"
+                            >
+                              <div class="mb-2">
+                                The document is available from
+                                <a
+                                  class="pdf-link"
+                                  :href="pdfURL"
+                                  target="_blank"
+                                  >here</a
+                                >.
+                              </div>
+
+                              <iframe
+                                ref="iframe"
+                                width="100%"
+                                height="100%"
+                                type="application/pdf"
+                                :src="'https://docs.google.com/gview?url=' + pdfURL + '&embedded=true'"
+                                frameborder="0"
+                              ></iframe>
+                            </div>
+                            <v-container v-else>
+                              <v-row justify="center">
+                                <v-col cols="12" md="6">
+                                  <v-alert
+                                    outlined
+                                    color="lighten"
+                                    icon="mdi-alert"
+                                    border="left"
+                                    elevation="2"
+                                  >
+                                    <span
+                                      >No link to this document is
+                                      available.</span
+                                    >
+                                  </v-alert>
+                                </v-col>
+                              </v-row>
+                            </v-container>
+                          </template>
+
+                          <template v-if="active_tab === 'metadata' && metadata">
+                            <v-container class="metadata-document">
+                              <v-card-title class="text-h6 pb-2">
+                                Document metadata
+                              </v-card-title>
+                              <v-card-text class="pt-0">
+                                <div
+                                  v-for="(sectionVal, sectionKey) in metadata"
+                                  :key="sectionKey"
+                                  class="metadata-section mb-6"
+                                >
+                                  <div class="metadata-section-title text-subtitle-2 text-medium-emphasis mb-3">
+                                    {{ formatMetadataKey(sectionKey) }}
+                                  </div>
+                                  <template v-if="sectionVal !== null && sectionVal !== undefined && typeof sectionVal === 'object' && !Array.isArray(sectionVal)">
+                                    <template v-for="(val, key) in sectionVal" :key="key">
+                                    <div
+                                      v-if="hasMetadataValue(val)"
+                                      class="metadata-row d-flex align-start mb-3"
+                                      :class="{ 'metadata-row-pills': (key === 'keywords' || key === 'themes') && Array.isArray(val) && val.length > 0 }"
+                                    >
+                                      <span class="metadata-label text-caption text-medium-emphasis">{{ formatMetadataKey(key) }}</span>
+                                      <span class="metadata-value text-body-2 flex-grow-1">
+                                        <template v-if="(key === 'keywords' || key === 'themes') && Array.isArray(val) && val.length > 0">
+                                          <div class="metadata-pills-block">
+                                            <div
+                                              v-for="group in groupKeywordsByVocabulary(val)"
+                                              :key="group.vocabulary"
+                                              class="metadata-pills-group mb-3"
+                                            >
+                                              <div class="metadata-pills-vocabulary text-caption text-medium-emphasis mb-1">{{ group.vocabulary }}</div>
+                                              <div class="metadata-pills-list d-flex flex-wrap ga-1">
+                                                <span
+                                                  v-for="name in group.names"
+                                                  :key="name"
+                                                  class="metadata-pill"
+                                                >{{ name }}</span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </template>
+                                        <template v-else-if="(key === 'authors' || key === 'Authors') && Array.isArray(val) && val.length > 0">
+                                          <div class="metadata-authors-inline">
+                                            <template v-for="(name, index) in formatAuthorsForDisplay(val)" :key="index">
+                                              <span class="metadata-authors-item">
+                                                <span class="metadata-authors-name">{{ name }}</span>
+                                              </span>
+                                              <span v-if="index < formatAuthorsForDisplay(val).length - 1" class="metadata-authors-sep" aria-hidden="true">·</span>
+                                            </template>
+                                          </div>
+                                        </template>
+                                        <template v-else-if="Array.isArray(val) && val.length > 0 && isNameCodeArray(val)">
+                                          <div class="metadata-namecode-inline">
+                                            <template v-for="(item, index) in formatNameCodeList(val)" :key="index">
+                                              <span class="metadata-namecode-item">
+                                                <span class="metadata-namecode-code">{{ item.code }}</span>
+                                                <span class="metadata-namecode-name">{{ item.name }}</span>
+                                              </span>
+                                              <span v-if="index < formatNameCodeList(val).length - 1" class="metadata-namecode-sep" aria-hidden="true">·</span>
+                                            </template>
+                                          </div>
+                                        </template>
+                                        <metadata-value
+                                          v-else
+                                          :value="val"
+                                          :key-name="key"
+                                          :format-key="formatMetadataKey"
+                                        />
+                                      </span>
+                                    </div>
+                                    </template>
+                                  </template>
+                                  <div v-else class="metadata-row">
+                                    <span class="metadata-value text-body-2">{{ sectionVal == null ? '—' : String(sectionVal) }}</span>
+                                  </div>
+                                </div>
+                              </v-card-text>
+                            </v-container>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+
+                  <template v-if="viewItem?.type == 'indicator'">
+                    <div
+                      class="search-content__detail__description mx-n4 mx-md-0 pt-4 py-md-5 px-md-1 bg-white rounded-lg mt-4"
+                      ref="detailDescription"
+                    >
+                      <div
+                        class="d-flex ga-2 max-w-full flex-no-wrap overflow-hidden overflow-x-auto pb-2 px-4 px-md-4"
+                      >
+                        <v-btn
+                          variant="outlined"
+                          class="v-btn-icon v-btn--search"
+                          :class="{ active: btn.active }"
+                          v-for="(btn, index) in filteredBtnContents"
+                          :key="index"
+                          @click="handleFilter(btn, index)"
+                        >
+                          <v-icon-custom
+                            :size="16"
+                            type="symbol"
+                            :outlined="true"
+                            :icon="btn.icon"
+                          ></v-icon-custom>
+
+                          <span class="mx-1">{{ btn.text }}</span>
+                        </v-btn>
+                      </div>
+                      <div class="scroll-area mt-6 px-4 px-md-4">
+                        <div class="d-flex flex-column overflow-y-auto pr-2">
+                          <template v-if="active_tab === 'metadata'">
+                            <div>
+                              <v-btn
+                                @click="handleMetadataDownload(viewItem?.idno, metadata)"
+                                color="gray-600"
+                                class="mb-4"
+                              >
+                                <v-icon>mdi-download</v-icon>
+                                JSON
+                              </v-btn>
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </template>
+              </v-col>
+            </v-row>
+          </v-container>
+        </main>
+
+        <div v-if="pageLoading || loadingModel" class="full-page-loading">
+          <v-row align-content="center" class="fill-height" justify="center">
+            <v-col class="text-subtitle-1 text-center" cols="12">
+              {{ loadingMessage }}
+            </v-col>
+            <v-col cols="6">
+              <v-progress-linear
+                color="var(--purple)"
+                :size="70"
+                height="6"
+                indeterminate
+                rounded
+              ></v-progress-linear>
+            </v-col>
+          </v-row>
+        </div>
+      </v-app>
+    </div>
+
+    <div
+      id="firstLoading"
+      class="full-page-loading"
+      style="background-color: #f3f5fc; z-index: 999999 !important"
+    ></div>
+    <template id="v-icon-custom-template">
+      <i
+        class="v-icon material-symbols-outlined"
+        :class="cls"
+        v-if="type === 'symbol'"
+        :size="size"
+        :outlined="outlined"
+        :style="computedStyle"
+      >
+        {{ icon }}
+      </i>
+
+      <v-icon
+        v-else
+        :class="cls"
+        :color="color"
+        :disabled="disabled"
+        :end="end"
+        :size="size"
+        :start="start"
+        :tag="tag"
+        :theme="theme"
+        :outlined="outlined"
+        :icon="icon"
+        :style="styles"
+        :variant="variant"
+      >
+        {{ icon }}
+      </v-icon>
+    </template>
+
+    <script>
+      const VIconCustom = Vue.defineComponent({
+        template: "#v-icon-custom-template",
+        props: {
+          icon: String,
+          class: [String, Array, Object],
+          mainClass: String,
+          type: {
+            type: String,
+            default: "mdi",
+          },
+          color: String,
+          disabled: Boolean,
+          end: Boolean,
+          size: [String, Number],
+          start: Boolean,
+          tag: String,
+          theme: String,
+          outlined: Boolean,
+          variant: String,
+          styles: Object,
+        },
+        computed: {
+          cls() {
+            return this.class;
+          },
+          computedStyle() {
+            const size =
+              typeof this.size === "string" ? parseInt(this.size) : this.size;
+            return {
+              color: this.color,
+              fontSize: size ? size + "px" : undefined,
+              width: size ? size + "px" : undefined,
+              height: size ? size + "px" : undefined,
+              ...(this.styles || {}),
+            };
+          },
+        },
+      });
+
+      const isEmptyMetadataValue = (val) => {
+        if (val === null || val === undefined) return true;
+        if (typeof val === "string") return val.trim().length === 0;
+        if (Array.isArray(val)) return val.length === 0;
+        if (typeof val === "object") return Object.keys(val).length === 0;
+        return false;
+      };
+
+      const MetadataValue = {
+        name: "MetadataValue",
+        props: {
+          value: { required: true },
+          keyName: { type: String, default: "" },
+          formatKey: { type: Function, required: true },
+        },
+        computed: {
+          parsedValue() {
+            if (typeof this.value !== "string") return this.value;
+            const s = this.value.trim();
+            if ((s.startsWith("{") || s.startsWith("[")) && s.length > 1) {
+              try {
+                return JSON.parse(this.value);
+              } catch (_) {
+                return this.value;
+              }
+            }
+            return this.value;
+          },
+        },
+        methods: {
+          hasValue(val) {
+            return !isEmptyMetadataValue(val);
+          },
+        },
+        template: `
+          <span class="metadata-value-inner">
+            <template v-if="value === null || value === undefined">—</template>
+            <template v-else-if="(keyName === 'abstract' || keyName === 'description') && typeof value === 'string'">
+              <span v-html="value" class="metadata-html"></span>
+            </template>
+            <template v-else-if="Array.isArray(value)">
+              <template v-if="value.length === 0">—</template>
+              <div v-else v-for="(item, i) in value" :key="i" class="metadata-array-item">
+                <template v-if="item !== null && typeof item === 'object' && !Array.isArray(item)">
+                  <div class="metadata-nested">
+                    <template v-for="(v, k) in item" :key="k">
+                      <div v-if="hasValue(v)" class="metadata-nested-row">
+                        <span class="metadata-label">{{ formatKey(k) }}</span>
+                        <metadata-value :value="v" :key-name="k" :format-key="formatKey" />
+                      </div>
+                    </template>
+                  </div>
+                </template>
+                <metadata-value v-else :value="item" :key-name="''" :format-key="formatKey" />
+              </div>
+            </template>
+            <template v-else-if="typeof value === 'object' && value !== null">
+              <div class="metadata-nested">
+                <template v-for="(v, k) in value" :key="k">
+                  <div v-if="hasValue(v)" class="metadata-nested-row">
+                    <span class="metadata-label">{{ formatKey(k) }}</span>
+                    <metadata-value :value="v" :key-name="k" :format-key="formatKey" />
+                  </div>
+                </template>
+              </div>
+            </template>
+            <template v-else-if="typeof value === 'string' && typeof parsedValue === 'object' && parsedValue !== null">
+              <div class="metadata-nested" v-if="Array.isArray(parsedValue)">
+                <div v-for="(item, i) in parsedValue" :key="i" class="metadata-array-item">
+                  <template v-if="item !== null && typeof item === 'object' && !Array.isArray(item)">
+                    <div class="metadata-nested">
+                      <template v-for="(v, k) in item" :key="k">
+                        <div v-if="hasValue(v)" class="metadata-nested-row">
+                          <span class="metadata-label">{{ formatKey(k) }}</span>
+                          <metadata-value :value="v" :key-name="k" :format-key="formatKey" />
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                  <metadata-value v-else :value="item" :key-name="''" :format-key="formatKey" />
+                </div>
+              </div>
+              <div class="metadata-nested" v-else>
+                <template v-for="(v, k) in parsedValue" :key="k">
+                  <div v-if="hasValue(v)" class="metadata-nested-row">
+                    <span class="metadata-label">{{ formatKey(k) }}</span>
+                    <metadata-value :value="v" :key-name="k" :format-key="formatKey" />
+                  </div>
+                </template>
+              </div>
+            </template>
+            <template v-else-if="typeof value === 'string'">
+              <span>{{ value }}</span>
+            </template>
+            <template v-else-if="typeof value === 'number' || typeof value === 'boolean'">{{ value }}</template>
+            <template v-else>{{ value == null ? '—' : String(value) }}</template>
+          </span>
+        `,
+      };
+    </script>
+
+    <script type="module">
+      import { useScroll, useWindowSize } from "https://esm.sh/@vueuse/core";
+      import {
+        env,
+        pipeline,
+      } from "https://cdn.jsdelivr.net/npm/@xenova/transformers";
+      env.allowRemoteModels = true;
+
+      const { createApp, ref, onMounted, nextTick, watch, computed } = Vue;
+      const { createVuetify } = Vuetify;
+      const vuetify = createVuetify({
+        defaults: {},
+        icons: {
+          defaultSet: "md",
+          sets: {
+            md: {
+              component: "v-icon", // uses <v-icon> by default
+            },
+          },
+        },
+      });
+
+      const useRerank = false;
+      let rerankWorker = null;
+      if (useRerank) {
+        rerankWorker = new Worker("/js/search/rank.worker.js", {
+          type: "module",
+        });
+      }
+
+      createApp({
+        setup() {
+          const model_name = "GIST-small-Embedding-v0";
+          const hf_organization = "avsolatorio";
+          const query = ref("");
+          const tab = ref(0);
+          const selected = ref(null);
+          const showMobileModal = ref(false);
+          const dataEmbeddings = ref([]);
+          const fullResults = ref([]);
+          const semanticResults = ref([]);
+          const loadedCount = ref(0);
+          const batchSize = 10;
+          const extractor = ref(null);
+          const loading = ref(false);
+          const applyReranking = ref(false);
+          const resultReranked = ref(false);
+          const reranking = ref(false);
+          const hasQueried = ref(false);
+          const threshold = 0.78;
+          const top_k = 20;
+          const isActive = ref(false);
+          const tempFile = ref(null);
+          const isListening = ref(false);
+          const textareaGrowWrap = ref(null);
+
+          const handleClickOutside = () => {
+            isActive.value = false;
+          };
+
+          const updateReplicatedValue = () => {
+            const el = textareaGrowWrap.value;
+            if (el) {
+              const textarea = el.querySelector("textarea");
+              if (textarea) el.dataset.replicatedValue = textarea.value;
+            }
+          };
+
+          const dtype = "document";
+          const viewItem = ref(null);
+          const busy = ref(false);
+          const { width } = useWindowSize();
+          const pageLoading = ref(true);
+          const metadata = ref(null);
+          const pdfURL = ref(null);
+          const loadingModel = ref(false);
+          const loadingMessage = ref("Loading data...");
+          const loadingModelProgress = ref(0);
+
+          const scrollSearchContentResultMobile = ref(null);
+          const scrollSearchContentResultDesktop = ref(null);
+          const btnContents = ref([
+            {
+              icon: "bolt",
+              text: "Quick answer",
+              key: "quick_answer",
+              active: true,
+              type: "indicator",
+            },
+            {
+              icon: "storage",
+              text: "Data",
+              key: "data",
+              active: false,
+              type: "indicator",
+            },
+            {
+              icon: "bar_chart_4_bars",
+              text: "Visualizations",
+              key: "visualizations",
+              active: false,
+              type: "indicator",
+            },
+            {
+              icon: "description",
+              text: "Metadata",
+              key: "metadata",
+              active: false,
+              type: "indicator",
+            },
+            {
+              icon: "account_tree",
+              text: "See also",
+              key: "see_also",
+              active: false,
+              type: "indicator",
+            },
+            {
+              icon: "note",
+              text: "Abstract",
+              key: "abstract",
+              active: true,
+              type: "document",
+            },
+            {
+              icon: "bolt",
+              text: "View",
+              key: "view",
+              active: false,
+              type: "document",
+            },
+            {
+              icon: "scan",
+              text: "Metadata",
+              key: "metadata",
+              active: false,
+              type: "document",
+            },
+          ]);
+          const filteredBtnContents = computed(() => {
+            return btnContents.value.filter((btn) => btn.type === dtype);
+          });
+
+          const active_tab = ref(filteredBtnContents.value[0].key);
+
+          const handleFilter = (btn, index) => {
+            btn.active = true;
+            active_tab.value = btn.key;
+            filteredBtnContents.value.forEach((btn, i) => {
+              if (i !== index) {
+                btn.active = false;
+              }
+            });
+          };
+
+          const isFullscreen = ref(false);
+          const itemSelected = ref(false);
+
+          const infiniteHeight = ref(0);
+          watch(
+            () => width.value,
+            () => {
+              if (scrollSearchContentResultDesktop.value) {
+                infiniteHeight.value =
+                  scrollSearchContentResultDesktop.value.clientHeight ?? 0;
+              }
+            }
+          );
+
+          const format_authorities_title = (item) => {
+            let name = "-";
+            if (item?.source?.length === 1) {
+              name = item?.source[0];
+            }
+
+            if (item?.source?.length > 1) {
+              name = `${item?.source[0]} (+${item?.source?.length - 1})`;
+            }
+            return name;
+          };
+
+          const authorities_title = computed(() => {
+            return format_authorities_title(viewItem.value);
+          });
+
+          const loadModelCallback = async (progress) => {
+            if (progress.status != "progress") {
+              loadingMessage.value = "";
+            }
+            const prog = parseInt(progress.progress);
+            loadingModelProgress.value = prog;
+            loadingMessage.value = "Loading AI model...";
+          };
+
+          const loadExtractor = async () => {
+            if (!extractor.value) {
+              loadingModel.value = true;
+              loadingMessage.value = "Loading AI model...";
+
+              extractor.value = await pipeline(
+                "feature-extraction",
+                `${hf_organization}/${model_name}`,
+                // { device: "webgpu", progress_callback: loadModelCallback }
+                { device: "webgpu" }
+              );
+              // loadingModelText.value = "Loading AI model..."
+              loadingModel.value = false;
+            }
+          };
+
+          const getEmbedding = async (text) => {
+            await loadExtractor();
+            const result = await extractor.value.model(
+              extractor.value.tokenizer(text)
+            );
+            return result.sentence_embedding.data;
+          };
+
+          const dotProduct = (a, b) =>
+            a.map((x, i) => x * b[i]).reduce((sum, val) => sum + val, 0);
+
+          const submit = async () => {
+            busy.value = true;
+            selected.value = null;
+            viewItem.value = null;
+            loadedCount.value = 0;
+            hasQueried.value = true;
+            resultReranked.value = false;
+
+            if (query.value) {
+              const emb = await getEmbedding(query.value);
+              fullResults.value = dataEmbeddings.value
+                .map((d) => ({
+                  ...d,
+                  // title: d.name,
+                  // type: dtype,
+                  // idno: d.code,
+                  // text: d.definition,
+                  // source: [d.source],
+                  sim: dotProduct(emb, d.embedding),
+                }))
+                .sort((a, b) => b.sim - a.sim)
+                .filter((x) => x.sim > 0.5);
+
+              if (applyReranking.value && useRerank) {
+                await rerank();
+              }
+            } else {
+              // If query is empty return result sorted by most recent first.
+              fullResults.value = dataEmbeddings.value.sort((a, b) => {
+                const tA = a.time_coverage;
+                const tB = b.time_coverage;
+
+                if (tA < tB) {
+                  return 1;
+                }
+                if (tA > tB) {
+                  return -1;
+                }
+                return 0;
+              });
+            }
+
+            semanticResults.value = [];
+            await loadMore({ done: () => {} });
+            busy.value = false;
+            pageLoading.value = false;
+          };
+
+          const rerank = async () => {
+            if (!query.value || query.value.trim() === "" || !rerankWorker) return;
+            reranking.value = true;
+            const batch = fullResults.value.slice(0, top_k);
+            const documents = batch.map((x) => x.title + "\n\n" + (x.abstract ?? ""));
+            const reranked = await new Promise((resolve, reject) => {
+              rerankWorker.onmessage = (e) => resolve(e.data);
+              rerankWorker.onerror = (err) => {
+                console.error("Worker error:", err);
+                reject(err);
+              };
+              rerankWorker.postMessage({
+                query: query.value,
+                documents,
+                top_k,
+              });
+            });
+
+            for (let i = 0; i < top_k; i++) {
+              fullResults.value[i] = {
+                ...batch[reranked[i].corpus_id],
+                rerank_score: reranked[i].score,
+              };
+            }
+
+            resultReranked.value = true;
+            reranking.value = false;
+          };
+
+          const mockApi = async (data, buffer) => {
+            const next = data.slice(buffer.length, buffer.length + batchSize);
+            return new Promise((resolve) =>
+              setTimeout(() => resolve(next), 500)
+            );
+          };
+
+          const loadMore = async ({ done }) => {
+            loading.value = true;
+            const res = await mockApi(fullResults.value, semanticResults.value);
+            loading.value = false;
+
+            if (res.length === 0) {
+              done("empty");
+              return;
+            }
+            semanticResults.value.push(...res);
+            loadedCount.value = semanticResults.value.length;
+
+            if (viewItem.value === null) {
+              if (width.value >= 960) {
+                selectItem(res[0]);
+              }
+            }
+
+            done("ok");
+          };
+
+          const selectItem = (item) => {
+            viewItem.value = item;
+            tab.value = 0;
+            if (window.innerWidth < 960) {
+              showMobileModal.value = true;
+            }
+            loadMetadata();
+          };
+
+          const closeMobileModal = () => {
+            showMobileModal.value = false;
+          };
+
+          const clearSearch = () => {
+            query.value = "";
+            viewItem.value = null;
+            semanticResults.value = [];
+            hasQueried.value = false;
+            submit();
+          };
+
+          const loadJSON = () => {
+            fetch(
+              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__004__doc_embeddings.json`
+            )
+              .then((res) => res.json())
+              .then((data) => {
+                dataEmbeddings.value = data;
+                submit();
+              });
+          };
+
+          const loadMetadata = () => {
+            fetch(
+              `https://avsolatorio.github.io/ids-metadata/data/metadata/${dtype}/${dtype}_${viewItem.value.idno}.json`
+            )
+              .then((res) => res.json())
+              .then((data) => {
+                metadata.value = data;
+                pdfURL.value = metadata.value?.document_description?.url;
+              });
+          };
+
+          const sortTopKBy = (field) => {
+            const sorted = fullResults.value
+              .slice(0, top_k)
+              .sort((a, b) => (b[field] ?? 0) - (a[field] ?? 0));
+
+            fullResults.value = [...sorted, ...fullResults.value.slice(top_k)];
+          };
+
+          watch(applyReranking, async (newVal) => {
+            if (!useRerank) return;
+            if (newVal) {
+              if (!resultReranked.value) {
+                await rerank();
+              } else {
+                sortTopKBy("rerank_score");
+              }
+            } else {
+              sortTopKBy("sim");
+            }
+
+            semanticResults.value = [];
+            await loadMore({ done: () => {} });
+          });
+
+          onMounted(() => {
+            loadJSON();
+            document.getElementById("firstLoading")?.remove();
+          });
+
+          const handleKeyDown = (event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              // Prevent default behavior (adding a new line)
+              event.preventDefault();
+              submit();
+            }
+          };
+
+          const handleResultSearchClick = (_event, result) => {
+            if (result?.idno === viewItem.value?.idno) return;
+            itemSelected.value = true;
+            viewItem.value = result;
+            loadMetadata();
+          };
+
+          const handleMetadataDownload = (idno, meta) => {
+            if (!idno || !meta) return;
+            const blob = new Blob([JSON.stringify(meta, null, 2)], {
+              type: "application/json",
+            });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `metadata_${idno}.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+          };
+
+          const formatMetadataKey = (key) => {
+            if (typeof key !== "string") return key;
+            return key
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase());
+          };
+
+          const hasMetadataValue = (val) => {
+            if (val === null || val === undefined) return false;
+            if (typeof val === "string") return val.trim().length > 0;
+            if (Array.isArray(val)) return val.length > 0;
+            if (typeof val === "object") return Object.keys(val).length > 0;
+            return true;
+          };
+
+          const groupKeywordsByVocabulary = (keywords) => {
+            if (!Array.isArray(keywords) || keywords.length === 0) return [];
+            const map = {};
+            for (const kw of keywords) {
+              if (kw == null || typeof kw !== "object") continue;
+              const vocab = kw.vocabulary ?? kw.Vocabulary ?? "Other";
+              const name = kw.name ?? kw.Name ?? kw.title ?? kw.Title ?? "";
+              if (String(name).trim()) {
+                if (!map[vocab]) map[vocab] = [];
+                map[vocab].push(String(name).trim());
+              }
+            }
+            return Object.entries(map).map(([vocabulary, names]) => ({
+              vocabulary,
+              names,
+            }));
+          };
+
+          const formatAuthorsForDisplay = (authors) => {
+            if (!Array.isArray(authors) || authors.length === 0) return [];
+            return authors.map((a) => {
+              if (a == null || typeof a !== "object") return "";
+              const full = a.full_name ?? a["Full Name"] ?? a.fullName ?? "";
+              if (String(full).trim()) return String(full).trim();
+              const last = a.last_name ?? a["Last Name"] ?? "";
+              const first = a.first_name ?? a["First Name"] ?? "";
+              const initial = a.initial ?? a.Initial ?? "";
+              const parts = [last].filter(Boolean);
+              if (first) parts.push(first);
+              else if (initial) parts.push(initial);
+              return parts.length ? parts.join(", ") : "";
+            }).filter(Boolean);
+          };
+
+          const isNameCodeArray = (val) => {
+            if (!Array.isArray(val) || val.length === 0) return false;
+            return val.every((item) => {
+              if (item == null || typeof item !== "object") return false;
+              const hasName = ["name", "Name"].some((k) => item[k] != null && String(item[k]).trim() !== "");
+              const hasCode = ["code", "Code"].some((k) => item[k] != null && String(item[k]).trim() !== "");
+              return hasName || hasCode;
+            });
+          };
+
+          const formatNameCodeList = (arr) => {
+            if (!Array.isArray(arr) || arr.length === 0) return [];
+            return arr.map((item) => {
+              if (item == null || typeof item !== "object") return { name: "—", code: "—" };
+              const name = String(item.name ?? item.Name ?? "").trim() || "—";
+              const code = String(item.code ?? item.Code ?? "").trim() || "—";
+              return { name, code };
+            }).filter((item) => item.name !== "—" || item.code !== "—");
+          };
+
+          const formatGeographicCoverageForInline = (coverage) => {
+            if (!Array.isArray(coverage) || coverage.length === 0) return [];
+            return coverage.map((item) => {
+              if (item == null) return "";
+              if (typeof item === "string") return item.trim();
+              if (typeof item === "object" && (item.title != null || item.name != null)) {
+                return String(item.title ?? item.name ?? "").trim();
+              }
+              return "";
+            }).filter(Boolean);
+          };
+
+          const icons = {
+            microdata: { name: "database", outlined: false },
+            geospatial: { name: "globe_asia", outlined: true },
+            timeseries: { name: "chart_data", outlined: true },
+            table: { name: "table", outlined: true },
+            document: { name: "article", outlined: false },
+            image: { name: "image", outlined: false },
+            video: { name: "videocam", outlined: false },
+            script: { name: "integration_instructions", outlined: false },
+            indicator: { name: "monitoring", outlined: false },
+          };
+
+          return {
+            query,
+            tab,
+            selected,
+            semanticResults,
+            selectItem,
+            clearSearch,
+            loadMore,
+            submit,
+            loadedCount,
+            loading,
+            hasQueried,
+            fullResults,
+            showMobileModal,
+            closeMobileModal,
+            threshold,
+            reranking,
+            applyReranking,
+            isActive,
+            handleClickOutside,
+            updateReplicatedValue,
+            tempFile,
+            isListening,
+            itemSelected,
+            isFullscreen,
+            handleKeyDown,
+            icons,
+            viewItem,
+            handleResultSearchClick,
+            busy,
+            width,
+            authorities_title,
+            active_tab,
+            filteredBtnContents,
+            handleFilter,
+            handleMetadataDownload,
+            formatMetadataKey,
+            hasMetadataValue,
+            groupKeywordsByVocabulary,
+            formatAuthorsForDisplay,
+            isNameCodeArray,
+            formatNameCodeList,
+            formatGeographicCoverageForInline,
+            format_authorities_title,
+            pageLoading,
+            metadata,
+            pdfURL,
+            loadingModel,
+            loadingMessage,
+            loadingModelProgress,
+          };
+        },
+      })
+        .use(vuetify)
+        .component("v-icon-custom", VIconCustom)
+        .component("MetadataValue", MetadataValue)
+        .mount("#app");
+    </script>
+  </body>
+</html>
