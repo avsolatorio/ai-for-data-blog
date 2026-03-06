@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -258,14 +258,19 @@
         flex-direction: column;
       }
 
-      .search-content__detail .search-content__detail__description .scroll-area {
+      .search-content__detail
+        .search-content__detail__description
+        .scroll-area {
         flex: 1;
         min-height: 0;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
       }
 
-      .search-content__detail .search-content__detail__description .scroll-area .v-infinite-scroll {
+      .search-content__detail
+        .search-content__detail__description
+        .scroll-area
+        .v-infinite-scroll {
         overflow: visible;
       }
 
@@ -277,7 +282,8 @@
        */
       .expanded-layout {
         display: grid;
-        grid-template-columns: 1fr minmax(320px, 2fr);
+        /* Left column: use --result-list-width when set (matches non-expanded), else 1fr */
+        grid-template-columns: var(--result-list-width, 1fr) minmax(320px, 2fr);
         grid-template-rows: 1fr;
         gap: 0 1rem;
         height: 100vh;
@@ -380,7 +386,8 @@
 
       .expanded-layout__header-meta .d-flex.text-gray-600,
       .expanded-layout__header-meta .d-flex.text-dark-gray,
-      .expanded-layout__header-meta .d-flex.align-center.flex-wrap.text-gray-600 {
+      .expanded-layout__header-meta
+        .d-flex.align-center.flex-wrap.text-gray-600 {
         margin-top: 0 !important;
         align-items: center;
       }
@@ -393,19 +400,25 @@
         flex-shrink: 0;
       }
 
-      .search-content__detail__info--compact .search-content__detail__info__content {
+      .search-content__detail__info--compact
+        .search-content__detail__info__content {
         flex-grow: 0;
       }
 
       .search-content__detail__info--compact .d-flex.text-dark-gray,
-      .search-content__detail__info--compact .d-flex.align-center.flex-wrap.text-gray-600 {
+      .search-content__detail__info--compact
+        .d-flex.align-center.flex-wrap.text-gray-600 {
         margin-top: 0.5rem !important;
         font-size: 0.75rem;
       }
 
       /* Override compact margin so DOI and geo/time/source row stay on one line (higher specificity) */
-      .search-content__detail__info--compact .expanded-layout__header-meta .d-flex.text-gray-600,
-      .search-content__detail__info--compact .expanded-layout__header-meta .d-flex.text-dark-gray {
+      .search-content__detail__info--compact
+        .expanded-layout__header-meta
+        .d-flex.text-gray-600,
+      .search-content__detail__info--compact
+        .expanded-layout__header-meta
+        .d-flex.text-dark-gray {
         margin-top: 0 !important;
       }
 
@@ -592,279 +605,276 @@
     <div id="app">
       <v-app>
         <main class="v-main">
-          <v-container fluid class="v-container--search" :class="{ 'v-container--detail-expanded': detailExpanded }">
+          <v-container
+            fluid
+            class="v-container--search"
+            :class="{ 'v-container--detail-expanded': detailExpanded }"
+          >
             <div class="search-content-root">
-            <!-- Normal layout: search bar full width, then row with results | detail. On mobile (width < 960) always use this layout. -->
-            <template v-if="!detailExpanded || busy || width < 960">
-            <div class="px-4 px-md-0 mt-md-9 search-bar-wrapper">
-              <div
-                class="position-relative search-bar-area search-bar"
-                @click="isActive = true"
-                v-click-outside="handleClickOutside"
-              >
-                <div class="custom-search-bar-filter">
-                  <div class="custom-search-bar-filter__content">
-                    <div
-                      class="grow-wrap"
-                      ref="textareaGrowWrap"
-                      :class="{ active: isActive }"
-                    >
-                      <textarea
-                        v-model="query"
-                        name="text"
-                        :maxlength="5000"
-                        rows="1"
-                        id="text"
-                        placeholder="What are you looking for?"
-                        @input="updateReplicatedValue"
-                        @keydown="handleKeyDown"
-                      ></textarea>
-                    </div>
-                  </div>
-                  <div class="custom-search-bar-filter__append">
-                    <div class="right-icons-container">
-                      <div
-                        class="w-[30px] h-[30px] custom-search-bar-filter__icon d-flex justify-center align-center"
-                        v-if="(!query && !tempFile) || isListening === true"
-                      >
-                        <i
-                          class="v-icon material-symbols-outlined cursor-pointer search-icon semibold search-buttons"
-                          size="24"
-                          onclick="onMicrophoneClick()"
-                          aria-label="Voice search"
+              <!-- Normal layout: search bar full width, then row with results | detail. On mobile (width < 960) always use this layout. -->
+              <template v-if="!detailExpanded || busy || width < 960">
+                <div class="px-4 px-md-0 mt-md-9 search-bar-wrapper">
+                  <div
+                    class="position-relative search-bar-area search-bar"
+                    @click="isActive = true"
+                    v-click-outside="handleClickOutside"
+                  >
+                    <div class="custom-search-bar-filter">
+                      <div class="custom-search-bar-filter__content">
+                        <div
+                          class="grow-wrap"
+                          ref="textareaGrowWrap"
+                          :class="{ active: isActive }"
                         >
-                          settings_voice
-                        </i>
+                          <textarea
+                            v-model="query"
+                            name="text"
+                            :maxlength="5000"
+                            rows="1"
+                            id="text"
+                            placeholder="What are you looking for?"
+                            @input="updateReplicatedValue"
+                            @keydown="handleKeyDown"
+                          ></textarea>
+                        </div>
                       </div>
-                      <div class="d-flex right-icons-container__append" v-else>
-                        <v-icon-custom
-                          size="24"
-                          icon="cancel"
-                          type="symbol"
-                          class="v-icon--clickable v-btn--close custom-search-bar-filter__icon"
-                          outlined
-                          aria-label="clear"
-                          @click="clearSearch"
-                        ></v-icon-custom>
-                        <v-btn
-                          aria-label="search"
-                          class="h-[30px]"
-                          size="small"
-                          @click="submit"
-                        >
-                          <i
-                            class="material-icons v-icon notranslate v-theme--light v-icon--size-default"
-                            aria-hidden="true"
-                            >arrow_forward_ios</i
+                      <div class="custom-search-bar-filter__append">
+                        <div class="right-icons-container">
+                          <div
+                            class="w-[30px] h-[30px] custom-search-bar-filter__icon d-flex justify-center align-center"
+                            v-if="(!query && !tempFile) || isListening === true"
                           >
-                        </v-btn>
+                            <i
+                              class="v-icon material-symbols-outlined cursor-pointer search-icon semibold search-buttons"
+                              size="24"
+                              onclick="onMicrophoneClick()"
+                              aria-label="Voice search"
+                            >
+                              settings_voice
+                            </i>
+                          </div>
+                          <div
+                            class="d-flex right-icons-container__append"
+                            v-else
+                          >
+                            <v-icon-custom
+                              size="24"
+                              icon="cancel"
+                              type="symbol"
+                              class="v-icon--clickable v-btn--close custom-search-bar-filter__icon"
+                              outlined
+                              aria-label="clear"
+                              @click="clearSearch"
+                            ></v-icon-custom>
+                            <v-btn
+                              aria-label="search"
+                              class="h-[30px]"
+                              size="small"
+                              @click="submit"
+                            >
+                              <i
+                                class="material-icons v-icon notranslate v-theme--light v-icon--size-default"
+                                aria-hidden="true"
+                                >arrow_forward_ios</i
+                              >
+                            </v-btn>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <v-row
-              v-if="busy"
-              class="d-flex ga-md-5 mx-0 search-content mt-md-2"
-            >
-              <v-col
-                cols="12"
-                md="4"
-                class="search-content__result pa-4 px-md-0"
-              >
-                <v-skeleton-loader
-                  class="mx-auto w-100 border"
-                  elevation="12"
-                  type="list-item-two-line, list-item-three-line"
-                ></v-skeleton-loader>
-                <v-skeleton-loader
-                  class="mx-auto w-100 border mt-6"
-                  elevation="12"
-                  type="list-item-two-line, list-item-three-line"
-                ></v-skeleton-loader>
-
-                <v-skeleton-loader
-                  class="mx-auto w-100 border mt-6"
-                  elevation="12"
-                  type="list-item-two-line, list-item-three-line"
-                ></v-skeleton-loader>
-              </v-col>
-              <v-col
-                cols="12"
-                md="8"
-                class="search-content__detail pa-4 relative"
-              >
-                <v-skeleton-loader
-                  class="mx-auto w-100 border"
-                  elevation="12"
-                  theme="light"
-                  type="avatar, list-item-three-line, list-item-three-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line"
-                />
-              </v-col>
-            </v-row>
-            <v-row
-              v-else
-              class="d-flex ga-md-5 mx-0 search-content mt-md-2"
-              :class="{ 'animation-slide': itemSelected === true }"
-            >
-              <v-col
-                v-show="!isFullscreen"
-                cols="12"
-                md="4"
-                class="search-content__result px-4 px-md-0"
-                ref="scrollSearchContentResultMobile"
-              >
-                <div class="d-flex flex-column search-content__result__area">
-                  <div
-                    class="scroll-area"
-                    ref="scrollSearchContentResultDesktop"
-                    v-if="fullResults"
+                <v-row
+                  v-if="busy"
+                  class="d-flex ga-md-5 mx-0 search-content mt-md-2"
+                >
+                  <v-col
+                    cols="12"
+                    md="4"
+                    class="search-content__result pa-4 px-md-0"
                   >
-                    <v-infinite-scroll
-                      v-if="!reranking && fullResults.length > 0 && semanticResults.length > 0"
-                      :items="semanticResults"
-                      @load="loadMore"
-                      class="scroll-panel"
-                      color="primary"
+                    <v-skeleton-loader
+                      class="mx-auto w-100 border"
+                      elevation="12"
+                      type="list-item-two-line, list-item-three-line"
+                    ></v-skeleton-loader>
+                    <v-skeleton-loader
+                      class="mx-auto w-100 border mt-6"
+                      elevation="12"
+                      type="list-item-two-line, list-item-three-line"
+                    ></v-skeleton-loader>
+
+                    <v-skeleton-loader
+                      class="mx-auto w-100 border mt-6"
+                      elevation="12"
+                      type="list-item-two-line, list-item-three-line"
+                    ></v-skeleton-loader>
+                  </v-col>
+                  <v-col
+                    cols="12"
+                    md="8"
+                    class="search-content__detail pa-4 relative"
+                  >
+                    <v-skeleton-loader
+                      class="mx-auto w-100 border"
+                      elevation="12"
+                      theme="light"
+                      type="avatar, list-item-three-line, list-item-three-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line"
+                    />
+                  </v-col>
+                </v-row>
+                <v-row
+                  v-else
+                  ref="searchContentRow"
+                  class="d-flex ga-md-5 mx-0 search-content mt-md-2"
+                  :class="{ 'animation-slide': itemSelected === true }"
+                >
+                  <v-col
+                    v-show="!isFullscreen"
+                    cols="12"
+                    md="4"
+                    class="search-content__result px-4 px-md-0"
+                    ref="scrollSearchContentResultMobile"
+                  >
+                    <div
+                      class="d-flex flex-column search-content__result__area"
                     >
-                      <!-- CardResult -->
-                      <template
-                        v-for="(result, index) in semanticResults"
-                        :key="result.code"
+                      <div
+                        class="scroll-area"
+                        ref="scrollSearchContentResultDesktop"
+                        v-if="fullResults"
                       >
-                        <div @click="(e) => handleResultSearchClick(e, result)">
-                          <v-card
-                            flat
-                            class="card-result relative"
-                            :class="{
+                        <v-infinite-scroll
+                          v-if="!reranking && fullResults.length > 0 && semanticResults.length > 0"
+                          :items="semanticResults"
+                          @load="loadMore"
+                          class="scroll-panel"
+                          color="primary"
+                        >
+                          <!-- CardResult -->
+                          <template
+                            v-for="(result, index) in semanticResults"
+                            :key="result.code"
+                          >
+                            <div
+                              @click="(e) => handleResultSearchClick(e, result)"
+                            >
+                              <v-card
+                                flat
+                                class="card-result relative"
+                                :class="{
     active: viewItem?.idno === result?.idno,
     'mt-3': index !== 0,
   }"
-                            :link="false"
-                          >
-                            <div class="d-flex align-center mb-3 type-info">
-                              <i
-                                class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon card-icons"
-                                size="15"
-                                onclick="clearSearch()"
-                                aria-label="clear"
+                                :link="false"
                               >
-                                {{ icons[result.type]?.name ?? 'more_horiz' }}
-                              </i>
-                              <div class="text-xs text-capitalize">
-                                {{ result?.type }}
-                              </div>
-                              <div
-                                v-if="result?.type_extra"
-                                class="text-xs text-capitalize ml-1"
-                              >
-                                [{{ result?.type_extra }}]
-                              </div>
-                            </div>
-                            <v-card-title
-                              color="primary-dark"
-                              class="leading-1.3"
-                              >{{ result?.title }}</v-card-title
-                            >
-                            <v-card-subtitle v-if="result?.sub_title"
-                              >{{ result?.sub_title ?? '' }}</v-card-subtitle
-                            >
-                            <v-card-text v-if="result?.text"
-                              >{{ result?.text ?? '-' }}</v-card-text
-                            >
-                            <div
-                              class="mt-4 d-flex flex-wrap align-center text-body-3 categories"
-                            >
-                              <div
-                                v-if="result?.geographic_coverage?.length === 1"
-                                class="category-item"
-                              >
-                                <i
-                                  class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
-                                  aria-hidden="true"
-                                ></i>
-                                <div>{{ formatGeographicCoverageForInline(result.geographic_coverage)[0] }}</div>
-                              </div>
-                              <v-menu
-                                v-else-if="result?.geographic_coverage?.length > 1"
-                                class="v-menu--none-shadow"
-                                content-class="v-menu--country"
-                                max-height="250"
-                                scroll-strategy="close"
-                              >
-                                <template v-slot:activator="{ props }">
+                                <div class="d-flex align-center mb-3 type-info">
+                                  <i
+                                    class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon card-icons"
+                                    size="15"
+                                    onclick="clearSearch()"
+                                    aria-label="clear"
+                                  >
+                                    {{ icons[result.type]?.name ?? 'more_horiz'
+                                    }}
+                                  </i>
+                                  <div class="text-xs text-capitalize">
+                                    {{ result?.type }}
+                                  </div>
                                   <div
-                                    class="category-item clickable-fn"
-                                    v-bind="props"
+                                    v-if="result?.type_extra"
+                                    class="text-xs text-capitalize ml-1"
+                                  >
+                                    [{{ result?.type_extra }}]
+                                  </div>
+                                </div>
+                                <v-card-title
+                                  color="primary-dark"
+                                  class="leading-1.3"
+                                  >{{ result?.title }}</v-card-title
+                                >
+                                <v-card-subtitle v-if="result?.sub_title"
+                                  >{{ result?.sub_title ?? ''
+                                  }}</v-card-subtitle
+                                >
+                                <v-card-text v-if="result?.text"
+                                  >{{ result?.text ?? '-' }}</v-card-text
+                                >
+                                <div
+                                  class="mt-4 d-flex flex-wrap align-center text-body-3 categories"
+                                >
+                                  <div
+                                    v-if="result?.geographic_coverage?.length === 1"
+                                    class="category-item"
                                   >
                                     <i
                                       class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
                                       aria-hidden="true"
                                     ></i>
                                     <div>
-                                      {{ formatGeographicCoverageForInline(result.geographic_coverage)[0] }} (+{{ result.geographic_coverage.length - 1 }})
+                                      {{
+                                      formatGeographicCoverageForInline(result.geographic_coverage)[0]
+                                      }}
                                     </div>
                                   </div>
-                                </template>
-                                <div
-                                  class="v-menu--country__content text-light-gray relative"
-                                >
-                                  <div
-                                    v-for="(item, index) in result?.geographic_coverage"
-                                    :key="index"
-                                    class="v-menu--country__item pa-3"
-                                    :class="{
+                                  <v-menu
+                                    v-else-if="result?.geographic_coverage?.length > 1"
+                                    class="v-menu--none-shadow"
+                                    content-class="v-menu--country"
+                                    max-height="250"
+                                    scroll-strategy="close"
+                                  >
+                                    <template v-slot:activator="{ props }">
+                                      <div
+                                        class="category-item clickable-fn"
+                                        v-bind="props"
+                                      >
+                                        <i
+                                          class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                          aria-hidden="true"
+                                        ></i>
+                                        <div>
+                                          {{
+                                          formatGeographicCoverageForInline(result.geographic_coverage)[0]
+                                          }} (+{{
+                                          result.geographic_coverage.length - 1
+                                          }})
+                                        </div>
+                                      </div>
+                                    </template>
+                                    <div
+                                      class="v-menu--country__content text-light-gray relative"
+                                    >
+                                      <div
+                                        v-for="(item, index) in result?.geographic_coverage"
+                                        :key="index"
+                                        class="v-menu--country__item pa-3"
+                                        :class="{
                                       'text-purple': item?.type === 'exist',
                                       'text-alert-color': item?.type === 'un_exist',
                                     }"
-                                  >
-                                    {{ typeof item === 'string' ? item : (item?.title ?? item?.name ?? '') }}
-                                  </div>
-                                </div>
-                              </v-menu>
+                                      >
+                                        {{ typeof item === 'string' ? item :
+                                        (item?.title ?? item?.name ?? '') }}
+                                      </div>
+                                    </div>
+                                  </v-menu>
 
-                              <div
-                                class="category-item"
-                                v-if="result.time_coverage"
-                              >
-                                <i
-                                  class="mdi mdi-calendar v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
-                                  aria-hidden="true"
-                                ></i>
-                                <div>{{ result?.time_coverage }}</div>
-                              </div>
-
-                              <div
-                                v-if="result?.source?.length === 1"
-                                class="category-item clickable-fn"
-                              >
-                                <i
-                                  v-if="result?.type === 'document'"
-                                  class="mdi-account-circle-outline mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
-                                  aria-hidden="true"
-                                ></i>
-                                <v-icon-custom
-                                  v-else
-                                  color="dark-gray"
-                                  type="symbol"
-                                  icon="account_balance"
-                                  outlined
-                                ></v-icon-custom>
-                                <div>{{ result?.source?.[0] }}</div>
-                              </div>
-                              <v-menu
-                                v-else-if="result?.source?.length > 1"
-                                class="v-menu--none-shadow"
-                                content-class="v-menu--source"
-                                max-height="250"
-                                scroll-strategy="close"
-                              >
-                                <template v-slot:activator="{ props }">
                                   <div
+                                    class="category-item"
+                                    v-if="result.time_coverage"
+                                  >
+                                    <i
+                                      class="mdi mdi-calendar v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                      aria-hidden="true"
+                                    ></i>
+                                    <div>{{ result?.time_coverage }}</div>
+                                  </div>
+
+                                  <div
+                                    v-if="result?.source?.length === 1"
                                     class="category-item clickable-fn"
-                                    v-bind="props"
                                   >
                                     <i
                                       v-if="result?.type === 'document'"
@@ -878,146 +888,174 @@
                                       icon="account_balance"
                                       outlined
                                     ></v-icon-custom>
-                                    <div>
-                                      {{ format_authorities_title(result) }}
-                                    </div>
+                                    <div>{{ result?.source?.[0] }}</div>
                                   </div>
-                                </template>
-                                <div
-                                  class="v-menu--source__content text-light-gray"
-                                >
-                                  <div
-                                    v-for="(item, index) in result?.source"
-                                    :key="index"
-                                    class="v-menu--source__item pa-3"
+                                  <v-menu
+                                    v-else-if="result?.source?.length > 1"
+                                    class="v-menu--none-shadow"
+                                    content-class="v-menu--source"
+                                    max-height="250"
+                                    scroll-strategy="close"
                                   >
-                                    {{ item }}
-                                  </div>
+                                    <template v-slot:activator="{ props }">
+                                      <div
+                                        class="category-item clickable-fn"
+                                        v-bind="props"
+                                      >
+                                        <i
+                                          v-if="result?.type === 'document'"
+                                          class="mdi-account-circle-outline mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                          aria-hidden="true"
+                                        ></i>
+                                        <v-icon-custom
+                                          v-else
+                                          color="dark-gray"
+                                          type="symbol"
+                                          icon="account_balance"
+                                          outlined
+                                        ></v-icon-custom>
+                                        <div>
+                                          {{ format_authorities_title(result) }}
+                                        </div>
+                                      </div>
+                                    </template>
+                                    <div
+                                      class="v-menu--source__content text-light-gray"
+                                    >
+                                      <div
+                                        v-for="(item, index) in result?.source"
+                                        :key="index"
+                                        class="v-menu--source__item pa-3"
+                                      >
+                                        {{ item }}
+                                      </div>
+                                    </div>
+                                  </v-menu>
                                 </div>
-                              </v-menu>
+                              </v-card>
                             </div>
-                          </v-card>
-                        </div>
-                      </template>
+                          </template>
 
-                      <template v-slot:empty>
-                        <div class="text-center text-light-gray text-sm mt-3">
-                          No more items!
-                        </div>
-                      </template>
-                    </v-infinite-scroll>
-                  </div>
-                </div>
-              </v-col>
-
-              <v-col
-                :cols="isFullscreen ? 12 : 8"
-                class="search-content__detail px-4 mt-4 pa-md-4 bg-secondary-100 relative"
-              >
-                <!-- DetailsPanel -->
-                <template v-if="viewItem">
-                  <div class="search-content__detail__info ga-md-4">
-                    <div
-                      class="d-flex ga-md-4 flex-column flex-md-row flex-1-1-0"
-                    >
-                      <div class="search-content__detail__info__image">
-                        <template v-if="loading">
-                          <v-progress-circular
-                            :size="40"
-                            :width="4"
-                            indeterminate
-                            color="primary"
-                          />
-                        </template>
-                        <template v-else>
-                          <img
-                            ref="thumbnailImage"
-                            src="https://data-compass.ihsn.org/files/thumbnails/thumbnail-s14220.jpeg"
-                            alt="Document thumbnail"
-                          />
-                        </template>
+                          <template v-slot:empty>
+                            <div
+                              class="text-center text-light-gray text-sm mt-3"
+                            >
+                              No more items!
+                            </div>
+                          </template>
+                        </v-infinite-scroll>
                       </div>
-                      <div
-                        class="search-content__detail__info__content relative"
-                      >
+                    </div>
+                  </v-col>
+
+                  <v-col
+                    :cols="isFullscreen ? 12 : 8"
+                    class="search-content__detail px-4 mt-4 pa-md-4 bg-secondary-100 relative"
+                  >
+                    <!-- DetailsPanel -->
+                    <template v-if="viewItem">
+                      <div class="search-content__detail__info ga-md-4">
                         <div
-                          class="d-flex align-center mb-3 type-info text-primary-dark"
+                          class="d-flex ga-md-4 flex-column flex-md-row flex-1-1-0"
                         >
-                          <v-icon-custom
-                            type="symbol"
-                            :icon="icons[viewItem.type]?.name ?? 'more_horiz'"
-                            size="15"
-                            :outlined="icons[viewItem.type]?.outlined ?? false"
-                          ></v-icon-custom>
-                          <div class="ml-1 text-subtitle-2 text-capitalize">
-                            {{ viewItem.type }}
+                          <div class="search-content__detail__info__image">
+                            <template v-if="loading">
+                              <v-progress-circular
+                                :size="40"
+                                :width="4"
+                                indeterminate
+                                color="primary"
+                              />
+                            </template>
+                            <template v-else>
+                              <img
+                                ref="thumbnailImage"
+                                src="https://data-compass.ihsn.org/files/thumbnails/thumbnail-s14220.jpeg"
+                                alt="Document thumbnail"
+                              />
+                            </template>
                           </div>
                           <div
-                            v-if="viewItem?.type_extra"
-                            class="text-subtitle-2 text-capitalize ml-1"
-                          >
-                            [{{ viewItem?.type_extra }}]
-                          </div>
-                        </div>
-
-                        <h6 class="text-primary-dark text-xl semibold">
-                          {{ viewItem.title }}
-                        </h6>
-
-                        <p
-                          class="text-charcoal text-sm medium mt-2"
-                          v-if="viewItem.sub_title"
-                        >
-                          {{ viewItem.sub_title }}
-                        </p>
-
-                        <div
-                          class="d-flex align-center flex-wrap text-gray-600 text-xs mt-3 ga-2"
-                        >
-                          <template v-if="viewItem.doi">
-                            DOI:
-                            <a
-                              class="doi-link"
-                              :href="`https://doi.org/${viewItem.doi}`"
-                              target="_blank"
-                              >{{ viewItem.doi }}</a
-                            >
-                          </template>
-                        </div>
-
-                        <div
-                          class="d-flex text-dark-gray text-xs mt-4 align-center flex-wrap medium"
-                        >
-                          <section
-                            class="d-flex align-center"
-                            v-if="viewItem.geographic_coverage?.length"
+                            class="search-content__detail__info__content relative flex-grow-1"
                           >
                             <div
-                              class="d-flex py-1"
-                              v-if="viewItem.geographic_coverage?.length === 1"
+                              class="d-flex justify-space-between align-start mb-2"
                             >
-                              <v-icon-custom
-                                type="symbol"
-                                icon="globe_asia"
-                                size="15"
-                                class="mr-1"
-                                outlined
-                              ></v-icon-custom>
-                              <span>{{
-                                formatGeographicCoverageForInline(viewItem.geographic_coverage)[0]
-                              }}</span>
-                            </div>
-                            <v-menu
-                              v-else-if="viewItem?.geographic_coverage?.length > 1"
-                              class="v-menu--none-shadow"
-                              content-class="v-menu--country"
-                              max-height="250"
-                              scroll-strategy="close"
-                            >
-                              <template v-slot:activator="{ props }">
+                              <div>
                                 <div
-                                  class="d-flex align-center py-1 cursor-pointer"
-                                  v-bind="props"
+                                  class="d-flex align-center mb-3 type-info text-primary-dark"
+                                >
+                                  <v-icon-custom
+                                    type="symbol"
+                                    :icon="icons[viewItem.type]?.name ?? 'more_horiz'"
+                                    size="15"
+                                    :outlined="icons[viewItem.type]?.outlined ?? false"
+                                  ></v-icon-custom>
+                                  <div
+                                    class="ml-1 text-subtitle-2 text-capitalize"
+                                  >
+                                    {{ viewItem.type }}
+                                  </div>
+                                  <div
+                                    v-if="viewItem?.type_extra"
+                                    class="text-subtitle-2 text-capitalize ml-1"
+                                  >
+                                    [{{ viewItem?.type_extra }}]
+                                  </div>
+                                </div>
+
+                                <h6 class="text-primary-dark text-xl semibold">
+                                  {{ viewItem.title }}
+                                </h6>
+                              </div>
+                              <v-btn
+                                v-if="viewItem?.type == 'document' && width >= 960"
+                                variant="outlined"
+                                size="small"
+                                class="v-btn-icon v-btn--search flex-shrink-0"
+                                :aria-label="detailExpanded ? 'Collapse' : 'Expand to use full screen'"
+                                @click="toggleDetailExpanded"
+                              >
+                                <v-icon-custom
+                                  :size="16"
+                                  type="symbol"
+                                  :outlined="true"
+                                  :icon="detailExpanded ? 'close_fullscreen' : 'open_in_full'"
+                                ></v-icon-custom>
+                              </v-btn>
+                            </div>
+
+                            <p
+                              class="text-charcoal text-sm medium mt-2"
+                              v-if="viewItem.sub_title"
+                            >
+                              {{ viewItem.sub_title }}
+                            </p>
+
+                            <div
+                              class="d-flex align-center flex-wrap text-gray-600 text-xs mt-3 ga-2"
+                            >
+                              <template v-if="viewItem.doi">
+                                DOI:
+                                <a
+                                  class="doi-link"
+                                  :href="`https://doi.org/${viewItem.doi}`"
+                                  target="_blank"
+                                  >{{ viewItem.doi }}</a
+                                >
+                              </template>
+                            </div>
+
+                            <div
+                              class="d-flex text-dark-gray text-xs mt-4 align-center flex-wrap medium"
+                            >
+                              <section
+                                class="d-flex align-center"
+                                v-if="viewItem.geographic_coverage?.length"
+                              >
+                                <div
+                                  class="d-flex py-1"
+                                  v-if="viewItem.geographic_coverage?.length === 1"
                                 >
                                   <v-icon-custom
                                     type="symbol"
@@ -1026,79 +1064,88 @@
                                     class="mr-1"
                                     outlined
                                   ></v-icon-custom>
-                                  <div>
-                                    {{ formatGeographicCoverageForInline(viewItem.geographic_coverage)[0] }} (+{{ viewItem.geographic_coverage.length - 1 }})
-                                  </div>
+                                  <span
+                                    >{{
+                                    formatGeographicCoverageForInline(viewItem.geographic_coverage)[0]
+                                    }}</span
+                                  >
                                 </div>
-                              </template>
-                              <div
-                                class="v-menu--country__content text-light-gray relative"
-                              >
-                                <div
-                                  v-for="(item, index) in viewItem?.geographic_coverage"
-                                  :key="index"
-                                  class="v-menu--country__item pa-3"
-                                  :class="{
+                                <v-menu
+                                  v-else-if="viewItem?.geographic_coverage?.length > 1"
+                                  class="v-menu--none-shadow"
+                                  content-class="v-menu--country"
+                                  max-height="250"
+                                  scroll-strategy="close"
+                                >
+                                  <template v-slot:activator="{ props }">
+                                    <div
+                                      class="d-flex align-center py-1 cursor-pointer"
+                                      v-bind="props"
+                                    >
+                                      <v-icon-custom
+                                        type="symbol"
+                                        icon="globe_asia"
+                                        size="15"
+                                        class="mr-1"
+                                        outlined
+                                      ></v-icon-custom>
+                                      <div>
+                                        {{
+                                        formatGeographicCoverageForInline(viewItem.geographic_coverage)[0]
+                                        }} (+{{
+                                        viewItem.geographic_coverage.length - 1
+                                        }})
+                                      </div>
+                                    </div>
+                                  </template>
+                                  <div
+                                    class="v-menu--country__content text-light-gray relative"
+                                  >
+                                    <div
+                                      v-for="(item, index) in viewItem?.geographic_coverage"
+                                      :key="index"
+                                      class="v-menu--country__item pa-3"
+                                      :class="{
                                     'text-purple': item?.type === 'exist',
                                     'text-alert-color': item?.type === 'un_exist',
                                   }"
+                                    >
+                                      {{ typeof item === 'string' ? item :
+                                      (item?.title ?? item?.name ?? '') }}
+                                    </div>
+                                  </div>
+                                </v-menu>
+                              </section>
+
+                              <section
+                                class="d-flex align-center"
+                                v-if="viewItem.time_coverage"
+                              >
+                                <span
+                                  v-if="viewItem.geographic_coverage?.length"
+                                  class="mx-2"
+                                  >|</span
                                 >
-                                  {{ typeof item === 'string' ? item : (item?.title ?? item?.name ?? '') }}
+                                <div class="d-flex py-1">
+                                  <v-icon-custom
+                                    type="symbol"
+                                    icon="calendar_today"
+                                    size="15"
+                                    class="mr-1"
+                                    outlined
+                                  ></v-icon-custom>
+                                  <span>{{ viewItem.time_coverage }}</span>
                                 </div>
-                              </div>
-                            </v-menu>
-                          </section>
+                              </section>
 
-                          <section
-                            class="d-flex align-center"
-                            v-if="viewItem.time_coverage"
-                          >
-                            <span
-                              v-if="viewItem.geographic_coverage?.length"
-                              class="mx-2"
-                              >|</span
-                            >
-                            <div class="d-flex py-1">
-                              <v-icon-custom
-                                type="symbol"
-                                icon="calendar_today"
-                                size="15"
-                                class="mr-1"
-                                outlined
-                              ></v-icon-custom>
-                              <span>{{ viewItem.time_coverage }}</span>
-                            </div>
-                          </section>
-
-                          <section
-                            class="d-flex align-center"
-                            v-if="viewItem.source?.length && viewItem.type !== 'document'"
-                          >
-                            <span class="mx-2">|</span>
-                            <div
-                              class="d-flex py-1 align-center cursor-pointer"
-                              v-if="viewItem?.source?.length === 1"
-                            >
-                              <v-icon-custom
-                                type="symbol"
-                                icon="account_balance"
-                                size="15"
-                                class="mr-1"
-                                outlined
-                              ></v-icon-custom>
-                              <span>{{ authorities_title }}</span>
-                            </div>
-                            <v-menu
-                              v-else-if="viewItem?.source?.length > 1"
-                              class="v-menu--none-shadow"
-                              content-class="v-menu--source"
-                              max-height="250"
-                              scroll-strategy="close"
-                            >
-                              <template v-slot:activator="{ props }">
+                              <section
+                                class="d-flex align-center"
+                                v-if="viewItem.source?.length && viewItem.type !== 'document'"
+                              >
+                                <span class="mx-2">|</span>
                                 <div
                                   class="d-flex py-1 align-center cursor-pointer"
-                                  v-bind="props"
+                                  v-if="viewItem?.source?.length === 1"
                                 >
                                   <v-icon-custom
                                     type="symbol"
@@ -1107,53 +1154,53 @@
                                     class="mr-1"
                                     outlined
                                   ></v-icon-custom>
-
-                                  <div>{{ authorities_title }}</div>
+                                  <span>{{ authorities_title }}</span>
                                 </div>
-                              </template>
-                              <div
-                                class="v-menu--source__content text-light-gray"
-                              >
-                                <div
-                                  v-for="(item, index) in viewItem?.source"
-                                  :key="index"
-                                  class="v-menu--source__item pa-3"
+                                <v-menu
+                                  v-else-if="viewItem?.source?.length > 1"
+                                  class="v-menu--none-shadow"
+                                  content-class="v-menu--source"
+                                  max-height="250"
+                                  scroll-strategy="close"
                                 >
-                                  {{ item }}
-                                </div>
-                              </div>
-                            </v-menu>
-                          </section>
+                                  <template v-slot:activator="{ props }">
+                                    <div
+                                      class="d-flex py-1 align-center cursor-pointer"
+                                      v-bind="props"
+                                    >
+                                      <v-icon-custom
+                                        type="symbol"
+                                        icon="account_balance"
+                                        size="15"
+                                        class="mr-1"
+                                        outlined
+                                      ></v-icon-custom>
 
-                          <section
-                            class="d-flex align-center"
-                            v-else-if="viewItem.source?.length"
-                          >
-                            <span class="mx-2">|</span>
-                            <div
-                              class="d-flex py-1 align-center cursor-pointer"
-                              v-if="viewItem?.source?.length === 1"
-                            >
-                              <v-icon-custom
-                                type="symbol"
-                                icon="account_circle"
-                                size="15"
-                                class="mr-1"
-                                outlined
-                              ></v-icon-custom>
-                              <span>{{ authorities_title }}</span>
-                            </div>
-                            <v-menu
-                              v-else-if="viewItem?.source?.length > 1"
-                              class="v-menu--none-shadow"
-                              content-class="v-menu--source"
-                              max-height="250"
-                              scroll-strategy="close"
-                            >
-                              <template v-slot:activator="{ props }">
+                                      <div>{{ authorities_title }}</div>
+                                    </div>
+                                  </template>
+                                  <div
+                                    class="v-menu--source__content text-light-gray"
+                                  >
+                                    <div
+                                      v-for="(item, index) in viewItem?.source"
+                                      :key="index"
+                                      class="v-menu--source__item pa-3"
+                                    >
+                                      {{ item }}
+                                    </div>
+                                  </div>
+                                </v-menu>
+                              </section>
+
+                              <section
+                                class="d-flex align-center"
+                                v-else-if="viewItem.source?.length"
+                              >
+                                <span class="mx-2">|</span>
                                 <div
                                   class="d-flex py-1 align-center cursor-pointer"
-                                  v-bind="props"
+                                  v-if="viewItem?.source?.length === 1"
                                 >
                                   <v-icon-custom
                                     type="symbol"
@@ -1162,628 +1209,1260 @@
                                     class="mr-1"
                                     outlined
                                   ></v-icon-custom>
-                                  <div>{{ authorities_title }}</div>
+                                  <span>{{ authorities_title }}</span>
                                 </div>
-                              </template>
-                              <div
-                                class="v-menu--source__content text-light-gray"
-                              >
-                                <div
-                                  v-for="(item, index) in viewItem?.source"
-                                  :key="index"
-                                  class="v-menu--source__item pa-3"
+                                <v-menu
+                                  v-else-if="viewItem?.source?.length > 1"
+                                  class="v-menu--none-shadow"
+                                  content-class="v-menu--source"
+                                  max-height="250"
+                                  scroll-strategy="close"
                                 >
-                                  {{ item }}
-                                </div>
-                              </div>
-                            </v-menu>
-                          </section>
-
-                          <section
-                            class="d-flex align-center"
-                            v-if="viewItem.collection?.length"
-                          >
-                            <span class="mx-2">|</span>
-                            <div class="d-flex py-1">
-                              <v-icon-custom
-                                type="symbol"
-                                icon="folder"
-                                size="15"
-                                class="mr-1"
-                                outlined
-                              ></v-icon-custom>
-                              <span>{{ viewItem.collection }}</span>
-                            </div>
-                          </section>
-
-                          <section
-                            class="d-flex align-center"
-                            v-if="viewItem.dimensions?.length"
-                          >
-                            <span class="mx-2">|</span>
-                            <div class="d-flex py-1">
-                              <v-icon-custom
-                                type="symbol"
-                                icon="resize"
-                                size="15"
-                                class="mr-1"
-                                outlined
-                              ></v-icon-custom>
-                              <span>{{ viewItem.dimensions?.join(', ') }}</span>
-                            </div>
-                          </section>
-                        </div>
-                      </div>
-                    </div>
-                    <!-- Group buttons (back + expand in header) -->
-                    <div
-                      class="d-flex justify-space-between justify-md-end align-center group-social-buttons"
-                    >
-                      <v-btn
-                        variant="outlined"
-                        class="v-btn-icon v-btn--search"
-                        @click="itemSelected = false"
-                        v-if="width < 960"
-                      >
-                        <v-icon-custom
-                          icon="chevron_backward"
-                          type="symbol"
-                          :size="20"
-                          outlined
-                        ></v-icon-custom>
-                      </v-btn>
-                      <v-btn
-                        v-if="viewItem?.type == 'document' && width >= 960"
-                        variant="outlined"
-                        class="v-btn-icon v-btn--search flex-shrink-0"
-                        :aria-label="detailExpanded ? 'Collapse' : 'Expand to use full screen'"
-                        @click="toggleDetailExpanded"
-                      >
-                        <v-icon-custom
-                          :size="18"
-                          type="symbol"
-                          :outlined="true"
-                          :icon="detailExpanded ? 'close_fullscreen' : 'open_in_full'"
-                        ></v-icon-custom>
-                      </v-btn>
-                    </div>
-                  </div>
-                  <template v-if="viewItem?.type == 'document'">
-                    <div
-                      class="search-content__detail__description mx-n4 mx-md-0 pt-4 py-md-5 px-md-1 bg-white rounded-lg mt-4"
-                    >
-                      <div
-                        class="d-flex ga-2 max-w-full flex-no-wrap overflow-hidden overflow-x-auto pb-2 px-4 px-md-4 align-center"
-                      >
-                        <v-btn
-                          variant="outlined"
-                          class="v-btn-icon v-btn--search"
-                          :class="{ active: btn.active }"
-                          v-for="(btn, index) in filteredBtnContents"
-                          :key="index"
-                          @click="handleFilter(btn, index)"
-                        >
-                          <v-icon-custom
-                            :size="16"
-                            type="symbol"
-                            :outlined="true"
-                            :icon="btn.icon"
-                          ></v-icon-custom>
-                          <span class="mx-1">{{ btn.text }}</span>
-                        </v-btn>
-                      </div>
-                      <div
-                        ref="scrollArea"
-                        class="scroll-area mt-6 px-4 px-md-4"
-                      >
-                        <div class="d-flex flex-column overflow-y-auto pr-2">
-                          <template v-if="active_tab === 'abstract'">
-                            <v-container>
-                              <v-row class="justify-center">
-                                <v-col cols="11">
-                                  <v-card-title class="text-h6"
-                                    >Abstract</v-card-title
-                                  >
-                                </v-col>
-                                <v-col cols="11">
-                                  <v-card-text>
-                                    <span
-                                      v-html="metadata?.document_description?.abstract"
-                                    ></span>
-                                  </v-card-text>
-                                </v-col>
-                              </v-row>
-                            </v-container>
-                          </template>
-
-                          <template v-if="active_tab === 'view' && metadata">
-                            <div
-                              class="pdf-viewer-wrap"
-                              v-if="pdfURL && typeof pdfURL === 'string'"
-                            >
-                              <div class="pdf-viewer-links mb-2">
-                                <a
-                                  class="pdf-link"
-                                  :href="pdfURL"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >Open PDF directly</a>
-                                <span class="pdf-viewer-links-sep">·</span>
-                                <a
-                                  class="pdf-link"
-                                  :href="'https://docs.google.com/gview?url=' + encodeURIComponent(pdfURL) + '&embedded=true'"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >Open with Google Viewer</a>
-                              </div>
-
-                              <div v-if="pdfLoadTimeout" class="pdf-viewer-timeout-msg">
-                                <p>If the PDF didn’t load above, use the links above to open it in a new tab.</p>
-                              </div>
-
-                              <div class="pdf-viewer-loading" v-if="pdfLoading">
-                                <div class="pdf-viewer-spinner"></div>
-                                <p>Loading PDF…</p>
-                                <p class="pdf-viewer-loading-hint">This may take a moment for large documents.</p>
-                              </div>
-
-                              <iframe
-                                ref="pdfIframe"
-                                class="pdf-viewer-iframe"
-                                width="100%"
-                                height="100%"
-                                :src="pdfIframeSrc"
-                                frameborder="0"
-                                title="PDF document"
-                                @load="onPdfIframeLoad"
-                              ></iframe>
-                            </div>
-                            <v-container v-else>
-                              <v-row justify="center">
-                                <v-col cols="12" md="6">
-                                  <v-alert
-                                    outlined
-                                    color="lighten"
-                                    icon="mdi-alert"
-                                    border="left"
-                                    elevation="2"
-                                  >
-                                    <span
-                                      >No link to this document is
-                                      available.</span
-                                    >
-                                  </v-alert>
-                                </v-col>
-                              </v-row>
-                            </v-container>
-                          </template>
-
-                          <template v-if="active_tab === 'metadata' && metadata">
-                            <v-container class="metadata-document">
-                              <v-card-title class="text-h6 pb-2">
-                                Document metadata
-                              </v-card-title>
-                              <v-card-text class="pt-0">
-                                <div
-                                  v-for="(sectionVal, sectionKey) in metadata"
-                                  :key="sectionKey"
-                                  class="metadata-section mb-6"
-                                >
-                                  <div class="metadata-section-title text-subtitle-2 text-medium-emphasis mb-3">
-                                    {{ formatMetadataKey(sectionKey) }}
-                                  </div>
-                                  <template v-if="sectionVal !== null && sectionVal !== undefined && typeof sectionVal === 'object' && !Array.isArray(sectionVal)">
-                                    <template v-for="(val, key) in sectionVal" :key="key">
+                                  <template v-slot:activator="{ props }">
                                     <div
-                                      v-if="hasMetadataValue(val)"
-                                      class="metadata-row d-flex align-start mb-3"
-                                      :class="{ 'metadata-row-pills': (key === 'keywords' || key === 'themes') && Array.isArray(val) && val.length > 0 }"
+                                      class="d-flex py-1 align-center cursor-pointer"
+                                      v-bind="props"
                                     >
-                                      <span class="metadata-label text-caption text-medium-emphasis">{{ formatMetadataKey(key) }}</span>
-                                      <span class="metadata-value text-body-2 flex-grow-1">
-                                        <template v-if="(key === 'keywords' || key === 'themes') && Array.isArray(val) && val.length > 0">
-                                          <div class="metadata-pills-block">
-                                            <div
-                                              v-for="group in groupKeywordsByVocabulary(val)"
-                                              :key="group.vocabulary"
-                                              class="metadata-pills-group mb-3"
-                                            >
-                                              <div class="metadata-pills-vocabulary text-caption text-medium-emphasis mb-1">{{ group.vocabulary }}</div>
-                                              <div class="metadata-pills-list d-flex flex-wrap ga-1">
-                                                <span
-                                                  v-for="name in group.names"
-                                                  :key="name"
-                                                  class="metadata-pill"
-                                                >{{ name }}</span>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </template>
-                                        <template v-else-if="(key === 'authors' || key === 'Authors') && Array.isArray(val) && val.length > 0">
-                                          <div class="metadata-authors-inline">
-                                            <template v-for="(name, index) in formatAuthorsForDisplay(val)" :key="index">
-                                              <span class="metadata-authors-item">
-                                                <span class="metadata-authors-name">{{ name }}</span>
-                                              </span>
-                                              <span v-if="index < formatAuthorsForDisplay(val).length - 1" class="metadata-authors-sep" aria-hidden="true">·</span>
-                                            </template>
-                                          </div>
-                                        </template>
-                                        <template v-else-if="Array.isArray(val) && val.length > 0 && isNameCodeArray(val)">
-                                          <div class="metadata-namecode-inline">
-                                            <template v-for="(item, index) in formatNameCodeList(val)" :key="index">
-                                              <span class="metadata-namecode-item">
-                                                <span class="metadata-namecode-code">{{ item.code }}</span>
-                                                <span class="metadata-namecode-name">{{ item.name }}</span>
-                                              </span>
-                                              <span v-if="index < formatNameCodeList(val).length - 1" class="metadata-namecode-sep" aria-hidden="true">·</span>
-                                            </template>
-                                          </div>
-                                        </template>
-                                        <metadata-value
-                                          v-else
-                                          :value="val"
-                                          :key-name="key"
-                                          :format-key="formatMetadataKey"
-                                        />
-                                      </span>
+                                      <v-icon-custom
+                                        type="symbol"
+                                        icon="account_circle"
+                                        size="15"
+                                        class="mr-1"
+                                        outlined
+                                      ></v-icon-custom>
+                                      <div>{{ authorities_title }}</div>
                                     </div>
-                                    </template>
                                   </template>
-                                  <div v-else class="metadata-row">
-                                    <span class="metadata-value text-body-2">{{ sectionVal == null ? '—' : String(sectionVal) }}</span>
+                                  <div
+                                    class="v-menu--source__content text-light-gray"
+                                  >
+                                    <div
+                                      v-for="(item, index) in viewItem?.source"
+                                      :key="index"
+                                      class="v-menu--source__item pa-3"
+                                    >
+                                      {{ item }}
+                                    </div>
                                   </div>
-                                </div>
-                              </v-card-text>
-                            </v-container>
-                          </template>
-                        </div>
-                      </div>
-                    </div>
-                  </template>
+                                </v-menu>
+                              </section>
 
-                  <template v-if="viewItem?.type == 'indicator'">
-                    <div
-                      class="search-content__detail__description mx-n4 mx-md-0 pt-4 py-md-5 px-md-1 bg-white rounded-lg mt-4"
-                      ref="detailDescription"
-                    >
-                      <div
-                        class="d-flex ga-2 max-w-full flex-no-wrap overflow-hidden overflow-x-auto pb-2 px-4 px-md-4"
-                      >
-                        <v-btn
-                          variant="outlined"
-                          class="v-btn-icon v-btn--search"
-                          :class="{ active: btn.active }"
-                          v-for="(btn, index) in filteredBtnContents"
-                          :key="index"
-                          @click="handleFilter(btn, index)"
-                        >
-                          <v-icon-custom
-                            :size="16"
-                            type="symbol"
-                            :outlined="true"
-                            :icon="btn.icon"
-                          ></v-icon-custom>
-
-                          <span class="mx-1">{{ btn.text }}</span>
-                        </v-btn>
-                      </div>
-                      <div class="scroll-area mt-6 px-4 px-md-4">
-                        <div class="d-flex flex-column overflow-y-auto pr-2">
-                          <template v-if="active_tab === 'metadata'">
-                            <div>
-                              <v-btn
-                                @click="handleMetadataDownload(viewItem?.idno, metadata)"
-                                color="gray-600"
-                                class="mb-4"
+                              <section
+                                class="d-flex align-center"
+                                v-if="viewItem.collection?.length"
                               >
-                                <v-icon>mdi-download</v-icon>
-                                JSON
-                              </v-btn>
-                            </div>
-                          </template>
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-                </template>
-              </v-col>
-            </v-row>
-            </template>
+                                <span class="mx-2">|</span>
+                                <div class="d-flex py-1">
+                                  <v-icon-custom
+                                    type="symbol"
+                                    icon="folder"
+                                    size="15"
+                                    class="mr-1"
+                                    outlined
+                                  ></v-icon-custom>
+                                  <span>{{ viewItem.collection }}</span>
+                                </div>
+                              </section>
 
-            <!-- Expanded layout: real two-column grid, search bar + results in left, detail in right -->
-            <template v-else>
-              <div class="expanded-layout">
-                <div class="expanded-layout__left">
-                  <div class="expanded-layout__search px-4 px-md-0 mt-md-4">
-                    <div
-                      class="position-relative search-bar-area search-bar"
-                      @click="isActive = true"
-                      v-click-outside="handleClickOutside"
-                    >
-                      <div class="custom-search-bar-filter">
-                        <div class="custom-search-bar-filter__content">
-                          <div class="grow-wrap" ref="textareaGrowWrap" :class="{ active: isActive }">
-                            <textarea
-                              v-model="query"
-                              name="text"
-                              :maxlength="5000"
-                              rows="1"
-                              placeholder="What are you looking for?"
-                              @input="updateReplicatedValue"
-                              @keydown="handleKeyDown"
-                            ></textarea>
-                          </div>
-                        </div>
-                        <div class="custom-search-bar-filter__append">
-                          <div class="right-icons-container">
-                            <div v-if="(!query && !tempFile) || isListening === true" class="w-[30px] h-[30px] custom-search-bar-filter__icon d-flex justify-center align-center">
-                              <i class="v-icon material-symbols-outlined cursor-pointer search-icon semibold search-buttons" size="24" onclick="onMicrophoneClick()" aria-label="Voice search">settings_voice</i>
-                            </div>
-                            <div class="d-flex right-icons-container__append" v-else>
-                              <v-icon-custom size="24" icon="cancel" type="symbol" class="v-icon--clickable v-btn--close custom-search-bar-filter__icon" outlined aria-label="clear" @click="clearSearch"></v-icon-custom>
-                              <v-btn aria-label="search" class="h-[30px]" size="small" @click="submit">
-                                <i class="material-icons v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true">arrow_forward_ios</i>
-                              </v-btn>
+                              <section
+                                class="d-flex align-center"
+                                v-if="viewItem.dimensions?.length"
+                              >
+                                <span class="mx-2">|</span>
+                                <div class="d-flex py-1">
+                                  <v-icon-custom
+                                    type="symbol"
+                                    icon="resize"
+                                    size="15"
+                                    class="mr-1"
+                                    outlined
+                                  ></v-icon-custom>
+                                  <span
+                                    >{{ viewItem.dimensions?.join(', ') }}</span
+                                  >
+                                </div>
+                              </section>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="expanded-layout__results pa-4 px-md-0 mt-md-2">
-                    <div class="d-flex flex-column search-content__result__area">
-                      <div class="scroll-area" ref="scrollSearchContentResultDesktop" v-if="fullResults">
-                        <v-infinite-scroll
-                          v-if="!reranking && fullResults.length > 0 && semanticResults.length > 0"
-                          :items="semanticResults"
-                          @load="loadMore"
-                          class="scroll-panel"
-                          color="primary"
+                        <!-- Back button row (mobile) -->
+                        <div
+                          class="d-flex justify-space-between justify-md-end align-center group-social-buttons"
                         >
-                          <template v-for="(result, index) in semanticResults" :key="result.code">
-                            <div @click="(e) => handleResultSearchClick(e, result)">
-                              <v-card flat class="card-result relative" :class="{ active: viewItem?.idno === result?.idno, 'mt-3': index !== 0 }" :link="false">
-                                <div class="d-flex align-center mb-3 type-info">
-                                  <i class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon card-icons" size="15" onclick="clearSearch()" aria-label="clear">{{ icons[result.type]?.name ?? 'more_horiz' }}</i>
-                                  <div class="text-xs text-capitalize">{{ result?.type }}</div>
-                                  <div v-if="result?.type_extra" class="text-xs text-capitalize ml-1">[{{ result?.type_extra }}]</div>
-                                </div>
-                                <v-card-title color="primary-dark" class="leading-1.3">{{ result?.title }}</v-card-title>
-                                <v-card-subtitle v-if="result?.sub_title">{{ result?.sub_title ?? '' }}</v-card-subtitle>
-                                <v-card-text v-if="result?.text">{{ result?.text ?? '-' }}</v-card-text>
-                                <div class="mt-4 d-flex flex-wrap align-center text-body-3 categories">
-                                  <div v-if="result?.geographic_coverage?.length === 1" class="category-item">
-                                    <i class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined" aria-hidden="true"></i>
-                                    <div>{{ formatGeographicCoverageForInline(result.geographic_coverage)[0] }}</div>
-                                  </div>
-                                  <v-menu v-else-if="result?.geographic_coverage?.length > 1" class="v-menu--none-shadow" content-class="v-menu--country" max-height="250" scroll-strategy="close">
-                                    <template v-slot:activator="{ props }">
-                                      <div class="category-item clickable-fn" v-bind="props">
-                                        <i class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined" aria-hidden="true"></i>
-                                        <div>{{ formatGeographicCoverageForInline(result.geographic_coverage)[0] }} (+{{ result.geographic_coverage.length - 1 }})</div>
-                                      </div>
-                                    </template>
-                                    <div class="v-menu--country__content text-light-gray relative">
-                                      <div v-for="(item, index) in result?.geographic_coverage" :key="index" class="v-menu--country__item pa-3" :class="{ 'text-purple': item?.type === 'exist', 'text-alert-color': item?.type === 'un_exist' }">{{ typeof item === 'string' ? item : (item?.title ?? item?.name ?? '') }}</div>
-                                    </div>
-                                  </v-menu>
-                                  <div class="category-item" v-if="result.time_coverage">
-                                    <i class="mdi mdi-calendar v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined" aria-hidden="true"></i>
-                                    <div>{{ result.time_coverage }}</div>
-                                  </div>
-                                  <div v-if="result?.source?.length === 1" class="category-item clickable-fn">
-                                    <i v-if="result?.type === 'document'" class="mdi-account-circle-outline mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined" aria-hidden="true"></i>
-                                    <v-icon-custom v-else color="dark-gray" type="symbol" icon="account_balance" outlined></v-icon-custom>
-                                    <div>{{ result?.source?.[0] }}</div>
-                                  </div>
-                                  <v-menu v-else-if="result?.source?.length > 1" class="v-menu--none-shadow" content-class="v-menu--source" max-height="250" scroll-strategy="close">
-                                    <template v-slot:activator="{ props }">
-                                      <div class="category-item clickable-fn" v-bind="props">
-                                        <i v-if="result?.type === 'document'" class="mdi-account-circle-outline mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined" aria-hidden="true"></i>
-                                        <v-icon-custom v-else color="dark-gray" type="symbol" icon="account_balance" outlined></v-icon-custom>
-                                        <div>{{ format_authorities_title(result) }}</div>
-                                      </div>
-                                    </template>
-                                    <div class="v-menu--source__content text-light-gray">
-                                      <div v-for="(item, index) in result?.source" :key="index" class="v-menu--source__item pa-3">{{ item }}</div>
-                                    </div>
-                                  </v-menu>
-                                </div>
-                              </v-card>
-                            </div>
-                          </template>
-                          <template v-slot:empty>
-                            <div class="text-center text-light-gray text-sm mt-3">No more items!</div>
-                          </template>
-                        </v-infinite-scroll>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="expanded-layout__right px-4 py-4">
-                  <template v-if="viewItem">
-                    <div class="search-content__detail__info search-content__detail__info--compact ga-md-4">
-                      <div class="d-flex ga-md-4 flex-column flex-md-row flex-1-1-0 align-start justify-space-between">
-                        <div class="search-content__detail__info__content relative flex-grow-1">
-                          <div class="d-flex align-center mb-3 type-info text-primary-dark">
-                            <v-icon-custom type="symbol" :icon="icons[viewItem.type]?.name ?? 'more_horiz'" size="15" :outlined="icons[viewItem.type]?.outlined ?? false"></v-icon-custom>
-                            <div class="ml-1 text-subtitle-2 text-capitalize">{{ viewItem.type }}</div>
-                            <div v-if="viewItem?.type_extra" class="text-subtitle-2 text-capitalize ml-1">[{{ viewItem?.type_extra }}]</div>
-                          </div>
-                          <h6 class="text-primary-dark text-xl semibold" style="font-size: 1rem;">{{ viewItem.title }}</h6>
-                          <p class="text-charcoal text-sm medium mt-2" v-if="viewItem.sub_title">{{ viewItem.sub_title }}</p>
-                          <div class="expanded-layout__header-meta">
-                            <div class="d-flex align-center text-gray-600 text-xs ga-2 flex-shrink-0">
-                              <template v-if="viewItem.doi">DOI: <a class="doi-link" :href="`https://doi.org/${viewItem.doi}`" target="_blank">{{ viewItem.doi }}</a></template>
-                            </div>
-                            <div class="d-flex text-dark-gray text-xs align-center medium flex-shrink-0">
-                            <section class="d-flex align-center" v-if="viewItem.geographic_coverage?.length">
-                              <div class="d-flex py-1" v-if="viewItem.geographic_coverage?.length === 1">
-                                <v-icon-custom type="symbol" icon="globe_asia" size="15" class="mr-1" outlined></v-icon-custom>
-                                <span>{{ formatGeographicCoverageForInline(viewItem.geographic_coverage)[0] }}</span>
-                              </div>
-                              <v-menu v-else-if="viewItem?.geographic_coverage?.length > 1" class="v-menu--none-shadow" content-class="v-menu--country" max-height="250" scroll-strategy="close">
-                                <template v-slot:activator="{ props }">
-                                  <div class="d-flex align-center py-1 cursor-pointer" v-bind="props">
-                                    <v-icon-custom type="symbol" icon="globe_asia" size="15" class="mr-1" outlined></v-icon-custom>
-                                    <div>{{ formatGeographicCoverageForInline(viewItem.geographic_coverage)[0] }} (+{{ viewItem.geographic_coverage.length - 1 }})</div>
-                                  </div>
-                                </template>
-                                <div class="v-menu--country__content text-light-gray relative">
-                                  <div v-for="(item, index) in viewItem?.geographic_coverage" :key="index" class="v-menu--country__item pa-3" :class="{ 'text-purple': item?.type === 'exist', 'text-alert-color': item?.type === 'un_exist' }">{{ typeof item === 'string' ? item : (item?.title ?? item?.name ?? '') }}</div>
-                                </div>
-                              </v-menu>
-                            </section>
-                            <section class="d-flex align-center" v-if="viewItem.time_coverage">
-                              <span v-if="viewItem.geographic_coverage?.length" class="mx-2">|</span>
-                              <div class="d-flex py-1">
-                                <v-icon-custom type="symbol" icon="calendar_today" size="15" class="mr-1" outlined></v-icon-custom>
-                                <span>{{ viewItem.time_coverage }}</span>
-                              </div>
-                            </section>
-                            <section class="d-flex align-center" v-if="viewItem.source?.length && viewItem.type !== 'document'">
-                              <span class="mx-2">|</span>
-                              <div class="d-flex py-1 align-center cursor-pointer" v-if="viewItem?.source?.length === 1">
-                                <v-icon-custom type="symbol" icon="account_balance" size="15" class="mr-1" outlined></v-icon-custom>
-                                <span>{{ authorities_title }}</span>
-                              </div>
-                              <v-menu v-else-if="viewItem?.source?.length > 1" class="v-menu--none-shadow" content-class="v-menu--source" max-height="250" scroll-strategy="close">
-                                <template v-slot:activator="{ props }">
-                                  <div class="d-flex py-1 align-center cursor-pointer" v-bind="props">
-                                    <v-icon-custom type="symbol" icon="account_balance" size="15" class="mr-1" outlined></v-icon-custom>
-                                    <div>{{ authorities_title }}</div>
-                                  </div>
-                                </template>
-                                <div class="v-menu--source__content text-light-gray">
-                                  <div v-for="(item, index) in viewItem?.source" :key="index" class="v-menu--source__item pa-3">{{ item }}</div>
-                                </div>
-                              </v-menu>
-                            </section>
-                            <section class="d-flex align-center" v-else-if="viewItem.source?.length">
-                              <span class="mx-2">|</span>
-                              <div class="d-flex py-1 align-center cursor-pointer" v-if="viewItem?.source?.length === 1">
-                                <v-icon-custom type="symbol" icon="account_circle" size="15" class="mr-1" outlined></v-icon-custom>
-                                <span>{{ authorities_title }}</span>
-                              </div>
-                              <v-menu v-else-if="viewItem?.source?.length > 1" class="v-menu--none-shadow" content-class="v-menu--source" max-height="250" scroll-strategy="close">
-                                <template v-slot:activator="{ props }">
-                                  <div class="d-flex py-1 align-center cursor-pointer" v-bind="props">
-                                    <v-icon-custom type="symbol" icon="account_circle" size="15" class="mr-1" outlined></v-icon-custom>
-                                    <div>{{ authorities_title }}</div>
-                                  </div>
-                                </template>
-                                <div class="v-menu--source__content text-light-gray">
-                                  <div v-for="(item, index) in viewItem?.source" :key="index" class="v-menu--source__item pa-3">{{ item }}</div>
-                                </div>
-                              </v-menu>
-                            </section>
-                            </div>
-                          </div>
-                        </div>
-                        <v-btn variant="outlined" class="v-btn-icon v-btn--search flex-shrink-0" :aria-label="detailExpanded ? 'Collapse' : 'Expand to use full screen'" @click="toggleDetailExpanded">
-                          <v-icon-custom :size="18" type="symbol" :outlined="true" :icon="detailExpanded ? 'close_fullscreen' : 'open_in_full'"></v-icon-custom>
-                        </v-btn>
-                      </div>
-                    </div>
-                    <div class="d-flex justify-space-between justify-md-end group-social-buttons">
-                      <v-btn variant="outlined" class="v-btn-icon v-btn--search" @click="itemSelected = false" v-if="width < 960">
-                        <v-icon-custom icon="chevron_backward" type="symbol" :size="20" outlined></v-icon-custom>
-                      </v-btn>
-                    </div>
-                    <template v-if="viewItem?.type == 'document'">
-                      <div class="search-content__detail__description mx-n4 mx-md-0 pt-4 py-md-5 px-md-1 bg-white rounded-lg mt-4 expanded-layout__description">
-                        <div class="d-flex ga-2 max-w-full flex-no-wrap overflow-hidden overflow-x-auto pb-2 px-4 px-md-4 align-center">
-                          <v-btn variant="outlined" class="v-btn-icon v-btn--search" :class="{ active: btn.active }" v-for="(btn, index) in filteredBtnContents" :key="index" @click="handleFilter(btn, index)">
-                            <v-icon-custom :size="16" type="symbol" :outlined="true" :icon="btn.icon"></v-icon-custom>
-                            <span class="mx-1">{{ btn.text }}</span>
+                          <v-btn
+                            variant="outlined"
+                            class="v-btn-icon v-btn--search"
+                            @click="itemSelected = false"
+                            v-if="width < 960"
+                          >
+                            <v-icon-custom
+                              icon="chevron_backward"
+                              type="symbol"
+                              :size="20"
+                              outlined
+                            ></v-icon-custom>
                           </v-btn>
                         </div>
-                        <div ref="scrollArea" class="scroll-area mt-6 px-4 px-md-4 expanded-layout__scroll">
-                          <div class="d-flex flex-column overflow-y-auto pr-2">
-                            <template v-if="active_tab === 'abstract'">
-                              <v-container>
-                                <v-row class="justify-center">
-                                  <v-col cols="11"><v-card-title class="text-h6">Abstract</v-card-title></v-col>
-                                  <v-col cols="11"><v-card-text><span v-html="metadata?.document_description?.abstract"></span></v-card-text></v-col>
-                                </v-row>
-                              </v-container>
-                            </template>
-                            <template v-if="active_tab === 'view' && metadata">
-                              <div class="pdf-viewer-wrap" v-if="pdfURL && typeof pdfURL === 'string'">
-                                <div class="pdf-viewer-links mb-2">
-                                  <a class="pdf-link" :href="pdfURL" target="_blank" rel="noopener noreferrer">Open PDF directly</a>
-                                  <span class="pdf-viewer-links-sep">·</span>
-                                  <a class="pdf-link" :href="'https://docs.google.com/gview?url=' + encodeURIComponent(pdfURL) + '&embedded=true'" target="_blank" rel="noopener noreferrer">Open with Google Viewer</a>
-                                </div>
-                                <div v-if="pdfLoadTimeout" class="pdf-viewer-timeout-msg"><p>If the PDF didn’t load above, use the links above to open it in a new tab.</p></div>
-                                <div class="pdf-viewer-loading" v-if="pdfLoading">
-                                  <div class="pdf-viewer-spinner"></div>
-                                  <p>Loading PDF…</p>
-                                  <p class="pdf-viewer-loading-hint">This may take a moment for large documents.</p>
-                                </div>
-                                <iframe ref="pdfIframe" class="pdf-viewer-iframe" width="100%" height="100%" :src="pdfIframeSrc" frameborder="0" title="PDF document" @load="onPdfIframeLoad"></iframe>
-                              </div>
-                              <v-container v-else>
-                                <v-row justify="center"><v-col cols="12" md="6">
-                                  <v-alert outlined color="lighten" icon="mdi-alert" border="left" elevation="2"><span>No link to this document is available.</span></v-alert>
-                                </v-col></v-row>
-                              </v-container>
-                            </template>
-                            <template v-if="active_tab === 'metadata' && metadata">
-                              <v-container class="metadata-document">
-                                <v-card-title class="text-h6 pb-2">Document metadata</v-card-title>
-                                <v-card-text class="pt-0">
-                                  <div v-for="(sectionVal, sectionKey) in metadata" :key="sectionKey" class="metadata-section mb-6">
-                                    <div class="metadata-section-title text-subtitle-2 text-medium-emphasis mb-3">{{ formatMetadataKey(sectionKey) }}</div>
-                                    <template v-if="sectionVal && typeof sectionVal === 'object' && !Array.isArray(sectionVal)">
-                                      <div v-for="(val, key) in sectionVal" :key="key" v-show="hasMetadataValue(val)" class="metadata-row d-flex align-start mb-3" :class="{ 'metadata-row-pills': (key === 'keywords' || key === 'themes') && Array.isArray(val) && val.length > 0 }">
-                                        <span class="metadata-label text-caption text-medium-emphasis">{{ formatMetadataKey(key) }}</span>
-                                        <span class="metadata-value text-body-2 flex-grow-1">
-                                          <template v-if="(key === 'keywords' || key === 'themes') && Array.isArray(val) && val.length > 0">
-                                            <div class="metadata-pills-block">
-                                              <div v-for="(group, gidx) in groupKeywordsByVocabulary(val)" :key="gidx" class="metadata-pills-group mb-3">
-                                                <div class="metadata-pills-vocabulary text-caption text-medium-emphasis mb-1">{{ group.vocabulary }}</div>
-                                                <div class="metadata-pills-list d-flex flex-wrap ga-1">
-                                                  <span v-for="(term, tidx) in group.terms" :key="tidx" class="metadata-pill">{{ term }}</span>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          </template>
-                                          <template v-else-if="key === 'authors' && Array.isArray(val)">
-                                            <div class="metadata-authors-inline">
-                                              <span v-for="(name, index) in formatAuthorsForDisplay(val)" :key="index" class="metadata-authors-item">
-                                                <span class="metadata-authors-name">{{ name }}</span>
-                                                <span v-if="index < formatAuthorsForDisplay(val).length - 1" class="metadata-authors-sep" aria-hidden="true">·</span>
-                                              </span>
-                                            </div>
-                                          </template>
-                                          <template v-else-if="isNameCodeArray(val)">
-                                            <div class="metadata-namecode-inline">
-                                              <span v-for="(item, index) in formatNameCodeList(val)" :key="index" class="metadata-namecode-item">
-                                                <span class="metadata-namecode-code">{{ item.code }}</span>
-                                                <span class="metadata-namecode-name">{{ item.name }}</span>
-                                                <span v-if="index < formatNameCodeList(val).length - 1" class="metadata-namecode-sep" aria-hidden="true">·</span>
-                                              </span>
-                                            </div>
-                                          </template>
-                                          <metadata-value v-else :value="val" :key-name="key" :format-key="formatMetadataKey" />
-                                        </span>
-                                      </div>
-                                    </template>
-                                    <div v-else class="metadata-row"><span class="metadata-value text-body-2">{{ sectionVal == null ? '—' : String(sectionVal) }}</span></div>
+                      </div>
+                      <template v-if="viewItem?.type == 'document'">
+                        <div
+                          class="search-content__detail__description mx-n4 mx-md-0 pt-4 py-md-5 px-md-1 bg-white rounded-lg mt-4"
+                        >
+                          <div
+                            class="d-flex ga-2 max-w-full flex-no-wrap overflow-hidden overflow-x-auto pb-2 px-4 px-md-4 align-center"
+                          >
+                            <v-btn
+                              variant="outlined"
+                              class="v-btn-icon v-btn--search"
+                              :class="{ active: btn.active }"
+                              v-for="(btn, index) in filteredBtnContents"
+                              :key="index"
+                              @click="handleFilter(btn, index)"
+                            >
+                              <v-icon-custom
+                                :size="16"
+                                type="symbol"
+                                :outlined="true"
+                                :icon="btn.icon"
+                              ></v-icon-custom>
+                              <span class="mx-1">{{ btn.text }}</span>
+                            </v-btn>
+                          </div>
+                          <div
+                            ref="scrollArea"
+                            class="scroll-area mt-6 px-4 px-md-4"
+                          >
+                            <div
+                              class="d-flex flex-column overflow-y-auto pr-2"
+                            >
+                              <template v-if="active_tab === 'abstract'">
+                                <v-container>
+                                  <v-row class="justify-center">
+                                    <v-col cols="11">
+                                      <v-card-title class="text-h6"
+                                        >Abstract</v-card-title
+                                      >
+                                    </v-col>
+                                    <v-col cols="11">
+                                      <v-card-text>
+                                        <span
+                                          v-html="metadata?.document_description?.abstract"
+                                        ></span>
+                                      </v-card-text>
+                                    </v-col>
+                                  </v-row>
+                                </v-container>
+                              </template>
+
+                              <template
+                                v-if="active_tab === 'view' && metadata"
+                              >
+                                <div
+                                  class="pdf-viewer-wrap"
+                                  v-if="pdfURL && typeof pdfURL === 'string'"
+                                >
+                                  <div class="pdf-viewer-links mb-2">
+                                    <a
+                                      class="pdf-link"
+                                      :href="pdfURL"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      >Open PDF directly</a
+                                    >
+                                    <span class="pdf-viewer-links-sep">·</span>
+                                    <a
+                                      class="pdf-link"
+                                      :href="'https://docs.google.com/gview?url=' + encodeURIComponent(pdfURL) + '&embedded=true'"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      >Open with Google Viewer</a
+                                    >
                                   </div>
-                                </v-card-text>
-                              </v-container>
-                            </template>
+
+                                  <div
+                                    v-if="pdfLoadTimeout"
+                                    class="pdf-viewer-timeout-msg"
+                                  >
+                                    <p>
+                                      If the PDF didn’t load above, use the
+                                      links above to open it in a new tab.
+                                    </p>
+                                  </div>
+
+                                  <div
+                                    class="pdf-viewer-loading"
+                                    v-if="pdfLoading"
+                                  >
+                                    <div class="pdf-viewer-spinner"></div>
+                                    <p>Loading PDF…</p>
+                                    <p class="pdf-viewer-loading-hint">
+                                      This may take a moment for large
+                                      documents.
+                                    </p>
+                                  </div>
+
+                                  <iframe
+                                    ref="pdfIframe"
+                                    class="pdf-viewer-iframe"
+                                    width="100%"
+                                    height="100%"
+                                    :src="pdfIframeSrc"
+                                    frameborder="0"
+                                    title="PDF document"
+                                    @load="onPdfIframeLoad"
+                                  ></iframe>
+                                </div>
+                                <v-container v-else>
+                                  <v-row justify="center">
+                                    <v-col cols="12" md="6">
+                                      <v-alert
+                                        outlined
+                                        color="lighten"
+                                        icon="mdi-alert"
+                                        border="left"
+                                        elevation="2"
+                                      >
+                                        <span
+                                          >No link to this document is
+                                          available.</span
+                                        >
+                                      </v-alert>
+                                    </v-col>
+                                  </v-row>
+                                </v-container>
+                              </template>
+
+                              <template
+                                v-if="active_tab === 'metadata' && metadata"
+                              >
+                                <v-container class="metadata-document">
+                                  <v-card-title class="text-h6 pb-2">
+                                    Document metadata
+                                  </v-card-title>
+                                  <v-card-text class="pt-0">
+                                    <div
+                                      v-for="(sectionVal, sectionKey) in metadata"
+                                      :key="sectionKey"
+                                      class="metadata-section mb-6"
+                                    >
+                                      <div
+                                        class="metadata-section-title text-subtitle-2 text-medium-emphasis mb-3"
+                                      >
+                                        {{ formatMetadataKey(sectionKey) }}
+                                      </div>
+                                      <template
+                                        v-if="sectionVal !== null && sectionVal !== undefined && typeof sectionVal === 'object' && !Array.isArray(sectionVal)"
+                                      >
+                                        <template
+                                          v-for="(val, key) in sectionVal"
+                                          :key="key"
+                                        >
+                                          <div
+                                            v-if="hasMetadataValue(val)"
+                                            class="metadata-row d-flex align-start mb-3"
+                                            :class="{ 'metadata-row-pills': (key === 'keywords' || key === 'themes') && Array.isArray(val) && val.length > 0 }"
+                                          >
+                                            <span
+                                              class="metadata-label text-caption text-medium-emphasis"
+                                              >{{ formatMetadataKey(key)
+                                              }}</span
+                                            >
+                                            <span
+                                              class="metadata-value text-body-2 flex-grow-1"
+                                            >
+                                              <template
+                                                v-if="(key === 'keywords' || key === 'themes') && Array.isArray(val) && val.length > 0"
+                                              >
+                                                <div
+                                                  class="metadata-pills-block"
+                                                >
+                                                  <div
+                                                    v-for="group in groupKeywordsByVocabulary(val)"
+                                                    :key="group.vocabulary"
+                                                    class="metadata-pills-group mb-3"
+                                                  >
+                                                    <div
+                                                      class="metadata-pills-vocabulary text-caption text-medium-emphasis mb-1"
+                                                    >
+                                                      {{ group.vocabulary }}
+                                                    </div>
+                                                    <div
+                                                      class="metadata-pills-list d-flex flex-wrap ga-1"
+                                                    >
+                                                      <span
+                                                        v-for="name in group.names"
+                                                        :key="name"
+                                                        class="metadata-pill"
+                                                        >{{ name }}</span
+                                                      >
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </template>
+                                              <template
+                                                v-else-if="(key === 'authors' || key === 'Authors') && Array.isArray(val) && val.length > 0"
+                                              >
+                                                <div
+                                                  class="metadata-authors-inline"
+                                                >
+                                                  <template
+                                                    v-for="(name, index) in formatAuthorsForDisplay(val)"
+                                                    :key="index"
+                                                  >
+                                                    <span
+                                                      class="metadata-authors-item"
+                                                    >
+                                                      <span
+                                                        class="metadata-authors-name"
+                                                        >{{ name }}</span
+                                                      >
+                                                    </span>
+                                                    <span
+                                                      v-if="index < formatAuthorsForDisplay(val).length - 1"
+                                                      class="metadata-authors-sep"
+                                                      aria-hidden="true"
+                                                      >·</span
+                                                    >
+                                                  </template>
+                                                </div>
+                                              </template>
+                                              <template
+                                                v-else-if="Array.isArray(val) && val.length > 0 && isNameCodeArray(val)"
+                                              >
+                                                <div
+                                                  class="metadata-namecode-inline"
+                                                >
+                                                  <template
+                                                    v-for="(item, index) in formatNameCodeList(val)"
+                                                    :key="index"
+                                                  >
+                                                    <span
+                                                      class="metadata-namecode-item"
+                                                    >
+                                                      <span
+                                                        class="metadata-namecode-code"
+                                                        >{{ item.code }}</span
+                                                      >
+                                                      <span
+                                                        class="metadata-namecode-name"
+                                                        >{{ item.name }}</span
+                                                      >
+                                                    </span>
+                                                    <span
+                                                      v-if="index < formatNameCodeList(val).length - 1"
+                                                      class="metadata-namecode-sep"
+                                                      aria-hidden="true"
+                                                      >·</span
+                                                    >
+                                                  </template>
+                                                </div>
+                                              </template>
+                                              <metadata-value
+                                                v-else
+                                                :value="val"
+                                                :key-name="key"
+                                                :format-key="formatMetadataKey"
+                                              />
+                                            </span>
+                                          </div>
+                                        </template>
+                                      </template>
+                                      <div v-else class="metadata-row">
+                                        <span class="metadata-value text-body-2"
+                                          >{{ sectionVal == null ? '—' :
+                                          String(sectionVal) }}</span
+                                        >
+                                      </div>
+                                    </div>
+                                  </v-card-text>
+                                </v-container>
+                              </template>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+
+                      <template v-if="viewItem?.type == 'indicator'">
+                        <div
+                          class="search-content__detail__description mx-n4 mx-md-0 pt-4 py-md-5 px-md-1 bg-white rounded-lg mt-4"
+                          ref="detailDescription"
+                        >
+                          <div
+                            class="d-flex ga-2 max-w-full flex-no-wrap overflow-hidden overflow-x-auto pb-2 px-4 px-md-4"
+                          >
+                            <v-btn
+                              variant="outlined"
+                              class="v-btn-icon v-btn--search"
+                              :class="{ active: btn.active }"
+                              v-for="(btn, index) in filteredBtnContents"
+                              :key="index"
+                              @click="handleFilter(btn, index)"
+                            >
+                              <v-icon-custom
+                                :size="16"
+                                type="symbol"
+                                :outlined="true"
+                                :icon="btn.icon"
+                              ></v-icon-custom>
+
+                              <span class="mx-1">{{ btn.text }}</span>
+                            </v-btn>
+                          </div>
+                          <div class="scroll-area mt-6 px-4 px-md-4">
+                            <div
+                              class="d-flex flex-column overflow-y-auto pr-2"
+                            >
+                              <template v-if="active_tab === 'metadata'">
+                                <div>
+                                  <v-btn
+                                    @click="handleMetadataDownload(viewItem?.idno, metadata)"
+                                    color="gray-600"
+                                    class="mb-4"
+                                  >
+                                    <v-icon>mdi-download</v-icon>
+                                    JSON
+                                  </v-btn>
+                                </div>
+                              </template>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </template>
+                  </v-col>
+                </v-row>
+              </template>
+
+              <!-- Expanded layout: real two-column grid, search bar + results in left, detail in right -->
+              <template v-else>
+                <div
+                  class="expanded-layout"
+                  :style="resultListWidth ? { '--result-list-width': resultListWidth + 'px' } : {}"
+                >
+                  <div
+                    class="expanded-layout__left"
+                    :style="resultListWidth ? { width: resultListWidth + 'px', minWidth: resultListWidth + 'px', maxWidth: resultListWidth + 'px' } : {}"
+                  >
+                    <div class="expanded-layout__search px-4 px-md-0 mt-md-4">
+                      <div
+                        class="position-relative search-bar-area search-bar"
+                        @click="isActive = true"
+                        v-click-outside="handleClickOutside"
+                      >
+                        <div class="custom-search-bar-filter">
+                          <div class="custom-search-bar-filter__content">
+                            <div
+                              class="grow-wrap"
+                              ref="textareaGrowWrap"
+                              :class="{ active: isActive }"
+                            >
+                              <textarea
+                                v-model="query"
+                                name="text"
+                                :maxlength="5000"
+                                rows="1"
+                                placeholder="What are you looking for?"
+                                @input="updateReplicatedValue"
+                                @keydown="handleKeyDown"
+                              ></textarea>
+                            </div>
+                          </div>
+                          <div class="custom-search-bar-filter__append">
+                            <div class="right-icons-container">
+                              <div
+                                v-if="(!query && !tempFile) || isListening === true"
+                                class="w-[30px] h-[30px] custom-search-bar-filter__icon d-flex justify-center align-center"
+                              >
+                                <i
+                                  class="v-icon material-symbols-outlined cursor-pointer search-icon semibold search-buttons"
+                                  size="24"
+                                  onclick="onMicrophoneClick()"
+                                  aria-label="Voice search"
+                                  >settings_voice</i
+                                >
+                              </div>
+                              <div
+                                class="d-flex right-icons-container__append"
+                                v-else
+                              >
+                                <v-icon-custom
+                                  size="24"
+                                  icon="cancel"
+                                  type="symbol"
+                                  class="v-icon--clickable v-btn--close custom-search-bar-filter__icon"
+                                  outlined
+                                  aria-label="clear"
+                                  @click="clearSearch"
+                                ></v-icon-custom>
+                                <v-btn
+                                  aria-label="search"
+                                  class="h-[30px]"
+                                  size="small"
+                                  @click="submit"
+                                >
+                                  <i
+                                    class="material-icons v-icon notranslate v-theme--light v-icon--size-default"
+                                    aria-hidden="true"
+                                    >arrow_forward_ios</i
+                                  >
+                                </v-btn>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
+                    </div>
+                    <div class="expanded-layout__results pa-4 px-md-0 mt-md-2">
+                      <div
+                        class="d-flex flex-column search-content__result__area"
+                      >
+                        <div
+                          class="scroll-area"
+                          ref="scrollSearchContentResultDesktop"
+                          v-if="fullResults"
+                        >
+                          <v-infinite-scroll
+                            v-if="!reranking && fullResults.length > 0 && semanticResults.length > 0"
+                            :items="semanticResults"
+                            @load="loadMore"
+                            class="scroll-panel"
+                            color="primary"
+                          >
+                            <template
+                              v-for="(result, index) in semanticResults"
+                              :key="result.code"
+                            >
+                              <div
+                                @click="(e) => handleResultSearchClick(e, result)"
+                              >
+                                <v-card
+                                  flat
+                                  class="card-result relative"
+                                  :class="{ active: viewItem?.idno === result?.idno, 'mt-3': index !== 0 }"
+                                  :link="false"
+                                >
+                                  <div
+                                    class="d-flex align-center mb-3 type-info"
+                                  >
+                                    <i
+                                      class="v-icon material-symbols-outlined v-icon--clickable v-btn--close custom-search-bar-filter__icon card-icons"
+                                      size="15"
+                                      onclick="clearSearch()"
+                                      aria-label="clear"
+                                      >{{ icons[result.type]?.name ??
+                                      'more_horiz' }}</i
+                                    >
+                                    <div class="text-xs text-capitalize">
+                                      {{ result?.type }}
+                                    </div>
+                                    <div
+                                      v-if="result?.type_extra"
+                                      class="text-xs text-capitalize ml-1"
+                                    >
+                                      [{{ result?.type_extra }}]
+                                    </div>
+                                  </div>
+                                  <v-card-title
+                                    color="primary-dark"
+                                    class="leading-1.3"
+                                    >{{ result?.title }}</v-card-title
+                                  >
+                                  <v-card-subtitle v-if="result?.sub_title"
+                                    >{{ result?.sub_title ?? ''
+                                    }}</v-card-subtitle
+                                  >
+                                  <v-card-text v-if="result?.text"
+                                    >{{ result?.text ?? '-' }}</v-card-text
+                                  >
+                                  <div
+                                    class="mt-4 d-flex flex-wrap align-center text-body-3 categories"
+                                  >
+                                    <div
+                                      v-if="result?.geographic_coverage?.length === 1"
+                                      class="category-item"
+                                    >
+                                      <i
+                                        class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                        aria-hidden="true"
+                                      ></i>
+                                      <div>
+                                        {{
+                                        formatGeographicCoverageForInline(result.geographic_coverage)[0]
+                                        }}
+                                      </div>
+                                    </div>
+                                    <v-menu
+                                      v-else-if="result?.geographic_coverage?.length > 1"
+                                      class="v-menu--none-shadow"
+                                      content-class="v-menu--country"
+                                      max-height="250"
+                                      scroll-strategy="close"
+                                    >
+                                      <template v-slot:activator="{ props }">
+                                        <div
+                                          class="category-item clickable-fn"
+                                          v-bind="props"
+                                        >
+                                          <i
+                                            class="mdi mdi-earth v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                            aria-hidden="true"
+                                          ></i>
+                                          <div>
+                                            {{
+                                            formatGeographicCoverageForInline(result.geographic_coverage)[0]
+                                            }} (+{{
+                                            result.geographic_coverage.length -
+                                            1 }})
+                                          </div>
+                                        </div>
+                                      </template>
+                                      <div
+                                        class="v-menu--country__content text-light-gray relative"
+                                      >
+                                        <div
+                                          v-for="(item, index) in result?.geographic_coverage"
+                                          :key="index"
+                                          class="v-menu--country__item pa-3"
+                                          :class="{ 'text-purple': item?.type === 'exist', 'text-alert-color': item?.type === 'un_exist' }"
+                                        >
+                                          {{ typeof item === 'string' ? item :
+                                          (item?.title ?? item?.name ?? '') }}
+                                        </div>
+                                      </div>
+                                    </v-menu>
+                                    <div
+                                      class="category-item"
+                                      v-if="result.time_coverage"
+                                    >
+                                      <i
+                                        class="mdi mdi-calendar v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                        aria-hidden="true"
+                                      ></i>
+                                      <div>{{ result.time_coverage }}</div>
+                                    </div>
+                                    <div
+                                      v-if="result?.source?.length === 1"
+                                      class="category-item clickable-fn"
+                                    >
+                                      <i
+                                        v-if="result?.type === 'document'"
+                                        class="mdi-account-circle-outline mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                        aria-hidden="true"
+                                      ></i>
+                                      <v-icon-custom
+                                        v-else
+                                        color="dark-gray"
+                                        type="symbol"
+                                        icon="account_balance"
+                                        outlined
+                                      ></v-icon-custom>
+                                      <div>{{ result?.source?.[0] }}</div>
+                                    </div>
+                                    <v-menu
+                                      v-else-if="result?.source?.length > 1"
+                                      class="v-menu--none-shadow"
+                                      content-class="v-menu--source"
+                                      max-height="250"
+                                      scroll-strategy="close"
+                                    >
+                                      <template v-slot:activator="{ props }">
+                                        <div
+                                          class="category-item clickable-fn"
+                                          v-bind="props"
+                                        >
+                                          <i
+                                            v-if="result?.type === 'document'"
+                                            class="mdi-account-circle-outline mdi v-icon notranslate v-theme--light v-icon--size-default material-symbols-outlined"
+                                            aria-hidden="true"
+                                          ></i>
+                                          <v-icon-custom
+                                            v-else
+                                            color="dark-gray"
+                                            type="symbol"
+                                            icon="account_balance"
+                                            outlined
+                                          ></v-icon-custom>
+                                          <div>
+                                            {{ format_authorities_title(result)
+                                            }}
+                                          </div>
+                                        </div>
+                                      </template>
+                                      <div
+                                        class="v-menu--source__content text-light-gray"
+                                      >
+                                        <div
+                                          v-for="(item, index) in result?.source"
+                                          :key="index"
+                                          class="v-menu--source__item pa-3"
+                                        >
+                                          {{ item }}
+                                        </div>
+                                      </div>
+                                    </v-menu>
+                                  </div>
+                                </v-card>
+                              </div>
+                            </template>
+                            <template v-slot:empty>
+                              <div
+                                class="text-center text-light-gray text-sm mt-3"
+                              >
+                                No more items!
+                              </div>
+                            </template>
+                          </v-infinite-scroll>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="expanded-layout__right px-4 py-4">
+                    <template v-if="viewItem">
+                      <div
+                        class="search-content__detail__info search-content__detail__info--compact ga-md-4"
+                      >
+                        <div
+                          class="d-flex ga-md-4 flex-column flex-md-row flex-1-1-0 align-start justify-space-between"
+                        >
+                          <div
+                            class="search-content__detail__info__content relative flex-grow-1"
+                          >
+                            <div
+                              class="d-flex align-center mb-3 type-info text-primary-dark"
+                            >
+                              <v-icon-custom
+                                type="symbol"
+                                :icon="icons[viewItem.type]?.name ?? 'more_horiz'"
+                                size="15"
+                                :outlined="icons[viewItem.type]?.outlined ?? false"
+                              ></v-icon-custom>
+                              <div class="ml-1 text-subtitle-2 text-capitalize">
+                                {{ viewItem.type }}
+                              </div>
+                              <div
+                                v-if="viewItem?.type_extra"
+                                class="text-subtitle-2 text-capitalize ml-1"
+                              >
+                                [{{ viewItem?.type_extra }}]
+                              </div>
+                            </div>
+                            <h6
+                              class="text-primary-dark text-xl semibold"
+                              style="font-size: 1rem"
+                            >
+                              {{ viewItem.title }}
+                            </h6>
+                            <p
+                              class="text-charcoal text-sm medium mt-2"
+                              v-if="viewItem.sub_title"
+                            >
+                              {{ viewItem.sub_title }}
+                            </p>
+                            <div class="expanded-layout__header-meta">
+                              <div
+                                class="d-flex align-center text-gray-600 text-xs ga-2 flex-shrink-0"
+                              >
+                                <template v-if="viewItem.doi"
+                                  >DOI:
+                                  <a
+                                    class="doi-link"
+                                    :href="`https://doi.org/${viewItem.doi}`"
+                                    target="_blank"
+                                    >{{ viewItem.doi }}</a
+                                  ></template
+                                >
+                              </div>
+                              <div
+                                class="d-flex text-dark-gray text-xs align-center medium flex-shrink-0"
+                              >
+                                <section
+                                  class="d-flex align-center"
+                                  v-if="viewItem.geographic_coverage?.length"
+                                >
+                                  <div
+                                    class="d-flex py-1"
+                                    v-if="viewItem.geographic_coverage?.length === 1"
+                                  >
+                                    <v-icon-custom
+                                      type="symbol"
+                                      icon="globe_asia"
+                                      size="15"
+                                      class="mr-1"
+                                      outlined
+                                    ></v-icon-custom>
+                                    <span
+                                      >{{
+                                      formatGeographicCoverageForInline(viewItem.geographic_coverage)[0]
+                                      }}</span
+                                    >
+                                  </div>
+                                  <v-menu
+                                    v-else-if="viewItem?.geographic_coverage?.length > 1"
+                                    class="v-menu--none-shadow"
+                                    content-class="v-menu--country"
+                                    max-height="250"
+                                    scroll-strategy="close"
+                                  >
+                                    <template v-slot:activator="{ props }">
+                                      <div
+                                        class="d-flex align-center py-1 cursor-pointer"
+                                        v-bind="props"
+                                      >
+                                        <v-icon-custom
+                                          type="symbol"
+                                          icon="globe_asia"
+                                          size="15"
+                                          class="mr-1"
+                                          outlined
+                                        ></v-icon-custom>
+                                        <div>
+                                          {{
+                                          formatGeographicCoverageForInline(viewItem.geographic_coverage)[0]
+                                          }} (+{{
+                                          viewItem.geographic_coverage.length -
+                                          1 }})
+                                        </div>
+                                      </div>
+                                    </template>
+                                    <div
+                                      class="v-menu--country__content text-light-gray relative"
+                                    >
+                                      <div
+                                        v-for="(item, index) in viewItem?.geographic_coverage"
+                                        :key="index"
+                                        class="v-menu--country__item pa-3"
+                                        :class="{ 'text-purple': item?.type === 'exist', 'text-alert-color': item?.type === 'un_exist' }"
+                                      >
+                                        {{ typeof item === 'string' ? item :
+                                        (item?.title ?? item?.name ?? '') }}
+                                      </div>
+                                    </div>
+                                  </v-menu>
+                                </section>
+                                <section
+                                  class="d-flex align-center"
+                                  v-if="viewItem.time_coverage"
+                                >
+                                  <span
+                                    v-if="viewItem.geographic_coverage?.length"
+                                    class="mx-2"
+                                    >|</span
+                                  >
+                                  <div class="d-flex py-1">
+                                    <v-icon-custom
+                                      type="symbol"
+                                      icon="calendar_today"
+                                      size="15"
+                                      class="mr-1"
+                                      outlined
+                                    ></v-icon-custom>
+                                    <span>{{ viewItem.time_coverage }}</span>
+                                  </div>
+                                </section>
+                                <section
+                                  class="d-flex align-center"
+                                  v-if="viewItem.source?.length && viewItem.type !== 'document'"
+                                >
+                                  <span class="mx-2">|</span>
+                                  <div
+                                    class="d-flex py-1 align-center cursor-pointer"
+                                    v-if="viewItem?.source?.length === 1"
+                                  >
+                                    <v-icon-custom
+                                      type="symbol"
+                                      icon="account_balance"
+                                      size="15"
+                                      class="mr-1"
+                                      outlined
+                                    ></v-icon-custom>
+                                    <span>{{ authorities_title }}</span>
+                                  </div>
+                                  <v-menu
+                                    v-else-if="viewItem?.source?.length > 1"
+                                    class="v-menu--none-shadow"
+                                    content-class="v-menu--source"
+                                    max-height="250"
+                                    scroll-strategy="close"
+                                  >
+                                    <template v-slot:activator="{ props }">
+                                      <div
+                                        class="d-flex py-1 align-center cursor-pointer"
+                                        v-bind="props"
+                                      >
+                                        <v-icon-custom
+                                          type="symbol"
+                                          icon="account_balance"
+                                          size="15"
+                                          class="mr-1"
+                                          outlined
+                                        ></v-icon-custom>
+                                        <div>{{ authorities_title }}</div>
+                                      </div>
+                                    </template>
+                                    <div
+                                      class="v-menu--source__content text-light-gray"
+                                    >
+                                      <div
+                                        v-for="(item, index) in viewItem?.source"
+                                        :key="index"
+                                        class="v-menu--source__item pa-3"
+                                      >
+                                        {{ item }}
+                                      </div>
+                                    </div>
+                                  </v-menu>
+                                </section>
+                                <section
+                                  class="d-flex align-center"
+                                  v-else-if="viewItem.source?.length"
+                                >
+                                  <span class="mx-2">|</span>
+                                  <div
+                                    class="d-flex py-1 align-center cursor-pointer"
+                                    v-if="viewItem?.source?.length === 1"
+                                  >
+                                    <v-icon-custom
+                                      type="symbol"
+                                      icon="account_circle"
+                                      size="15"
+                                      class="mr-1"
+                                      outlined
+                                    ></v-icon-custom>
+                                    <span>{{ authorities_title }}</span>
+                                  </div>
+                                  <v-menu
+                                    v-else-if="viewItem?.source?.length > 1"
+                                    class="v-menu--none-shadow"
+                                    content-class="v-menu--source"
+                                    max-height="250"
+                                    scroll-strategy="close"
+                                  >
+                                    <template v-slot:activator="{ props }">
+                                      <div
+                                        class="d-flex py-1 align-center cursor-pointer"
+                                        v-bind="props"
+                                      >
+                                        <v-icon-custom
+                                          type="symbol"
+                                          icon="account_circle"
+                                          size="15"
+                                          class="mr-1"
+                                          outlined
+                                        ></v-icon-custom>
+                                        <div>{{ authorities_title }}</div>
+                                      </div>
+                                    </template>
+                                    <div
+                                      class="v-menu--source__content text-light-gray"
+                                    >
+                                      <div
+                                        v-for="(item, index) in viewItem?.source"
+                                        :key="index"
+                                        class="v-menu--source__item pa-3"
+                                      >
+                                        {{ item }}
+                                      </div>
+                                    </div>
+                                  </v-menu>
+                                </section>
+                              </div>
+                            </div>
+                          </div>
+                          <v-btn
+                            variant="outlined"
+                            size="small"
+                            class="v-btn-icon v-btn--search flex-shrink-0"
+                            :aria-label="detailExpanded ? 'Collapse' : 'Expand to use full screen'"
+                            @click="toggleDetailExpanded"
+                          >
+                            <v-icon-custom
+                              :size="16"
+                              type="symbol"
+                              :outlined="true"
+                              :icon="detailExpanded ? 'close_fullscreen' : 'open_in_full'"
+                            ></v-icon-custom>
+                          </v-btn>
+                        </div>
+                      </div>
+                      <div
+                        class="d-flex justify-space-between justify-md-end group-social-buttons"
+                      >
+                        <v-btn
+                          variant="outlined"
+                          class="v-btn-icon v-btn--search"
+                          @click="itemSelected = false"
+                          v-if="width < 960"
+                        >
+                          <v-icon-custom
+                            icon="chevron_backward"
+                            type="symbol"
+                            :size="20"
+                            outlined
+                          ></v-icon-custom>
+                        </v-btn>
+                      </div>
+                      <template v-if="viewItem?.type == 'document'">
+                        <div
+                          class="search-content__detail__description mx-n4 mx-md-0 pt-4 py-md-5 px-md-1 bg-white rounded-lg mt-4 expanded-layout__description"
+                        >
+                          <div
+                            class="d-flex ga-2 max-w-full flex-no-wrap overflow-hidden overflow-x-auto pb-2 px-4 px-md-4 align-center"
+                          >
+                            <v-btn
+                              variant="outlined"
+                              class="v-btn-icon v-btn--search"
+                              :class="{ active: btn.active }"
+                              v-for="(btn, index) in filteredBtnContents"
+                              :key="index"
+                              @click="handleFilter(btn, index)"
+                            >
+                              <v-icon-custom
+                                :size="16"
+                                type="symbol"
+                                :outlined="true"
+                                :icon="btn.icon"
+                              ></v-icon-custom>
+                              <span class="mx-1">{{ btn.text }}</span>
+                            </v-btn>
+                          </div>
+                          <div
+                            ref="scrollArea"
+                            class="scroll-area mt-6 px-4 px-md-4 expanded-layout__scroll"
+                          >
+                            <div
+                              class="d-flex flex-column overflow-y-auto pr-2"
+                            >
+                              <template v-if="active_tab === 'abstract'">
+                                <v-container>
+                                  <v-row class="justify-center">
+                                    <v-col cols="11"
+                                      ><v-card-title class="text-h6"
+                                        >Abstract</v-card-title
+                                      ></v-col
+                                    >
+                                    <v-col cols="11"
+                                      ><v-card-text
+                                        ><span
+                                          v-html="metadata?.document_description?.abstract"
+                                        ></span></v-card-text
+                                    ></v-col>
+                                  </v-row>
+                                </v-container>
+                              </template>
+                              <template
+                                v-if="active_tab === 'view' && metadata"
+                              >
+                                <div
+                                  class="pdf-viewer-wrap"
+                                  v-if="pdfURL && typeof pdfURL === 'string'"
+                                >
+                                  <div class="pdf-viewer-links mb-2">
+                                    <a
+                                      class="pdf-link"
+                                      :href="pdfURL"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      >Open PDF directly</a
+                                    >
+                                    <span class="pdf-viewer-links-sep">·</span>
+                                    <a
+                                      class="pdf-link"
+                                      :href="'https://docs.google.com/gview?url=' + encodeURIComponent(pdfURL) + '&embedded=true'"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      >Open with Google Viewer</a
+                                    >
+                                  </div>
+                                  <div
+                                    v-if="pdfLoadTimeout"
+                                    class="pdf-viewer-timeout-msg"
+                                  >
+                                    <p>
+                                      If the PDF didn’t load above, use the
+                                      links above to open it in a new tab.
+                                    </p>
+                                  </div>
+                                  <div
+                                    class="pdf-viewer-loading"
+                                    v-if="pdfLoading"
+                                  >
+                                    <div class="pdf-viewer-spinner"></div>
+                                    <p>Loading PDF…</p>
+                                    <p class="pdf-viewer-loading-hint">
+                                      This may take a moment for large
+                                      documents.
+                                    </p>
+                                  </div>
+                                  <iframe
+                                    ref="pdfIframe"
+                                    class="pdf-viewer-iframe"
+                                    width="100%"
+                                    height="100%"
+                                    :src="pdfIframeSrc"
+                                    frameborder="0"
+                                    title="PDF document"
+                                    @load="onPdfIframeLoad"
+                                  ></iframe>
+                                </div>
+                                <v-container v-else>
+                                  <v-row justify="center"
+                                    ><v-col cols="12" md="6">
+                                      <v-alert
+                                        outlined
+                                        color="lighten"
+                                        icon="mdi-alert"
+                                        border="left"
+                                        elevation="2"
+                                        ><span
+                                          >No link to this document is
+                                          available.</span
+                                        ></v-alert
+                                      >
+                                    </v-col></v-row
+                                  >
+                                </v-container>
+                              </template>
+                              <template
+                                v-if="active_tab === 'metadata' && metadata"
+                              >
+                                <v-container class="metadata-document">
+                                  <v-card-title class="text-h6 pb-2"
+                                    >Document metadata</v-card-title
+                                  >
+                                  <v-card-text class="pt-0">
+                                    <div
+                                      v-for="(sectionVal, sectionKey) in metadata"
+                                      :key="sectionKey"
+                                      class="metadata-section mb-6"
+                                    >
+                                      <div
+                                        class="metadata-section-title text-subtitle-2 text-medium-emphasis mb-3"
+                                      >
+                                        {{ formatMetadataKey(sectionKey) }}
+                                      </div>
+                                      <template
+                                        v-if="sectionVal && typeof sectionVal === 'object' && !Array.isArray(sectionVal)"
+                                      >
+                                        <div
+                                          v-for="(val, key) in sectionVal"
+                                          :key="key"
+                                          v-show="hasMetadataValue(val)"
+                                          class="metadata-row d-flex align-start mb-3"
+                                          :class="{ 'metadata-row-pills': (key === 'keywords' || key === 'themes') && Array.isArray(val) && val.length > 0 }"
+                                        >
+                                          <span
+                                            class="metadata-label text-caption text-medium-emphasis"
+                                            >{{ formatMetadataKey(key) }}</span
+                                          >
+                                          <span
+                                            class="metadata-value text-body-2 flex-grow-1"
+                                          >
+                                            <template
+                                              v-if="(key === 'keywords' || key === 'themes') && Array.isArray(val) && val.length > 0"
+                                            >
+                                              <div class="metadata-pills-block">
+                                                <div
+                                                  v-for="(group, gidx) in groupKeywordsByVocabulary(val)"
+                                                  :key="gidx"
+                                                  class="metadata-pills-group mb-3"
+                                                >
+                                                  <div
+                                                    class="metadata-pills-vocabulary text-caption text-medium-emphasis mb-1"
+                                                  >
+                                                    {{ group.vocabulary }}
+                                                  </div>
+                                                  <div
+                                                    class="metadata-pills-list d-flex flex-wrap ga-1"
+                                                  >
+                                                    <span
+                                                      v-for="(term, tidx) in group.terms"
+                                                      :key="tidx"
+                                                      class="metadata-pill"
+                                                      >{{ term }}</span
+                                                    >
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </template>
+                                            <template
+                                              v-else-if="key === 'authors' && Array.isArray(val)"
+                                            >
+                                              <div
+                                                class="metadata-authors-inline"
+                                              >
+                                                <span
+                                                  v-for="(name, index) in formatAuthorsForDisplay(val)"
+                                                  :key="index"
+                                                  class="metadata-authors-item"
+                                                >
+                                                  <span
+                                                    class="metadata-authors-name"
+                                                    >{{ name }}</span
+                                                  >
+                                                  <span
+                                                    v-if="index < formatAuthorsForDisplay(val).length - 1"
+                                                    class="metadata-authors-sep"
+                                                    aria-hidden="true"
+                                                    >·</span
+                                                  >
+                                                </span>
+                                              </div>
+                                            </template>
+                                            <template
+                                              v-else-if="isNameCodeArray(val)"
+                                            >
+                                              <div
+                                                class="metadata-namecode-inline"
+                                              >
+                                                <span
+                                                  v-for="(item, index) in formatNameCodeList(val)"
+                                                  :key="index"
+                                                  class="metadata-namecode-item"
+                                                >
+                                                  <span
+                                                    class="metadata-namecode-code"
+                                                    >{{ item.code }}</span
+                                                  >
+                                                  <span
+                                                    class="metadata-namecode-name"
+                                                    >{{ item.name }}</span
+                                                  >
+                                                  <span
+                                                    v-if="index < formatNameCodeList(val).length - 1"
+                                                    class="metadata-namecode-sep"
+                                                    aria-hidden="true"
+                                                    >·</span
+                                                  >
+                                                </span>
+                                              </div>
+                                            </template>
+                                            <metadata-value
+                                              v-else
+                                              :value="val"
+                                              :key-name="key"
+                                              :format-key="formatMetadataKey"
+                                            />
+                                          </span>
+                                        </div>
+                                      </template>
+                                      <div v-else class="metadata-row">
+                                        <span class="metadata-value text-body-2"
+                                          >{{ sectionVal == null ? '—' :
+                                          String(sectionVal) }}</span
+                                        >
+                                      </div>
+                                    </div>
+                                  </v-card-text>
+                                </v-container>
+                              </template>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
                     </template>
-                  </template>
+                  </div>
                 </div>
-              </div>
-            </template>
+              </template>
             </div>
           </v-container>
         </main>
@@ -2067,7 +2746,10 @@
             const url = pdfURL.value;
             if (!url || typeof url !== "string") return false;
             try {
-              return new URL(url, window.location.href).origin === window.location.origin;
+              return (
+                new URL(url, window.location.href).origin ===
+                window.location.origin
+              );
             } catch {
               return false;
             }
@@ -2076,7 +2758,11 @@
             const url = pdfURL.value;
             if (!url || typeof url !== "string") return "";
             if (pdfURLSameOrigin.value) return url;
-            return "https://docs.google.com/gview?url=" + encodeURIComponent(url) + "&embedded=true";
+            return (
+              "https://docs.google.com/gview?url=" +
+              encodeURIComponent(url) +
+              "&embedded=true"
+            );
           });
           const loadingModel = ref(false);
           const loadingMessage = ref("Loading data...");
@@ -2084,6 +2770,7 @@
 
           const scrollSearchContentResultMobile = ref(null);
           const scrollSearchContentResultDesktop = ref(null);
+          const searchContentRow = ref(null);
           const btnContents = ref([
             {
               icon: "bolt",
@@ -2161,8 +2848,28 @@
           const isFullscreen = ref(false);
           const detailExpanded = ref(false);
           const itemSelected = ref(false);
+          /** When expanded, keep result list this width so it doesn't change from non-expanded */
+          const resultListWidth = ref(null);
 
           const toggleDetailExpanded = () => {
+            if (!detailExpanded.value) {
+              // Measure result column width from DOM so expanded layout keeps the same width
+              const rowRef = searchContentRow.value;
+              const rowEl = rowRef?.$el ?? rowRef;
+              const resultCol =
+                rowEl instanceof HTMLElement
+                  ? rowEl.querySelector(".search-content__result") ?? rowEl.children[0]
+                  : null;
+              if (resultCol instanceof HTMLElement) {
+                resultListWidth.value = Math.round(resultCol.getBoundingClientRect().width);
+              } else {
+                const col = scrollSearchContentResultMobile.value;
+                const el = col?.$el ?? col;
+                if (el instanceof HTMLElement) {
+                  resultListWidth.value = Math.round(el.getBoundingClientRect().width);
+                }
+              }
+            }
             detailExpanded.value = !detailExpanded.value;
           };
 
@@ -2174,7 +2881,7 @@
                 infiniteHeight.value =
                   scrollSearchContentResultDesktop.value.clientHeight ?? 0;
               }
-            }
+            },
           );
 
           const format_authorities_title = (item) => {
@@ -2211,7 +2918,7 @@
                 "feature-extraction",
                 `${hf_organization}/${model_name}`,
                 // { device: "webgpu", progress_callback: loadModelCallback }
-                { device: "webgpu" }
+                { device: "webgpu" },
               );
               // loadingModelText.value = "Loading AI model..."
               loadingModel.value = false;
@@ -2221,7 +2928,7 @@
           const getEmbedding = async (text) => {
             await loadExtractor();
             const result = await extractor.value.model(
-              extractor.value.tokenizer(text)
+              extractor.value.tokenizer(text),
             );
             return result.sentence_embedding.data;
           };
@@ -2278,10 +2985,13 @@
           };
 
           const rerank = async () => {
-            if (!query.value || query.value.trim() === "" || !rerankWorker) return;
+            if (!query.value || query.value.trim() === "" || !rerankWorker)
+              return;
             reranking.value = true;
             const batch = fullResults.value.slice(0, top_k);
-            const documents = batch.map((x) => x.title + "\n\n" + (x.abstract ?? ""));
+            const documents = batch.map(
+              (x) => x.title + "\n\n" + (x.abstract ?? ""),
+            );
             const reranked = await new Promise((resolve, reject) => {
               rerankWorker.onmessage = (e) => resolve(e.data);
               rerankWorker.onerror = (err) => {
@@ -2309,7 +3019,7 @@
           const mockApi = async (data, buffer) => {
             const next = data.slice(buffer.length, buffer.length + batchSize);
             return new Promise((resolve) =>
-              setTimeout(() => resolve(next), 500)
+              setTimeout(() => resolve(next), 500),
             );
           };
 
@@ -2357,7 +3067,7 @@
 
           const loadJSON = () => {
             fetch(
-              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__004__doc_embeddings.json`
+              `https://raw.githubusercontent.com/avsolatorio/ai-for-data-blog/main/semantic-search/data/${hf_organization}__${model_name}__004__doc_embeddings.json`,
             )
               .then((res) => res.json())
               .then((data) => {
@@ -2368,7 +3078,7 @@
 
           const loadMetadata = () => {
             fetch(
-              `https://avsolatorio.github.io/ids-metadata/data/metadata/${dtype}/${dtype}_${viewItem.value.idno}.json`
+              `https://avsolatorio.github.io/ids-metadata/data/metadata/${dtype}/${dtype}_${viewItem.value.idno}.json`,
             )
               .then((res) => res.json())
               .then((data) => {
@@ -2413,7 +3123,7 @@
                 pdfLoadTimeout.value = false;
               }
             },
-            { immediate: true }
+            { immediate: true },
           );
 
           const sortTopKBy = (field) => {
@@ -2507,50 +3217,64 @@
 
           const formatAuthorsForDisplay = (authors) => {
             if (!Array.isArray(authors) || authors.length === 0) return [];
-            return authors.map((a) => {
-              if (a == null || typeof a !== "object") return "";
-              const full = a.full_name ?? a["Full Name"] ?? a.fullName ?? "";
-              if (String(full).trim()) return String(full).trim();
-              const last = a.last_name ?? a["Last Name"] ?? "";
-              const first = a.first_name ?? a["First Name"] ?? "";
-              const initial = a.initial ?? a.Initial ?? "";
-              const parts = [last].filter(Boolean);
-              if (first) parts.push(first);
-              else if (initial) parts.push(initial);
-              return parts.length ? parts.join(", ") : "";
-            }).filter(Boolean);
+            return authors
+              .map((a) => {
+                if (a == null || typeof a !== "object") return "";
+                const full = a.full_name ?? a["Full Name"] ?? a.fullName ?? "";
+                if (String(full).trim()) return String(full).trim();
+                const last = a.last_name ?? a["Last Name"] ?? "";
+                const first = a.first_name ?? a["First Name"] ?? "";
+                const initial = a.initial ?? a.Initial ?? "";
+                const parts = [last].filter(Boolean);
+                if (first) parts.push(first);
+                else if (initial) parts.push(initial);
+                return parts.length ? parts.join(", ") : "";
+              })
+              .filter(Boolean);
           };
 
           const isNameCodeArray = (val) => {
             if (!Array.isArray(val) || val.length === 0) return false;
             return val.every((item) => {
               if (item == null || typeof item !== "object") return false;
-              const hasName = ["name", "Name"].some((k) => item[k] != null && String(item[k]).trim() !== "");
-              const hasCode = ["code", "Code"].some((k) => item[k] != null && String(item[k]).trim() !== "");
+              const hasName = ["name", "Name"].some(
+                (k) => item[k] != null && String(item[k]).trim() !== "",
+              );
+              const hasCode = ["code", "Code"].some(
+                (k) => item[k] != null && String(item[k]).trim() !== "",
+              );
               return hasName || hasCode;
             });
           };
 
           const formatNameCodeList = (arr) => {
             if (!Array.isArray(arr) || arr.length === 0) return [];
-            return arr.map((item) => {
-              if (item == null || typeof item !== "object") return { name: "—", code: "—" };
-              const name = String(item.name ?? item.Name ?? "").trim() || "—";
-              const code = String(item.code ?? item.Code ?? "").trim() || "—";
-              return { name, code };
-            }).filter((item) => item.name !== "—" || item.code !== "—");
+            return arr
+              .map((item) => {
+                if (item == null || typeof item !== "object")
+                  return { name: "—", code: "—" };
+                const name = String(item.name ?? item.Name ?? "").trim() || "—";
+                const code = String(item.code ?? item.Code ?? "").trim() || "—";
+                return { name, code };
+              })
+              .filter((item) => item.name !== "—" || item.code !== "—");
           };
 
           const formatGeographicCoverageForInline = (coverage) => {
             if (!Array.isArray(coverage) || coverage.length === 0) return [];
-            return coverage.map((item) => {
-              if (item == null) return "";
-              if (typeof item === "string") return item.trim();
-              if (typeof item === "object" && (item.title != null || item.name != null)) {
-                return String(item.title ?? item.name ?? "").trim();
-              }
-              return "";
-            }).filter(Boolean);
+            return coverage
+              .map((item) => {
+                if (item == null) return "";
+                if (typeof item === "string") return item.trim();
+                if (
+                  typeof item === "object" &&
+                  (item.title != null || item.name != null)
+                ) {
+                  return String(item.title ?? item.name ?? "").trim();
+                }
+                return "";
+              })
+              .filter(Boolean);
           };
 
           const icons = {
@@ -2592,6 +3316,8 @@
             isFullscreen,
             detailExpanded,
             toggleDetailExpanded,
+            resultListWidth,
+            searchContentRow,
             handleKeyDown,
             icons,
             viewItem,
