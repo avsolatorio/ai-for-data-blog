@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HNSW Search — Integration Test</title>
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
+  <style>
+    body { font-family: 'Roboto', sans-serif; background: #f5f5f5; }
+    .metric-card { font-size: 13px; }
+    .pass { color: #2e7d32; font-weight: bold; }
+    .fail { color: #c62828; font-weight: bold; }
+    .warn { color: #e65100; font-weight: bold; }
+    pre { white-space: pre-wrap; word-break: break-all; font-size: 11px; }
+    .shard-bar { height: 6px; background: #1565c0; border-radius: 3px; transition: width 0.3s; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <v-app>
+    <v-main>
+      <v-container max-width="1100">
+        <v-row class="mt-4 mb-2">
+          <v-col>
+            <h2 class="text-h5">HNSW Search — Integration Test</h2>
+            <p class="text-body-2 text-medium-emphasis">
+              Tests recall@10, latency, and shard efficiency against a given collection manifest.
+            </p>
+          </v-col>
+        </v-row>
+
+        <!-- Config -->
+        <v-card class="mb-4" variant="outlined">
+          <v-card-text>
+            <v-row dense>
+              <v-col cols="12" md="8">
+                <v-text-field
+                  v-model="manifestUrl"
+                  label="Manifest URL"
+                  placeholder="data/prwp/manifest.json"
+                  density="compact"
+                  variant="outlined"
+                  hide-details
+                />
+              </v-col>
+              <v-col cols="6" md="2">
+                <v-text-field v-model.number="efSearch" label="ef_search" type="number"
+                  density="compact" variant="outlined" hide-details />
+              </v-col>
+              <v-col cols="6" md="2">
+                <v-text-field v-model.number="topK" label="top_k" type="number"
+                  density="compact" variant="outlined" hide-details />
+              </v-col>
+            </v-row>
+            <v-row dense class="mt-2">
+              <v-col>
+                <v-btn color="primary" :loading="running" :disabled="running || !manifestUrl"
+                  @click="runTests" prepend-icon="mdi-play">
+                  Run Test Suite
+                </v-btn>
+                <v-btn variant="text" class="ml-2" @click="resetResults" :disabled="running">
+                  Clear
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+
+        <!-- Status / progress -->
+        <v-alert v-if="statusMessage" :type="statusType" class="mb-4" density="compact">
+          {{ statusMessage }}
+        </v-alert>
+
+        <!-- Overall metrics -->
+        <v-row v-if="summary" class="mb-4">
+          <v-col cols="6" md="3" v-for="m in summaryMetrics" :key="m.label">
+            <v-card variant="tonal" :color="m.color" class="metric-card text-center pa-3">
+              <div class="text-h5 font-weight-bold">{{ m.value }}</div>
+              <div class="text-caption">{{ m.label }}</div>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Per-query results -->
+        <v-card v-if="queryResults.length" variant="outlined" class="mb-4">
+          <v-card-title class="text-subtitle-1">Query Results</v-card-title>
+          <v-divider />
+          <v-card-text class="pa-0">
+            <v-table density="compact">
+              <thead>
+                <tr>
+                  <th>Query</th>
+                  <th>Cold (ms)</th>
+                  <th>Warm (ms)</th>
+                  <th>Shards loaded</th>
+                  <th>Top result</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in queryResults" :key="r.query">
+                  <td>{{ r.query }}</td>
+                  <td>{{ r.coldMs ?? '—' }}</td>
+                  <td>{{ r.warmMs ?? '—' }}</td>
+                  <td>
+                    <div class="d-flex align-center gap-2">
+                      <span>{{ r.shardsLoaded }}</span>
+                      <div class="shard-bar ml-2" :style="{ width: Math.min(r.shardsLoaded * 12, 96) + 'px' }"></div>
+                    </div>
+                  </td>
+                  <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    {{ r.topResult?.title ?? '—' }}
+                  </td>
+                  <td>
+                    <span :class="r.ok ? 'pass' : 'warn'">{{ r.ok ? '✓ OK' : '⚠ Slow' }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+          </v-card-text>
+        </v-card>
+
+        <!-- Shard bandwidth breakdown -->
+        <v-card v-if="shardStats" variant="outlined" class="mb-4">
+          <v-card-title class="text-subtitle-1">Shard Bandwidth</v-card-title>
+          <v-card-text>
+            <v-row dense>
+              <v-col cols="12" md="4">
+                <div class="text-caption text-medium-emphasis">Total shards cached after all queries</div>
+                <div class="text-h6">{{ shardStats.totalCached }}</div>
+              </v-col>
+              <v-col cols="12" md="4">
+                <div class="text-caption text-medium-emphasis">Avg shards per cold query</div>
+                <div class="text-h6">{{ shardStats.avgColdShards }}</div>
+              </v-col>
+              <v-col cols="12" md="4">
+                <div class="text-caption text-medium-emphasis">Index config</div>
+                <div class="text-body-2" v-if="indexConfig">
+                  {{ indexConfig.n_items }} items · {{ indexConfig.dim }}D int8 ·
+                  {{ indexConfig.n_clusters }} clusters · recall@10={{ indexConfig.recall_at_10 }}
+                </div>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+
+        <!-- Raw log -->
+        <v-expansion-panels v-if="log.length">
+          <v-expansion-panel title="Detailed log">
+            <v-expansion-panel-text>
+              <pre>{{ log.join('\n') }}</pre>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </v-expansion-panels>
+
+      </v-container>
+    </v-main>
+  </v-app>
+</div>
+
+<script type="module">
+const { createApp, ref, computed } = Vue;
+const { createVuetify } = Vuetify;
+
+const vuetify = createVuetify({ theme: { defaultTheme: 'light' } });
+
+// ── Test queries ─────────────────────────────────────────────────────────────
+const TEST_QUERIES = [
+  'poverty reduction and social protection programs',
+  'climate change adaptation in developing countries',
+  'education outcomes and human capital development',
+  'public health systems and disease prevention',
+  'fiscal policy and government expenditure',
+  'financial inclusion and microfinance',
+  'infrastructure investment and economic growth',
+];
+
+// ── Targets ──────────────────────────────────────────────────────────────────
+const TARGET_COLD_MS = 1000;  // cold query should return within 1s
+const TARGET_MAX_SHARDS = 8;  // should need ≤8 shards per query
+
+createApp({
+  setup() {
+    const manifestUrl = ref('data/prwp/manifest.json');
+    const efSearch = ref(50);
+    const topK = ref(10);
+    const running = ref(false);
+    const statusMessage = ref('');
+    const statusType = ref('info');
+    const queryResults = ref([]);
+    const summary = ref(null);
+    const shardStats = ref(null);
+    const indexConfig = ref(null);
+    const log = ref([]);
+
+    let worker = null;
+
+    function addLog(msg) {
+      const ts = new Date().toISOString().split('T')[1].slice(0, 12);
+      log.value.push(`[${ts}] ${msg}`);
+      console.log(msg);
+    }
+
+    function resetResults() {
+      queryResults.value = [];
+      summary.value = null;
+      shardStats.value = null;
+      indexConfig.value = null;
+      log.value = [];
+      statusMessage.value = '';
+      if (worker) { worker.terminate(); worker = null; }
+    }
+
+    const summaryMetrics = computed(() => {
+      if (!summary.value) return [];
+      const s = summary.value;
+      return [
+        { label: 'Avg Cold Latency', value: s.avgColdMs + ' ms',
+          color: s.avgColdMs < TARGET_COLD_MS ? 'success' : 'warning' },
+        { label: 'Avg Warm Latency', value: s.avgWarmMs + ' ms',
+          color: s.avgWarmMs < 100 ? 'success' : 'warning' },
+        { label: 'Avg Shards / Query', value: s.avgShards,
+          color: s.avgShards <= TARGET_MAX_SHARDS ? 'success' : 'warning' },
+        { label: 'Search Mode', value: s.mode.toUpperCase(), color: 'info' },
+      ];
+    });
+
+    async function runTests() {
+      resetResults();
+      running.value = true;
+      statusMessage.value = 'Initializing search worker…';
+      statusType.value = 'info';
+
+      try {
+        await runTestSuite();
+      } catch (e) {
+        statusMessage.value = 'Error: ' + e.message;
+        statusType.value = 'error';
+        addLog('Fatal error: ' + e.message);
+      } finally {
+        running.value = false;
+      }
+    }
+
+    async function runTestSuite() {
+      // ── 1. Create worker ────────────────────────────────────────────────
+      worker = new Worker('js/search/search.worker.js', { type: 'module' });
+
+      let resolveReady, rejectReady;
+      const readyPromise = new Promise((res, rej) => {
+        resolveReady = res; rejectReady = rej;
+      });
+
+      worker.onmessage = (e) => {
+        const msg = e.data;
+        if (!msg || !msg.type) return;
+        addLog(`← ${msg.type}${msg.mode ? ' (mode=' + msg.mode + ')' : ''}${msg.message ? ': ' + msg.message : ''}`);
+
+        if (msg.type === 'ready') {
+          resolveReady(msg);
+        } else if (msg.type === 'results') {
+          if (pendingResolve) { pendingResolve(msg); pendingResolve = null; }
+        } else if (msg.type === 'error') {
+          if (pendingResolve) { pendingResolve({ data: [], stats: null, error: msg.message }); pendingResolve = null; }
+          else rejectReady(new Error(msg.message));
+        } else if (msg.type === 'bm25_init') {
+          indexConfig.value = msg.manifest?.search_mode === 'hnsw' ? null : null;
+        }
+      };
+      worker.onerror = (e) => rejectReady(new Error(e.message));
+
+      // ── 2. Init worker ──────────────────────────────────────────────────
+      // Resolve relative URL against page origin so the worker (served from /js/search/) can fetch it
+      const resolvedManifestUrl = new URL(manifestUrl.value, location.href).href;
+      addLog(`→ init (manifestUrl=${resolvedManifestUrl})`);
+      worker.postMessage({ type: 'init', manifestUrl: resolvedManifestUrl });
+
+      statusMessage.value = 'Loading embedding model and index…';
+      const readyMsg = await Promise.race([
+        readyPromise,
+        new Promise((_, rej) => setTimeout(() => rej(new Error('Init timeout (60s)')), 60000)),
+      ]);
+
+      addLog(`Worker ready! mode=${readyMsg.mode}`);
+      statusMessage.value = `Index ready (mode=${readyMsg.mode}). Running ${TEST_QUERIES.length} queries…`;
+
+      // Fetch config for display
+      try {
+        const cfgUrl = resolvedManifestUrl.replace('manifest.json', 'index/config.json');
+        const cfgResp = await fetch(cfgUrl);
+        if (cfgResp.ok) indexConfig.value = await cfgResp.json();
+      } catch (_) {}
+
+      // ── 3. Run each query (cold then warm) ──────────────────────────────
+      const results = [];
+      let totalShards = 0;
+      let lastColdResult = null;
+
+      for (const query of TEST_QUERIES) {
+        addLog(`\nQuery: "${query}"`);
+        statusMessage.value = `Running: "${query}"…`;
+
+        // Cold run
+        const t0 = performance.now();
+        const coldResult = await sendSearch(query);
+        const coldMs = Math.round(performance.now() - t0);
+
+        lastColdResult = coldResult;
+        const shardsLoaded = coldResult.stats?.shardsLoaded ?? 0;
+        totalShards += shardsLoaded;
+        addLog(`  Cold: ${coldMs}ms, shards=${shardsLoaded}, top="${coldResult.data?.[0]?.title?.slice(0, 60)}"`);
+
+        // Warm run (shards now in memory cache)
+        await new Promise(r => setTimeout(r, 50));
+        const t1 = performance.now();
+        const warmResult = await sendSearch(query);
+        const warmMs = Math.round(performance.now() - t1);
+        addLog(`  Warm: ${warmMs}ms`);
+
+        results.push({
+          query,
+          coldMs,
+          warmMs,
+          shardsLoaded,
+          topResult: coldResult.data?.[0] ?? null,
+          ok: coldMs < TARGET_COLD_MS && shardsLoaded <= TARGET_MAX_SHARDS,
+        });
+        queryResults.value = [...results];
+      }
+
+      // ── 4. Summary ───────────────────────────────────────────────────────
+      const avgColdMs = Math.round(results.reduce((s, r) => s + r.coldMs, 0) / results.length);
+      const avgWarmMs = Math.round(results.reduce((s, r) => s + r.warmMs, 0) / results.length);
+      const avgShards = (results.reduce((s, r) => s + r.shardsLoaded, 0) / results.length).toFixed(1);
+
+      summary.value = { avgColdMs, avgWarmMs, avgShards: +avgShards, mode: readyMsg.mode };
+      shardStats.value = {
+        totalCached: lastColdResult?.stats?.totalCachedShards ?? '—',
+        avgColdShards: avgShards,
+      };
+
+      const allOk = results.every(r => r.ok);
+      statusMessage.value = allOk
+        ? `All ${results.length} queries passed! avg cold=${avgColdMs}ms, avg shards=${avgShards}`
+        : `${results.filter(r => !r.ok).length} queries exceeded targets. See details below.`;
+      statusType.value = allOk ? 'success' : 'warning';
+
+      addLog(`\n=== Summary ===`);
+      addLog(`Avg cold latency: ${avgColdMs}ms (target: <${TARGET_COLD_MS}ms)`);
+      addLog(`Avg warm latency: ${avgWarmMs}ms`);
+      addLog(`Avg shards/query: ${avgShards} (target: ≤${TARGET_MAX_SHARDS})`);
+      addLog(`Mode: ${readyMsg.mode}`);
+
+      worker.terminate();
+      worker = null;
+    }
+
+    function sendSearch(text) {
+      return new Promise((resolve) => {
+        pendingResolve = resolve;
+        worker.postMessage({ type: 'search', text, topK: topK.value, ef: efSearch.value });
+      });
+    }
+
+    // Track pendingResolve in closure
+    let pendingResolve = null;
+
+    return {
+      manifestUrl, efSearch, topK, running,
+      statusMessage, statusType,
+      queryResults, summary, summaryMetrics,
+      shardStats, indexConfig, log,
+      runTests, resetResults,
+    };
+  }
+}).use(vuetify).mount('#app');
+</script>
+</body>
+</html>

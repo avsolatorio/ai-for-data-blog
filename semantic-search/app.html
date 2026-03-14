@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>Data Discovery</title>
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
+    <script>/* pym iFrame embed — only needed when hosted inside a WB iframe */
+    window.onload = function () { if (window.pym) { try { new pym.Child({ polling: 500 }); } catch(_) {} } };</script>
+    <style>
+      :root {
+        --secondary-100: #f3f5fc;
+        --primary-dark: #0c1a4d;
+        --primary: #1a3c8f;
+      }
+      .bg-secondary-100 { background-color: var(--secondary-100); }
+      .search-buttons { color: #0c1a4d; font-size: 24px; width: 24px; height: 24px; }
+      .card-icons { color: var(--primary-dark); font-size: 15px; width: 15px; height: 15px; }
+      .full-page-loading {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background-color: rgba(255,255,255,0.75);
+        display: flex; justify-content: center; align-items: center; z-index: 9999;
+      }
+      .doi-link { color: var(--primary-dark); text-decoration: none; font-weight: 500; }
+      .doi-link:hover { text-decoration: underline; }
+      .pdf-viewer-wrap { position: relative; height: 80vh; min-height: 400px; display: flex; flex-direction: column; }
+      .pdf-viewer-wrap.pdf-viewer-external { height: auto; min-height: 0; }
+      .pdf-viewer-external-card { padding: 1.25rem; background: rgba(0,0,0,0.04); border-radius: 8px; }
+      .pdf-viewer-external-msg { margin: 0; font-size: 0.9375rem; color: rgba(0,0,0,0.75); line-height: 1.5; }
+      .pdf-viewer-links { flex-shrink: 0; font-size: 0.875rem; }
+      .pdf-viewer-links-sep { margin: 0 0.5rem; color: rgba(0,0,0,0.4); }
+      .pdf-viewer-timeout-msg { flex-shrink: 0; padding: 0.5rem 0; font-size: 0.8125rem; color: rgba(0,0,0,0.7); }
+      .pdf-viewer-loading {
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: rgba(255,255,255,0.9); z-index: 2; font-size: 0.875rem; color: rgba(0,0,0,0.7);
+      }
+      .pdf-viewer-spinner {
+        width: 40px; height: 40px;
+        border: 3px solid rgba(0,0,0,0.1); border-top-color: var(--primary-dark, #0c1a4d);
+        border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 0.75rem;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .pdf-viewer-iframe { flex: 1; min-height: 0; border: none; }
+      .search-content-root { width: 100%; }
+      .search-content-root .search-content.mt-md-2 { height: calc(100vh - 9rem); min-height: 16rem; }
+      .search-content__result { display: flex; flex-direction: column; min-height: 0; }
+      .search-content__result .search-content__result__area { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+      .search-content__result .scroll-area { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+      .search-content__result .scroll-area .v-infinite-scroll { overflow: visible; }
+      .search-content__detail { display: flex; flex-direction: column; min-height: 0; }
+      .search-content__detail .search-content__detail__description { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+      .search-content__detail .search-content__detail__description .scroll-area { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+      .expanded-layout {
+        display: grid; grid-template-columns: var(--result-list-width, 1fr) minmax(320px, 2fr);
+        grid-template-rows: 1fr; gap: 0 1rem; height: 100vh; max-height: 100vh;
+        width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden;
+      }
+      .expanded-layout__left { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+      .expanded-layout__search { flex-shrink: 0; }
+      .expanded-layout__results { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+      .expanded-layout__results .search-content__result__area { min-height: 0; display: flex; flex-direction: column; }
+      .expanded-layout__results .scroll-area { height: auto; min-height: 0; overflow: visible; flex: none; }
+      .expanded-layout__right { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--secondary-100); overflow: hidden; }
+      .expanded-layout__description { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+      .expanded-layout__scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+      .expanded-layout__scroll .scroll-area { height: auto; overflow: visible; }
+      @media (max-width: 599px) { .expanded-layout { grid-template-columns: 1fr; } }
+      .mode-chip { cursor: pointer; }
+      .loading-phase { font-size: 12px; color: rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; }
+      .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #bbb; display: inline-block; }
+      .status-dot.ready { background: #2e7d32; }
+      .status-dot.loading { background: #ef6c00; animation: pulse 1s ease-in-out infinite; }
+      @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+      .score-chip { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; background: rgba(21,101,192,0.1); color: #1565c0; }
+    </style>
+  </head>
+  <body>
+    <div id="firstLoading" class="full-page-loading">
+      <v-progress-circular indeterminate color="primary" size="48"></v-progress-circular>
+    </div>
+
+    <div id="app">
+      <v-app>
+        <v-main>
+          <!-- ── Search bar ─────────────────────────────────────────────── -->
+          <v-container class="py-2 px-4" fluid>
+            <v-row align="center" dense>
+              <v-col>
+                <div class="d-flex align-center gap-2">
+                  <v-textarea
+                    v-model="query"
+                    :placeholder="searchReady ? 'Search documents, indicators, or topics…' : 'Loading index…'"
+                    :disabled="!searchReady && searchMode !== 'lexical'"
+                    auto-grow rows="1" max-rows="4"
+                    variant="outlined" density="compact" hide-details
+                    class="flex-grow-1"
+                    @keydown="handleKeyDown"
+                  >
+                    <template #append-inner>
+                      <v-btn icon size="small" variant="text" :disabled="!query" @click="clearSearch">
+                        <v-icon>mdi-close</v-icon>
+                      </v-btn>
+                      <v-btn icon size="small" color="primary" :disabled="!query || busy"
+                        :loading="busy" @click="submit">
+                        <v-icon>mdi-magnify</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-textarea>
+                </div>
+
+                <!-- Search mode + status row -->
+                <div class="d-flex align-center flex-wrap gap-2 mt-1">
+                  <!-- Mode switcher -->
+                  <v-chip-group v-model="searchMode" mandatory selected-class="text-primary">
+                    <v-chip value="semantic" size="small" class="mode-chip"
+                      :disabled="!modelReady" variant="tonal">
+                      <v-icon start size="14">mdi-brain</v-icon> Semantic
+                    </v-chip>
+                    <v-chip value="lexical" size="small" class="mode-chip"
+                      :disabled="!bm25Ready" variant="tonal">
+                      <v-icon start size="14">mdi-text-search</v-icon> Keyword
+                    </v-chip>
+                    <v-chip value="hybrid" size="small" class="mode-chip"
+                      :disabled="!modelReady || !bm25Ready" variant="tonal">
+                      <v-icon start size="14">mdi-lightning-bolt</v-icon> Hybrid
+                    </v-chip>
+                  </v-chip-group>
+
+                  <v-spacer />
+
+                  <!-- Loading phase indicator -->
+                  <div class="loading-phase">
+                    <span :class="['status-dot', modelReady && indexReady ? 'ready' : 'loading']"></span>
+                    <span>{{ loadingMessage }}</span>
+                    <template v-if="manifestConfig">
+                      <v-chip size="x-small" variant="tonal" color="info">
+                        {{ manifestConfig.collection_id }} · {{ manifestConfig.search_mode?.toUpperCase() }}
+                      </v-chip>
+                    </template>
+                  </div>
+                </div>
+              </v-col>
+            </v-row>
+          </v-container>
+
+          <!-- ── Results + detail (Splitpanes) ────────────────────────────── -->
+          <div class="search-content-root px-2">
+            <template v-if="!detailExpanded">
+              <v-row class="search-content mt-md-2 mx-0" no-gutters>
+                <!-- Results list -->
+                <v-col
+                  ref="scrollSearchContentResultDesktop"
+                  cols="12" md="4" lg="3"
+                  class="search-content__result pr-md-2"
+                >
+                  <div class="search-content__result__area">
+                    <div class="d-flex align-center mb-2 px-1">
+                      <span v-if="hasQueried" class="text-caption text-medium-emphasis">
+                        {{ fullResults.length }} result{{ fullResults.length !== 1 ? 's' : '' }}
+                        <template v-if="lastStats"> · {{ lastStats.latencyMs }}ms</template>
+                        <template v-if="lastStats?.shardsLoaded"> · {{ lastStats.shardsLoaded }} shards</template>
+                      </span>
+                      <v-spacer />
+                      <v-btn v-if="hasQueried && useRerank && modelReady"
+                        size="x-small" variant="tonal"
+                        :loading="reranking" :color="applyReranking ? 'primary' : ''"
+                        @click="applyReranking = !applyReranking">
+                        {{ applyReranking ? 'Reranked' : 'Rerank' }}
+                      </v-btn>
+                    </div>
+                    <div class="scroll-area">
+                      <!-- Skeleton loaders while searching -->
+                      <template v-if="busy">
+                        <v-skeleton-loader v-for="n in 5" :key="n" type="list-item-two-line" class="mb-2" />
+                      </template>
+                      <!-- Results -->
+                      <template v-else>
+                        <v-infinite-scroll :height="infiniteHeight || undefined" @load="loadMore">
+                          <template v-for="result in semanticResults" :key="result.id ?? result.idno">
+                            <v-card
+                              class="mb-2 cursor-pointer"
+                              :class="{ 'border-primary': viewItem?.id === result.id || viewItem?.idno === result.idno }"
+                              variant="outlined"
+                              @click="selectItem(result)"
+                            >
+                              <v-card-text class="pa-3">
+                                <div class="d-flex align-start gap-2">
+                                  <v-icon size="18" class="mt-0.5 flex-shrink-0" color="primary">
+                                    {{ icons[result.type] || 'mdi-file-document-outline' }}
+                                  </v-icon>
+                                  <div class="min-w-0">
+                                    <div class="text-body-2 font-weight-medium text-wrap" style="line-height:1.3">
+                                      {{ result.title }}
+                                    </div>
+                                    <div class="text-caption text-medium-emphasis mt-1 text-truncate">
+                                      {{ result.type_extra || result.type || '' }}
+                                      <template v-if="result.date_published">
+                                        · {{ result.date_published?.slice(0,4) }}
+                                      </template>
+                                    </div>
+                                    <div v-if="result.score != null" class="mt-1">
+                                      <span class="score-chip">{{ (result.score * 100).toFixed(0) }}% match</span>
+                                      <span v-if="result.rerank_score != null" class="score-chip ml-1" style="background:rgba(46,125,50,0.1);color:#2e7d32">
+                                        rerank {{ result.rerank_score.toFixed(2) }}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </v-card-text>
+                            </v-card>
+                          </template>
+                          <template #empty>
+                            <div v-if="hasQueried && !busy && semanticResults.length === 0"
+                              class="text-center text-medium-emphasis py-8">
+                              <v-icon size="40" color="grey">mdi-magnify-remove-outline</v-icon>
+                              <div class="text-body-2 mt-2">No results found</div>
+                            </div>
+                          </template>
+                        </v-infinite-scroll>
+                      </template>
+                    </div>
+                  </div>
+                </v-col>
+
+                <!-- Detail pane -->
+                <v-col cols="12" md="8" lg="9" class="search-content__detail bg-secondary-100 rounded-lg">
+                  <div class="search-content__detail__description pa-3">
+                    <template v-if="!viewItem">
+                      <div class="d-flex align-center justify-center h-100 text-medium-emphasis">
+                        <div class="text-center">
+                          <v-icon size="56" color="grey-lighten-1">mdi-text-search-variant</v-icon>
+                          <div class="text-body-2 mt-2">Select a result to view details</div>
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <detail-pane
+                        :item="viewItem"
+                        :metadata="metadata"
+                        :active-tab="active_tab"
+                        :btn-contents="filteredBtnContents"
+                        :pdf-url="pdfURL"
+                        :pdf-iframe-src="pdfIframeSrc"
+                        :pdf-loading="pdfLoading"
+                        :pdf-load-timeout="pdfLoadTimeout"
+                        :pdf-same-origin="pdfURLSameOrigin"
+                        :reranking="reranking"
+                        :apply-reranking="applyReranking"
+                        :detail-expanded="detailExpanded"
+                        @filter="handleFilter"
+                        @pdf-load="onPdfIframeLoad"
+                        @expand="toggleDetailExpanded"
+                        @download-meta="handleMetadataDownload"
+                      />
+                    </template>
+                  </div>
+                </v-col>
+              </v-row>
+            </template>
+
+            <!-- Expanded layout (full-width detail pane) -->
+            <template v-else>
+              <div class="expanded-layout" :style="resultListWidth ? `--result-list-width: ${resultListWidth}px` : ''">
+                <div class="expanded-layout__left">
+                  <div class="expanded-layout__search pa-2">
+                    <!-- compact search -->
+                  </div>
+                  <div class="expanded-layout__results pa-2">
+                    <v-infinite-scroll @load="loadMore">
+                      <template v-for="result in semanticResults" :key="result.id ?? result.idno">
+                        <v-card class="mb-1 cursor-pointer" variant="outlined"
+                          :class="{ 'border-primary': viewItem?.id === result.id }"
+                          @click="selectItem(result)">
+                          <v-card-text class="pa-2">
+                            <div class="text-body-2 font-weight-medium">{{ result.title }}</div>
+                            <div class="text-caption text-medium-emphasis">{{ result.type }}</div>
+                          </v-card-text>
+                        </v-card>
+                      </template>
+                    </v-infinite-scroll>
+                  </div>
+                </div>
+                <div class="expanded-layout__right">
+                  <div class="expanded-layout__description pa-3">
+                    <div class="expanded-layout__scroll">
+                      <detail-pane
+                        v-if="viewItem"
+                        :item="viewItem"
+                        :metadata="metadata"
+                        :active-tab="active_tab"
+                        :btn-contents="filteredBtnContents"
+                        :pdf-url="pdfURL"
+                        :pdf-iframe-src="pdfIframeSrc"
+                        :pdf-loading="pdfLoading"
+                        :pdf-load-timeout="pdfLoadTimeout"
+                        :pdf-same-origin="pdfURLSameOrigin"
+                        :reranking="reranking"
+                        :apply-reranking="applyReranking"
+                        :detail-expanded="detailExpanded"
+                        @filter="handleFilter"
+                        @pdf-load="onPdfIframeLoad"
+                        @expand="toggleDetailExpanded"
+                        @download-meta="handleMetadataDownload"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </v-main>
+      </v-app>
+    </div>
+
+    <!-- ── Detail pane component ───────────────────────────────────────────── -->
+    <script>
+      const DetailPane = {
+        props: ['item','metadata','activeTab','btnContents','pdfUrl','pdfIframeSrc',
+                'pdfLoading','pdfLoadTimeout','pdfSameOrigin','reranking','applyReranking','detailExpanded'],
+        emits: ['filter','pdf-load','expand','download-meta'],
+        template: `
+          <div class="h-100 d-flex flex-column">
+            <!-- header -->
+            <div class="flex-shrink-0 pa-1">
+              <div class="d-flex align-start gap-2">
+                <div class="flex-grow-1">
+                  <h6 class="text-subtitle-1 font-weight-bold text-wrap" style="line-height:1.3">{{ item.title }}</h6>
+                  <div class="d-flex flex-wrap align-center gap-1 mt-1 text-caption text-medium-emphasis">
+                    <v-chip v-if="item.type" size="x-small" variant="tonal">{{ item.type }}</v-chip>
+                    <span v-if="item.doi">
+                      <a :href="'https://doi.org/' + item.doi" target="_blank" class="doi-link">{{ item.doi }}</a>
+                    </span>
+                    <span v-if="item.date_published">{{ item.date_published?.slice(0,4) }}</span>
+                    <template v-if="item.geographic_coverage?.length">
+                      <span>·</span>
+                      <span>{{ Array.isArray(item.geographic_coverage) ? item.geographic_coverage.slice(0,3).join(', ') + (item.geographic_coverage.length > 3 ? ' +' + (item.geographic_coverage.length-3) : '') : item.geographic_coverage }}</span>
+                    </template>
+                  </div>
+                </div>
+                <div class="d-flex gap-1 flex-shrink-0">
+                  <v-btn icon size="small" variant="text" @click="$emit('expand')">
+                    <v-icon>{{ detailExpanded ? 'mdi-arrow-collapse' : 'mdi-arrow-expand' }}</v-icon>
+                  </v-btn>
+                  <v-btn v-if="metadata" icon size="small" variant="text"
+                    @click="$emit('download-meta', item.idno ?? item.id, metadata)">
+                    <v-icon>mdi-download</v-icon>
+                  </v-btn>
+                </div>
+              </div>
+
+              <!-- Tab buttons -->
+              <div class="d-flex gap-1 mt-2 flex-wrap">
+                <v-btn v-for="(btn, i) in btnContents" :key="btn.key"
+                  :variant="activeTab === btn.key ? 'tonal' : 'text'"
+                  :color="activeTab === btn.key ? 'primary' : ''"
+                  size="small" @click="$emit('filter', btn, i)">
+                  <v-icon start size="16">{{ 'mdi-' + (btn.key === 'abstract' ? 'text' : btn.key === 'view' ? 'file-pdf-box' : 'information-outline') }}</v-icon>
+                  {{ btn.text }}
+                </v-btn>
+              </div>
+            </div>
+
+            <v-divider class="my-2" />
+
+            <!-- Content area -->
+            <div class="scroll-area flex-grow-1 pa-1">
+              <!-- Abstract tab -->
+              <template v-if="activeTab === 'abstract' || activeTab === 'quick_answer'">
+                <p class="text-body-2" style="white-space: pre-wrap; line-height:1.7">{{ item.abstract || item.text || 'No abstract available.' }}</p>
+                <div v-if="item.authors" class="mt-3">
+                  <div class="text-caption text-medium-emphasis font-weight-medium mb-1">Authors</div>
+                  <p class="text-body-2">{{ Array.isArray(item.authors) ? item.authors.join(', ') : item.authors }}</p>
+                </div>
+                <div v-if="item.source" class="mt-3">
+                  <div class="text-caption text-medium-emphasis font-weight-medium mb-1">Source</div>
+                  <p class="text-body-2">{{ Array.isArray(item.source) ? item.source.join(', ') : item.source }}</p>
+                </div>
+              </template>
+
+              <!-- PDF / View tab -->
+              <template v-else-if="activeTab === 'view'">
+                <div v-if="!pdfUrl" class="text-center py-8 text-medium-emphasis">
+                  <v-icon size="40">mdi-file-pdf-box</v-icon>
+                  <div class="text-body-2 mt-2">No PDF available for this item.</div>
+                </div>
+                <div v-else-if="!pdfSameOrigin" class="pdf-viewer-external">
+                  <div class="pdf-viewer-external-card">
+                    <p class="pdf-viewer-external-msg">
+                      This document is hosted externally.
+                      <a :href="pdfUrl" target="_blank" class="doi-link ml-1">Open PDF ↗</a>
+                      &nbsp;·&nbsp;
+                      <a :href="'https://docs.google.com/gview?url=' + encodeURIComponent(pdfUrl) + '&embedded=true'" target="_blank" class="doi-link">View in Google Docs ↗</a>
+                    </p>
+                  </div>
+                  <div class="pdf-viewer-wrap mt-3" v-if="pdfIframeSrc">
+                    <div v-if="pdfLoading" class="pdf-viewer-loading">
+                      <div class="pdf-viewer-spinner"></div>
+                      <span>Loading PDF…</span>
+                    </div>
+                    <iframe :src="pdfIframeSrc" class="pdf-viewer-iframe" @load="$emit('pdf-load')" />
+                  </div>
+                </div>
+                <div v-else class="pdf-viewer-wrap">
+                  <div v-if="pdfLoading" class="pdf-viewer-loading">
+                    <div class="pdf-viewer-spinner"></div>
+                    <span>Loading PDF…</span>
+                  </div>
+                  <iframe :src="pdfUrl" class="pdf-viewer-iframe" @load="$emit('pdf-load')" />
+                </div>
+              </template>
+
+              <!-- Metadata tab -->
+              <template v-else-if="activeTab === 'metadata'">
+                <template v-if="!metadata">
+                  <v-skeleton-loader type="article" />
+                </template>
+                <template v-else>
+                  <div class="text-body-2">
+                    <div v-for="(val, key) in flattenMeta(metadata)" :key="key" class="mb-2">
+                      <span class="font-weight-medium text-caption text-medium-emphasis">{{ formatKey(key) }}</span>
+                      <div>{{ formatVal(val) }}</div>
+                    </div>
+                  </div>
+                </template>
+              </template>
+            </div>
+          </div>
+        `,
+        methods: {
+          flattenMeta(meta) {
+            if (!meta) return {};
+            const dd = meta?.document_description ?? meta;
+            const result = {};
+            const skip = new Set(['embedding','qv','scale']);
+            for (const [k, v] of Object.entries(dd)) {
+              if (skip.has(k) || typeof v === 'object' && !Array.isArray(v)) continue;
+              result[k] = v;
+            }
+            return result;
+          },
+          formatKey(k) {
+            return String(k).replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+          },
+          formatVal(v) {
+            if (v == null) return '—';
+            if (Array.isArray(v)) return v.slice(0,10).join(', ') + (v.length > 10 ? ` +${v.length-10}` : '');
+            return String(v).slice(0,500);
+          },
+        }
+      };
+    </script>
+
+    <!-- ── Main app script ────────────────────────────────────────────────── -->
+    <script type="module">
+      import { useWindowSize } from 'https://esm.sh/@vueuse/core';
+      const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
+      const { createVuetify } = Vuetify;
+
+      const vuetify = createVuetify({
+        icons: { defaultSet: 'mdi' },
+        theme: { defaultTheme: 'light' },
+      });
+
+      // ── Search Worker ──────────────────────────────────────────────────────
+      const searchWorker = new Worker('js/search/search.worker.js', { type: 'module' });
+
+      // ── BM25 (lexical) — loaded as global script via ss-bundle ──────────
+      // ss-bundle.js exposes window.SearchBundle = { createBM25Engine, prepTask }
+      let bm25Engine = null;
+
+      // ── Reranker ──────────────────────────────────────────────────────────
+      const useRerank = true;
+      const rerankWorker = useRerank
+        ? new Worker('js/search/rank.worker.js', { type: 'module' })
+        : null;
+
+      // ── URL param: ?manifest=data/prwp/manifest.json ─────────────────────
+      const params = new URLSearchParams(location.search);
+      const DEFAULT_MANIFEST = params.get('manifest') || 'data/prwp/manifest.json';
+
+      // ── App ───────────────────────────────────────────────────────────────
+      createApp({
+        setup() {
+          const { width } = useWindowSize();
+
+          // State
+          const query = ref('');
+          const searchMode = ref('semantic'); // semantic | lexical | hybrid
+          const manifestUrl = ref(DEFAULT_MANIFEST);
+          const manifestConfig = ref(null);
+          const modelReady = ref(false);
+          const indexReady = ref(false);
+          const bm25Ready = ref(false);
+          const loadingMessage = ref('Loading index…');
+          const busy = ref(false);
+          const hasQueried = ref(false);
+          const loading = ref(false);
+
+          const fullResults = ref([]);
+          const semanticResults = ref([]);
+          const loadedCount = ref(0);
+          const batchSize = 10;
+          const lastStats = ref(null);
+
+          const viewItem = ref(null);
+          const metadata = ref(null);
+          const pdfURL = ref(null);
+          const pdfLoading = ref(false);
+          const pdfLoadTimeout = ref(false);
+          const pdfLoadTimeoutId = ref(null);
+          const pdfViewLoaded = ref(false);
+          const detailExpanded = ref(false);
+          const resultListWidth = ref(null);
+          const infiniteHeight = ref(0);
+          const scrollSearchContentResultDesktop = ref(null);
+          const reranking = ref(false);
+          const applyReranking = ref(false);
+          const resultReranked = ref(false);
+
+          // Flat items (from worker bm25_init) — for BM25 index building
+          const flatItems = ref([]);
+          // HNSW mode: store resolved metadata by id for display
+          const metaById = new Map();
+
+          const searchReady = computed(() => modelReady.value && indexReady.value);
+
+          // ── Tab content buttons ────────────────────────────────────────────
+          const active_tab = ref('abstract');
+          const btnContents = ref([
+            { icon: 'note', text: 'Abstract', key: 'abstract', active: true, type: 'document' },
+            { icon: 'bolt', text: 'View', key: 'view', active: false, type: 'document' },
+            { icon: 'description', text: 'Metadata', key: 'metadata', active: false, type: 'document' },
+            // Indicator tabs
+            { icon: 'bolt', text: 'Quick answer', key: 'quick_answer', active: true, type: 'indicator' },
+            { icon: 'description', text: 'Metadata', key: 'metadata_ind', active: false, type: 'indicator' },
+          ]);
+
+          const dtype = computed(() => manifestConfig.value?.collection_id?.includes('wdi') ? 'indicator' : 'document');
+          const filteredBtnContents = computed(() => btnContents.value.filter(b => b.type === dtype.value));
+
+          const handleFilter = (btn, index) => {
+            active_tab.value = btn.key;
+            filteredBtnContents.value.forEach((b, i) => { b.active = i === index; });
+          };
+
+          const icons = {
+            document: 'mdi-file-document-outline',
+            indicator: 'mdi-chart-line',
+            microdata: 'mdi-database',
+            geospatial: 'mdi-earth',
+          };
+
+          // ── Worker message handler ─────────────────────────────────────────
+          searchWorker.onmessage = async (e) => {
+            const msg = e.data;
+            if (!msg?.type) return;
+
+            switch (msg.type) {
+              case 'progress':
+                loadingMessage.value = msg.message;
+                break;
+
+              case 'bm25_init': {
+                if (msg.items?.length > 0) {
+                  flatItems.value = msg.items;
+                  // Populate metaById for HNSW result enrichment
+                  msg.items.forEach(item => metaById.set(String(item.id), item));
+                  await buildBM25(msg.items);
+                }
+                if (msg.manifest) {
+                  manifestConfig.value = msg.manifest;
+                  // Auto-select best default mode
+                  if (msg.manifest.search_mode === 'hnsw') {
+                    searchMode.value = 'semantic';
+                  }
+                }
+                indexReady.value = true;
+                break;
+              }
+
+              case 'ready':
+                modelReady.value = true;
+                indexReady.value = true;
+                if (msg.config) manifestConfig.value = msg.config;
+                loadingMessage.value = 'Ready';
+                // Initial load (show recent)
+                await submit();
+                break;
+
+              case 'results': {
+                const results = (msg.data || []).map(r => {
+                  // Enrich with metadata if available
+                  const meta = metaById.get(String(r.id));
+                  return meta ? { ...meta, ...r } : r;
+                });
+                lastStats.value = msg.stats ?? null;
+                fullResults.value = results;
+                semanticResults.value = [];
+                await loadMore({ done: () => {} });
+                busy.value = false;
+                break;
+              }
+
+              case 'error':
+                console.error('[Worker error]', msg.message);
+                loadingMessage.value = 'Error: ' + msg.message;
+                busy.value = false;
+                break;
+            }
+          };
+
+          searchWorker.onerror = (e) => {
+            console.error('Worker error:', e);
+            loadingMessage.value = 'Worker error';
+          };
+
+          // ── BM25 init ──────────────────────────────────────────────────────
+          async function buildBM25(items) {
+            if (!window.SearchBundle) return;
+            try {
+              const { createBM25Engine } = window.SearchBundle;
+              const docs = items.map(item => ({
+                name: item.title || '',
+                definition: item.text || item.abstract || '',
+              }));
+              bm25Engine = createBM25Engine(docs, { name: 2, definition: 1 });
+              bm25Ready.value = true;
+              // Upgrade default mode to hybrid if possible
+              if (modelReady.value && searchMode.value === 'lexical') {
+                searchMode.value = 'hybrid';
+              }
+            } catch (e) {
+              console.warn('BM25 init failed:', e);
+            }
+          }
+
+          // ── Search submit ──────────────────────────────────────────────────
+          const submit = async () => {
+            hasQueried.value = true;
+            busy.value = true;
+            viewItem.value = null;
+            resultReranked.value = false;
+            semanticResults.value = [];
+            fullResults.value = [];
+
+            const text = query.value.trim();
+
+            if (!text) {
+              // Show recent (pass-through)
+              busy.value = false;
+              return;
+            }
+
+            // Lexical-only: run in main thread without worker
+            if (searchMode.value === 'lexical' && bm25Engine) {
+              const raw = bm25Engine.search(text, 50);
+              const results = raw.map(([idx, score]) => {
+                const item = flatItems.value[idx];
+                return item ? { ...item, score: score / (raw[0]?.[1] || 1) } : null;
+              }).filter(Boolean);
+              fullResults.value = results;
+              semanticResults.value = [];
+              await loadMore({ done: () => {} });
+              busy.value = false;
+              return;
+            }
+
+            // Semantic or hybrid: send to worker
+            searchWorker.postMessage({
+              type: 'search',
+              text,
+              topK: 50,
+              ef: 50,
+            });
+            // busy.value will be cleared by the 'results' message handler
+          };
+
+          // ── Reranker ──────────────────────────────────────────────────────
+          const rerank = async () => {
+            if (!query.value || !rerankWorker || fullResults.value.length === 0) return;
+            reranking.value = true;
+            const batch = fullResults.value.slice(0, 20);
+            const documents = batch.map(x => x.title + '\n\n' + (x.abstract ?? x.text ?? ''));
+
+            const reranked = await new Promise((res, rej) => {
+              rerankWorker.onmessage = e => res(e.data);
+              rerankWorker.onerror = err => rej(err);
+              rerankWorker.postMessage({ query: query.value, documents, top_k: 20 });
+            });
+
+            for (let i = 0; i < 20 && i < reranked.length; i++) {
+              fullResults.value[i] = { ...batch[reranked[i].corpus_id], rerank_score: reranked[i].score };
+            }
+            resultReranked.value = true;
+            reranking.value = false;
+            semanticResults.value = [];
+            await loadMore({ done: () => {} });
+          };
+
+          watch(applyReranking, async (newVal) => {
+            if (!useRerank) return;
+            if (newVal && !resultReranked.value) await rerank();
+            else if (newVal) fullResults.value.sort((a, b) => (b.rerank_score ?? 0) - (a.rerank_score ?? 0));
+            else fullResults.value.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+            semanticResults.value = [];
+            await loadMore({ done: () => {} });
+          });
+
+          // ── Pagination ─────────────────────────────────────────────────────
+          const loadMore = async ({ done }) => {
+            loading.value = true;
+            const slice = fullResults.value.slice(semanticResults.value.length, semanticResults.value.length + batchSize);
+            await new Promise(r => setTimeout(r, 100));
+            loading.value = false;
+            if (slice.length === 0) { done?.('empty'); return; }
+            semanticResults.value.push(...slice);
+            loadedCount.value = semanticResults.value.length;
+            if (!viewItem.value && width.value >= 960 && slice.length > 0) selectItem(slice[0]);
+            done?.('ok');
+          };
+
+          // ── Item selection ─────────────────────────────────────────────────
+          const selectItem = (item) => {
+            viewItem.value = item;
+            active_tab.value = filteredBtnContents.value[0]?.key ?? 'abstract';
+            filteredBtnContents.value.forEach((b, i) => { b.active = i === 0; });
+            metadata.value = null;
+            pdfURL.value = null;
+            pdfViewLoaded.value = false;
+            loadItemMetadata(item);
+          };
+
+          const loadItemMetadata = async (item) => {
+            const idno = item.idno ?? item.id;
+            const dtype = item.type === 'indicator' ? 'indicator' : 'document';
+            const metaUrl = `https://avsolatorio.github.io/ids-metadata/data/metadata/${dtype}/${dtype}_${idno}.json`;
+            try {
+              const resp = await fetch(metaUrl);
+              if (resp.ok) {
+                metadata.value = await resp.json();
+                pdfURL.value = metadata.value?.document_description?.url ?? null;
+                pdfViewLoaded.value = false;
+              }
+            } catch (_) {}
+          };
+
+          const handleResultSearchClick = (_, result) => {
+            if (result?.idno === viewItem.value?.idno && result?.id === viewItem.value?.id) return;
+            selectItem(result);
+          };
+
+          // ── PDF ────────────────────────────────────────────────────────────
+          const pdfURLSameOrigin = computed(() => {
+            const url = pdfURL.value;
+            if (!url) return false;
+            try { return new URL(url, location.href).origin === location.origin; } catch { return false; }
+          });
+          const pdfIframeSrc = computed(() => {
+            const url = pdfURL.value;
+            if (!url) return '';
+            if (pdfURLSameOrigin.value) return url;
+            return 'https://docs.google.com/gview?url=' + encodeURIComponent(url) + '&embedded=true';
+          });
+
+          watch([active_tab, pdfURL], ([tab, url]) => {
+            if (pdfLoadTimeoutId.value) { clearTimeout(pdfLoadTimeoutId.value); pdfLoadTimeoutId.value = null; }
+            if (!url) { pdfLoading.value = false; pdfLoadTimeout.value = false; pdfViewLoaded.value = false; return; }
+            if (tab === 'view' && !pdfViewLoaded.value) {
+              pdfLoading.value = true; pdfLoadTimeout.value = false;
+              pdfLoadTimeoutId.value = setTimeout(() => { pdfLoading.value = false; pdfLoadTimeout.value = true; pdfLoadTimeoutId.value = null; }, 50000);
+            } else if (tab !== 'view') { pdfLoading.value = false; pdfLoadTimeout.value = false; }
+          }, { immediate: true });
+
+          const onPdfIframeLoad = () => {
+            pdfLoading.value = false; pdfViewLoaded.value = true;
+            if (pdfLoadTimeoutId.value) { clearTimeout(pdfLoadTimeoutId.value); pdfLoadTimeoutId.value = null; }
+          };
+
+          // ── Detail expand ──────────────────────────────────────────────────
+          const toggleDetailExpanded = () => {
+            if (!detailExpanded.value) {
+              const el = scrollSearchContentResultDesktop.value?.$el ?? scrollSearchContentResultDesktop.value;
+              if (el instanceof HTMLElement) resultListWidth.value = Math.round(el.getBoundingClientRect().width);
+            }
+            detailExpanded.value = !detailExpanded.value;
+          };
+
+          // ── Misc ───────────────────────────────────────────────────────────
+          const clearSearch = () => { query.value = ''; viewItem.value = null; semanticResults.value = []; hasQueried.value = false; };
+          const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } };
+          const handleMetadataDownload = (idno, meta) => {
+            if (!idno || !meta) return;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' }));
+            a.download = `metadata_${idno}.json`;
+            a.click(); URL.revokeObjectURL(a.href);
+          };
+
+          watch(() => width.value, () => {
+            const el = scrollSearchContentResultDesktop.value?.$el ?? scrollSearchContentResultDesktop.value;
+            if (el instanceof HTMLElement) infiniteHeight.value = el.clientHeight;
+          });
+
+          // ── Mount ──────────────────────────────────────────────────────────
+          onMounted(() => {
+            // Register service worker
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('service-worker.js').catch(() => {});
+            }
+
+            // Resolve relative URL against page origin (worker is served from /js/search/)
+            const resolvedManifest = new URL(manifestUrl.value, location.href).href;
+            searchWorker.postMessage({ type: 'init', manifestUrl: resolvedManifest });
+
+            document.getElementById('firstLoading')?.remove();
+          });
+
+          return {
+            query, searchMode, manifestConfig, modelReady, indexReady, bm25Ready,
+            loadingMessage, searchReady, busy, hasQueried, loading, lastStats,
+            fullResults, semanticResults, loadedCount, batchSize,
+            viewItem, metadata, pdfURL, pdfURLSameOrigin, pdfIframeSrc,
+            pdfLoading, pdfLoadTimeout, pdfViewLoaded, onPdfIframeLoad,
+            detailExpanded, toggleDetailExpanded, resultListWidth, infiniteHeight,
+            scrollSearchContentResultDesktop,
+            reranking, applyReranking, useRerank,
+            active_tab, btnContents, filteredBtnContents, dtype, icons,
+            submit, clearSearch, handleKeyDown, loadMore, selectItem,
+            handleResultSearchClick, handleFilter, handleMetadataDownload,
+          };
+        }
+      })
+      .use(vuetify)
+      .component('detail-pane', DetailPane)
+      .mount('#app');
+    </script>
+  </body>
+</html>
