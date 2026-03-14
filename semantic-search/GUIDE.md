@@ -397,7 +397,7 @@ A lightweight metadata file keyed by integer node ID (insertion order = HNSW nod
 | `--output_dir` | `data/collection` | Directory containing `raw_embeddings.npy` and `metadata.json` |
 | `--collection_id` | `collection` | Short identifier written into `manifest.json` |
 | `--model_id` | `avsolatorio/GIST-small-Embedding-v0` | Model identifier written into manifest |
-| `--compress` | `gzip` | `gzip` compresses all JSON to `.json.gz` (~70% smaller); `none` keeps uncompressed |
+| `--compress` | `gzip` | `gzip` compresses all JSON to `.json.gz` (~70% smaller); `none` keeps uncompressed. **GitHub Pages does not serve `.gz` files** — use `none` or run `decompress_for_github_pages.py` after building. |
 | `--hnsw_M` | `16` | HNSW `M` parameter (neighbors per node per layer). Higher = better recall, larger index |
 | `--ef_construction` | `200` | HNSW build-time beam width. Higher = better graph quality, slower build |
 | `--flat_threshold` | `2000` | Maximum `n_items` to use flat (brute-force) mode instead of HNSW |
@@ -1424,6 +1424,24 @@ function sendSearch(text) {
 **Cause:** The service worker has not yet cached the specific shard files needed by this query. Only shards that have been fetched at least once (in the current cache version) are stored.
 
 **Fix:** Shards are cached lazily on first use. After a few online sessions covering diverse queries, most shards will be cached. For guaranteed offline support, add a pre-caching step in the service worker's `install` event that fetches all shard URLs listed in the manifest. Alternatively, ensure users run at least one online query session before going offline.
+
+### GitHub Pages: 404 or 500 for shard/index files
+
+**Symptom:** `shard_NNN.json` or `.json.gz` returns 404 or 500 when deployed to GitHub Pages.
+
+**Cause:** GitHub Pages does not serve pre-compressed `.gz` files correctly (can cause 500 errors). If you built with `--compress=gzip`, the index files are `.json.gz` and may fail on GitHub Pages.
+
+**Fix:** Use uncompressed `.json` for GitHub Pages deployment:
+
+```bash
+# Option 1: Build with --compress=none
+python 03_build_index.py --output_dir=../../data/prwp --compress=none
+
+# Option 2: Decompress existing .gz output (after building with gzip)
+python decompress_for_github_pages.py --output_dir=../../data/prwp
+```
+
+Then commit and push the `.json` files and updated `manifest.json`.
 
 ### Init timeout
 

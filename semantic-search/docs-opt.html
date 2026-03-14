@@ -42,6 +42,7 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@vueuse/core@10.9.0/+esm" />
 
     <link
       href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/universal.min.css"
@@ -2672,7 +2673,7 @@
     </script>
 
     <script type="module">
-      import { useScroll, useWindowSize } from "https://esm.sh/@vueuse/core";
+      import { useScroll, useWindowSize } from "https://cdn.jsdelivr.net/npm/@vueuse/core@10.9.0/+esm";
 
       const { createApp, ref, onMounted, nextTick, watch, computed } = Vue;
 
