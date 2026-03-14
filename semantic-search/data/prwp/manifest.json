@@ -7,14 +7,14 @@
   "quant": "int8",
   "model_id": "avsolatorio/GIST-small-Embedding-v0",
   "flat": {
-    "path": "flat/embeddings.int8.json.gz"
+    "path": "flat/embeddings.int8.json"
   },
   "index": {
     "path": "index/",
-    "config": "index/config.json.gz",
-    "titles": "index/titles.json.gz",
-    "upper_layers": "index/upper_layers.json.gz",
-    "node_to_shard": "index/node_to_shard.json.gz"
+    "config": "index/config.json",
+    "titles": "index/titles.json",
+    "upper_layers": "index/upper_layers.json",
+    "node_to_shard": "index/node_to_shard.json"
   },
   "thresholds": {
     "flat_max": 2000
@@ -30,6 +30,6 @@
     "title",
     "text"
   ],
-  "compressed": true,
+  "compressed": false,
   "search_mode": "hnsw"
 }
