@@ -12,6 +12,7 @@
 4. [Index File Format](#4-index-file-format)
 5. [JavaScript Modules](#5-javascript-modules)
    - [int8-codec.js](#int8-codecjs)
+   - [fetch-json.js](#fetch-jsonjs)
    - [shard-loader.js](#shard-loaderjs)
    - [flat-engine.js](#flat-enginejs)
    - [hnsw-engine.js](#hnsw-enginejs)
@@ -21,6 +22,7 @@
 6. [Apps](#6-apps)
    - [app.html](#apphtml)
    - [test-hnsw-search.html](#test-hnsw-searchhtml)
+   - [test-hnsw-vs-flat.html](#test-hnsw-vs-flathtml)
 7. [Bandwidth and Performance](#7-bandwidth-and-performance)
 8. [Key Design Decisions](#8-key-design-decisions)
 9. [Extending to a New Collection](#9-extending-to-a-new-collection)
@@ -64,19 +66,18 @@ This system is a **fully browser-native semantic search engine** — no backend 
 |            |                                                        |
 |  02_generate_embeddings.py                                          |
 |    +-- raw_embeddings.npy  (float32, L2-normalized)                |
-|    +-- flat/embeddings.int8.json  (brute-force index)              |
+|    +-- flat/embeddings.int8.json(.gz)  (brute-force index)        |
 |            |                                                        |
 |  03_build_index.py                                                  |
 |    +-- manifest.json                                                |
 |    +-- index/                                                       |
-|         +-- config.json                                             |
-|         +-- upper_layers.json   (~835 KB for PRWP)                 |
-|         +-- node_to_shard.json  (~107 KB)                          |
-|         +-- cluster_centroids.json  (~126 KB)                      |
-|         +-- titles.json         (~1.4 MB)                          |
+|         +-- config.json(.gz)                                       |
+|         +-- upper_layers.json(.gz)   (~835 KB → ~200 KB gzip)     |
+|         +-- node_to_shard.json(.gz)  (~107 KB)                     |
+|         +-- cluster_centroids.json(.gz)                            |
+|         +-- titles.json(.gz)         (~1.4 MB)                     |
 |         +-- layer0/                                                 |
-|              +-- shard_000.json  (~128 KB avg)                     |
-|              +-- shard_001.json                                     |
+|              +-- shard_000.json(.gz)  (~128 KB avg → ~35 KB gzip)  |
 |              +-- ... (110 shards for PRWP)                         |
 +---------------------------------------------------------------------+
                               | static file hosting
@@ -134,11 +135,13 @@ python 02_generate_embeddings.py \
   --output_dir=../../data/prwp \
   --model=avsolatorio/GIST-small-Embedding-v0
 
-# Step 3: build the sharded HNSW index
+# Step 3: build the sharded HNSW index (default: gzip compression)
 python 03_build_index.py \
   --output_dir=../../data/prwp \
   --collection_id=prwp \
   --model_id=avsolatorio/GIST-small-Embedding-v0
+
+# Disable compression: --compress=none
 
 # Or use the orchestrator (runs all three steps):
 python pipeline.py prwp \
@@ -394,6 +397,7 @@ A lightweight metadata file keyed by integer node ID (insertion order = HNSW nod
 | `--output_dir` | `data/collection` | Directory containing `raw_embeddings.npy` and `metadata.json` |
 | `--collection_id` | `collection` | Short identifier written into `manifest.json` |
 | `--model_id` | `avsolatorio/GIST-small-Embedding-v0` | Model identifier written into manifest |
+| `--compress` | `gzip` | `gzip` compresses all JSON to `.json.gz` (~70% smaller); `none` keeps uncompressed |
 | `--hnsw_M` | `16` | HNSW `M` parameter (neighbors per node per layer). Higher = better recall, larger index |
 | `--ef_construction` | `200` | HNSW build-time beam width. Higher = better graph quality, slower build |
 | `--flat_threshold` | `2000` | Maximum `n_items` to use flat (brute-force) mode instead of HNSW |
@@ -513,6 +517,8 @@ The top-level entry point. The browser worker fetches this URL first.
 
 All paths in `flat` and `index` are relative to the manifest URL. `search_mode` is either `"flat"` (for small collections) or `"hnsw"`. The `titles` key is only present in HNSW mode.
 
+When the pipeline uses `--compress=gzip` (default), paths point to `.json.gz` files (e.g. `flat/embeddings.int8.json.gz`) and `compressed: true` is set. The app decompresses these automatically via `fetch-json.js`.
+
 ### `index/config.json`
 
 HNSW build parameters and measured recall. Loaded by `hnsw-engine.js` at init.
@@ -623,9 +629,9 @@ One file per K-Means cluster. Contains the SQ8-quantized vectors and layer-0 HNS
 
 Filename format: `shard_NNN.json` where NNN is zero-padded to 3 digits (e.g., `shard_007.json`). Average size for PRWP: ~128 KB per shard.
 
-### `flat/embeddings.int8.json`
+### `flat/embeddings.int8.json` (or `.json.gz`)
 
-Complete flat brute-force index. Contains every document's int8 vector, title, text, and preview fields. Used directly by `FlatEngine` for small collections and also as the source for BM25 construction in flat mode.
+Complete flat brute-force index. Contains every document's int8 vector, title, text, and preview fields. Used directly by `FlatEngine` for small collections and also as the source for BM25 construction in flat mode. When `--compress=gzip`, written as `.json.gz` (~75% smaller).
 
 ```json
 {
@@ -678,9 +684,29 @@ import { dotProductMixed, dequantize, l2NormalizeInPlace, toInt8Array } from './
 
 ---
 
+### `fetch-json.js`
+
+Fetches JSON from a URL with automatic gzip decompression. When the pipeline uses `--compress=gzip`, index files are written as `.json.gz`; this module fetches and decompresses them using `DecompressionStream` before parsing.
+
+#### API
+
+```js
+import { fetchJson } from './fetch-json.js';
+
+const data = await fetchJson('data/prwp/flat/embeddings.int8.json.gz');
+// Automatically decompresses .gz URLs before parsing
+```
+
+| Parameter | Description |
+|---|---|
+| `url` | Full URL to `.json` or `.json.gz` file |
+| `opts.cacheName` | If set, uses Cache API for caching (stores decompressed JSON) |
+
+---
+
 ### `shard-loader.js`
 
-Manages lazy loading of layer-0 shard files with three-tier caching.
+Manages lazy loading of layer-0 shard files with three-tier caching. Supports both `.json` and `.json.gz` (when `manifest.compressed` is true).
 
 #### Cache tiers
 
@@ -709,7 +735,7 @@ loader.evict(200);  // keep at most 200 shards in memory
 
 | Method | Description |
 |---|---|
-| `constructor(baseUrl, cacheName)` | `baseUrl` must end with `/`. `cacheName` is the Cache API bucket — must match `service-worker.js` constant. |
+| `constructor(baseUrl, cacheName, shardSuffix)` | `baseUrl` must end with `/`. `cacheName` is the Cache API bucket. `shardSuffix` is `.json` or `.json.gz` (default `.json`). |
 | `async load(shardId)` | Load and return parsed shard JSON. Checks memory -> Cache API -> network in order. |
 | `prefetch(shardIds)` | Fire-and-forget load for a list of shard IDs. Skips IDs already in memory or inflight. |
 | `evict(maxEntries)` | Remove oldest entries from memory using FIFO order until the cache is at most `maxEntries`. Default: 200. |
@@ -752,10 +778,10 @@ Approximate nearest-neighbor search using the HNSW algorithm over browser-lazily
 
 ```js
 const engine = new HNSWEngine();
-await engine.init('data/prwp/', { cacheName: 'hnsw-shards-v1' });
+await engine.init('data/prwp/', { cacheName: 'hnsw-shards-v1', manifest });
 ```
 
-`init()` fetches three files in **parallel**:
+When `manifest.compressed` is true, paths point to `.json.gz` and the loader uses `.json.gz` for shards. `init()` fetches three files in **parallel**:
 
 1. `index/config.json` — build parameters and entry point.
 2. `index/upper_layers.json` — all nodes in layers 1+; their `qv` arrays are immediately converted to `Int8Array` and stored in `nodeCache`.
@@ -871,6 +897,7 @@ All messages use a `type` field. The worker also handles a legacy bare-message f
 | `init` | `manifestUrl: string`, `modelId?: string` | Start initialization. `manifestUrl` must be an absolute URL — resolve with `new URL(url, location.href).href`. |
 | `search` | `text: string`, `topK?: number`, `ef?: number`, `threshold?: number` | Run a search query. Worker must be ready. |
 | `embed` | `text: string` | Get a raw embedding vector (transferred as `ArrayBuffer`). |
+| `searchCompare` | `text: string`, `topK?: number`, `ef?: number` | Run both HNSW and flat search, return both result sets + recall@k overlap. Only supported in HNSW mode. |
 | `ping` | — | Health check. |
 
 **Inbound from worker (worker -> main thread):**
@@ -881,6 +908,7 @@ All messages use a `type` field. The worker also handles a legacy bare-message f
 | `bm25_init` | `items: Array`, `manifest: object` | Sent after index load. In flat mode, `items` is the full flat items array for BM25 construction. In HNSW mode, `items` is empty. The manifest is forwarded for collection metadata. |
 | `ready` | `mode: 'flat' or 'hnsw'`, `config: object` | Both model and index are ready. Triggers initial search in `app.html`. |
 | `results` | `data: Array`, `stats?: object` | Search results array. `stats` contains `lastStats` from the engine (latencyMs, shardsLoaded, totalCachedShards). |
+| `compare` | `hnsw: Array`, `flat: Array`, `recall: number`, `overlap: number`, `k: number` | Response to `searchCompare`. Recall = overlap/k (how many flat top-k appear in HNSW top-k). |
 | `embedding` | `data: Float32Array` | Response to `embed` message. Transferred as `ArrayBuffer` for zero-copy. |
 | `pong` | — | Response to `ping` when ready. |
 | `loading` | — | Response to `ping` when still initializing. |
@@ -936,17 +964,17 @@ A cache-first service worker that intercepts requests for index files and shard 
 
 #### Cached URL patterns
 
-The service worker intercepts requests matching these patterns:
+The service worker intercepts requests matching these patterns (supports both `.json` and `.json.gz` when the pipeline uses `--compress=gzip`):
 
 ```
-/index/layer0/shard_NNN.json
-/index/upper_layers.json
-/index/node_to_shard.json
-/index/cluster_centroids.json
-/index/config.json
-/index/titles.json
+/index/layer0/shard_NNN.json(.gz)
+/index/upper_layers.json(.gz)
+/index/node_to_shard.json(.gz)
+/index/cluster_centroids.json(.gz)
+/index/config.json(.gz)
+/index/titles.json(.gz)
 /manifest.json
-/flat/embeddings.int8.json
+/flat/embeddings.int8.json(.gz)
 ```
 
 All other URLs pass through to the browser without interception.
@@ -1070,6 +1098,28 @@ The log panel shows every worker message (`<- type`) and every outbound message 
 
 ---
 
+### `test-hnsw-vs-flat.html`
+
+A comparison test that validates HNSW approximate search against brute-force flat search. Use this to verify that HNSW returns results comparable to exact retrieval.
+
+#### What it does
+
+- **Single query:** Enter a query, click "Compare HNSW vs Flat". The worker runs both HNSW and flat search, then computes recall@k (overlap of top-k results). Results are shown side-by-side with match/mismatch highlighting.
+- **Batch mode:** Runs 7 predefined queries and reports average recall, min recall, and how many queries achieved 100% recall.
+
+#### Requirements
+
+- Manifest must be in **HNSW mode** (`search_mode: "hnsw"`).
+- The manifest must have a `flat.path` (e.g. `flat/embeddings.int8.json` or `.json.gz`) — the flat index is lazy-loaded on first comparison (~44 MB uncompressed, ~11 MB gzip for PRWP).
+
+#### How to interpret
+
+- **Recall@k:** Fraction of flat top-k results that appear in HNSW top-k. Python build validation targets recall@10 ≥ 0.85; typical PRWP index achieves ~0.999.
+- **Match column:** Green = same document at same rank; red = different document at that rank (ordering may differ even when recall is high).
+- **Batch summary:** Avg recall ≥ 95% is good; ≥ 80% is acceptable; below 80% may warrant higher `ef_search` or index rebuild.
+
+---
+
 ## 7. Bandwidth and Performance
 
 All numbers are measured for the **PRWP collection** (10,942 documents, 384-dimensional embeddings, 110 clusters, M=16).
@@ -1078,7 +1128,7 @@ All numbers are measured for the **PRWP collection** (10,942 documents, 384-dime
 
 | File | Approx. size |
 |---|---|
-| `index/upper_layers.json` | ~835 KB |
+| `index/upper_layers.json` | ~835 KB (~200 KB gzip) |
 | `index/node_to_shard.json` | ~107 KB |
 | `index/cluster_centroids.json` | ~126 KB |
 | `index/config.json` | ~1 KB |
@@ -1133,7 +1183,7 @@ Lazy-loading upper layers would save the initial ~835 KB but would add 1-3 round
 
 ### Separate `titles.json` vs loading the flat file for HNSW mode
 
-The flat index (`flat/embeddings.int8.json`) for PRWP is approximately 44 MB — it contains quantized vectors for all 10,942 documents. Loading this file just to show titles in HNSW mode would be prohibitive (takes seconds and wastes memory).
+The flat index (`flat/embeddings.int8.json`) for PRWP is approximately 44 MB uncompressed (~11 MB gzip) — it contains quantized vectors for all 10,942 documents. Loading this file just to show titles in HNSW mode would be prohibitive (takes seconds and wastes memory).
 
 `titles.json` contains only display fields (title, idno, type, doi) without the large abstract/text fields or vectors, keeping it at ~1.4 MB. It is fetched in parallel with the three HNSW init files at startup, adding only ~50 ms to init time on a typical connection.
 
