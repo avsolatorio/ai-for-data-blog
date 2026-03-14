@@ -11,9 +11,9 @@ for models that do not support it (e.g. GIST-small-Embedding-v0).
 
 Usage:
   # From existing metadata.json produced by 01_fetch_and_prepare.py
-  python 02_generate_embeddings.py \\
-    --metadata_path=data/prwp/metadata.json \\
-    --output_dir=data/prwp \\
+  python 02_generate_embeddings.py \
+    --metadata_path=../../data/prwp/metadata.json \
+    --output_dir=../../data/prwp \
     --model=avsolatorio/GIST-small-Embedding-v0
 
   # From existing float32 embeddings (skip re-encoding)
@@ -32,6 +32,7 @@ Usage:
     --model=nomic-ai/nomic-embed-text-v1.5 \\
     --matryoshka_dim=128
 """
+
 import json
 import os
 import numpy as np
@@ -64,26 +65,37 @@ def l2_normalize(embs: np.ndarray) -> np.ndarray:
     return embs / norms
 
 
-def validate_quantization(original: np.ndarray, quantized_items: list, sample_size: int = 500) -> float:
+def validate_quantization(
+    original: np.ndarray, quantized_items: list, sample_size: int = 500
+) -> float:
     """Validate that int8 round-trip preserves cosine similarity.
     Returns minimum cosine similarity across sample (should be > 0.999).
     """
     n = min(sample_size, len(original))
     idx = np.random.choice(len(original), n, replace=False)
 
-    reconstructed = np.array([
-        dequantize_sq8(quantized_items[i]["scale"], quantized_items[i]["qv"])
-        for i in idx
-    ], dtype=np.float32)
+    reconstructed = np.array(
+        [
+            dequantize_sq8(quantized_items[i]["scale"], quantized_items[i]["qv"])
+            for i in idx
+        ],
+        dtype=np.float32,
+    )
     reconstructed = l2_normalize(reconstructed)
 
     orig_sample = original[idx]
 
-    sims = np.sum(orig_sample * reconstructed, axis=1)  # dot product of normalized = cosine sim
+    sims = np.sum(
+        orig_sample * reconstructed, axis=1
+    )  # dot product of normalized = cosine sim
     min_sim = float(np.min(sims))
     mean_sim = float(np.mean(sims))
-    print(f"  Quantization quality — min cosine sim: {min_sim:.6f}, mean: {mean_sim:.6f}")
-    assert min_sim > 0.98, f"Quantization quality too low: min cosine sim = {min_sim:.6f} (threshold: 0.98)"
+    print(
+        f"  Quantization quality — min cosine sim: {min_sim:.6f}, mean: {mean_sim:.6f}"
+    )
+    assert min_sim > 0.98, (
+        f"Quantization quality too low: min cosine sim = {min_sim:.6f} (threshold: 0.98)"
+    )
     return min_sim
 
 
@@ -91,28 +103,22 @@ def main(
     # Input: either metadata_path (raw docs) or embeddings_path (pre-computed)
     metadata_path: Optional[str] = None,
     embeddings_path: Optional[str] = None,
-
     # Output
     output_dir: str = "data/collection",
-
     # Model (only needed if generating embeddings from metadata_path)
     model: str = "avsolatorio/GIST-small-Embedding-v0",
     batch_size: int = 64,
-
     # Field names (for embeddings_path or metadata_path)
     id_field: str = "idno",
     content_field: str = "abstract",
     title_field: str = "title",
     embedding_field: str = "embedding",
     preview_fields: str = "idno,title,abstract,type,doi",  # comma-separated
-
     # Optional Matryoshka truncation — ONLY for models trained with MRL
     matryoshka_dim: Optional[int] = None,
-
     # Flat format options
-    bm25_text_field: str = "abstract",   # field to inline in flat format for BM25
+    bm25_text_field: str = "abstract",  # field to inline in flat format for BM25
     bm25_title_field: str = "title",
-
     seed: int = 42,
 ):
     np.random.seed(seed)
@@ -135,7 +141,9 @@ def main(
         embeddings_list = []
         for item in raw_data:
             embeddings_list.append(item[embedding_field])
-            meta = {field: item.get(field) for field in preview_field_list if field in item}
+            meta = {
+                field: item.get(field) for field in preview_field_list if field in item
+            }
             meta["id"] = str(item.get(id_field, item.get("id", "")))
             meta["title"] = item.get(title_field, "")
             meta["text"] = item.get(bm25_text_field, item.get(content_field, ""))
@@ -153,16 +161,25 @@ def main(
 
         model_obj = SentenceTransformer(model)
         texts = [
-            (doc.get(title_field, "") or "") + "\n\n" + (doc.get(content_field, "") or "")
+            (doc.get(title_field, "") or "")
+            + "\n\n"
+            + (doc.get(content_field, "") or "")
             for doc in docs
         ]
         print(f"  Encoding {len(texts)} documents with {model}...")
-        emb_array = model_obj.encode(texts, batch_size=batch_size, show_progress_bar=True, normalize_embeddings=False)
+        emb_array = model_obj.encode(
+            texts,
+            batch_size=batch_size,
+            show_progress_bar=True,
+            normalize_embeddings=False,
+        )
         embeddings = np.array(emb_array, dtype=np.float32)
 
         metadata = []
         for doc in docs:
-            meta = {field: doc.get(field) for field in preview_field_list if field in doc}
+            meta = {
+                field: doc.get(field) for field in preview_field_list if field in doc
+            }
             meta["id"] = str(doc.get(id_field, doc.get("id", "")))
             meta["title"] = doc.get(title_field, "")
             meta["text"] = doc.get(bm25_text_field, doc.get(content_field, ""))
@@ -181,7 +198,9 @@ def main(
     active_dim = full_dim
     if matryoshka_dim is not None:
         if matryoshka_dim >= full_dim:
-            print(f"  matryoshka_dim={matryoshka_dim} >= full_dim={full_dim}, skipping truncation")
+            print(
+                f"  matryoshka_dim={matryoshka_dim} >= full_dim={full_dim}, skipping truncation"
+            )
         else:
             print(f"  Applying Matryoshka truncation: {full_dim}D → {matryoshka_dim}D")
             # Validate truncation quality on a sample before committing
@@ -191,10 +210,14 @@ def main(
             sims = np.sum(full_sample[:, :matryoshka_dim] * trunc_sample, axis=1)
             # For MRL models, truncated cosine sim should be high (>0.90)
             min_trunc_sim = float(np.min(sims))
-            print(f"  Truncation quality — min cosine sim (full vs truncated): {min_trunc_sim:.4f}")
+            print(
+                f"  Truncation quality — min cosine sim (full vs truncated): {min_trunc_sim:.4f}"
+            )
             if min_trunc_sim < 0.85:
-                print(f"  WARNING: Low truncation similarity ({min_trunc_sim:.4f}). "
-                      f"This model may not support Matryoshka truncation well.")
+                print(
+                    f"  WARNING: Low truncation similarity ({min_trunc_sim:.4f}). "
+                    f"This model may not support Matryoshka truncation well."
+                )
 
             embeddings_norm = l2_normalize(embeddings_norm[:, :matryoshka_dim])
             active_dim = matryoshka_dim
@@ -251,7 +274,9 @@ def main(
         json.dump(flat_data, f, ensure_ascii=False, separators=(",", ":"))
 
     flat_size_mb = flat_path.stat().st_size / 1e6
-    print(f"Saved flat index ({n_items} items, {active_dim}D int8) → {flat_path} ({flat_size_mb:.1f} MB)")
+    print(
+        f"Saved flat index ({n_items} items, {active_dim}D int8) → {flat_path} ({flat_size_mb:.1f} MB)"
+    )
     print("\nDone! Next: run 03_build_index.py to build the sharded HNSW index.")
 
 

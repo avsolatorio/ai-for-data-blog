@@ -21,16 +21,17 @@ const CACHE_NAME = 'hnsw-shards-v1';
 /**
  * URL patterns that should be cached by this service worker.
  * Matches shard files, lookup tables, and upper-layer files.
+ * Supports both .json and .json.gz (compressed pipeline output).
  */
 const CACHEABLE_PATTERNS = [
-  /\/index\/layer0\/shard_\d+\.json$/,
-  /\/index\/upper_layers\.json$/,
-  /\/index\/node_to_shard\.json$/,
-  /\/index\/cluster_centroids\.json$/,
-  /\/index\/config\.json$/,
-  /\/index\/titles\.json$/,
+  /\/index\/layer0\/shard_\d+\.json(\.gz)?$/,
+  /\/index\/upper_layers\.json(\.gz)?$/,
+  /\/index\/node_to_shard\.json(\.gz)?$/,
+  /\/index\/cluster_centroids\.json(\.gz)?$/,
+  /\/index\/config\.json(\.gz)?$/,
+  /\/index\/titles\.json(\.gz)?$/,
   /\/manifest\.json$/,
-  /\/flat\/embeddings\.int8\.json$/,
+  /\/flat\/embeddings\.int8\.json(\.gz)?$/,
 ];
 
 function isCacheable(url) {

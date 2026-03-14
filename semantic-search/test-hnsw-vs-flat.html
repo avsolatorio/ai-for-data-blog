@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HNSW vs Flat — Recall Comparison</title>
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
+  <style>
+    body { font-family: 'Roboto', sans-serif; background: #f5f5f5; }
+    .pass { color: #2e7d32; font-weight: bold; }
+    .fail { color: #c62828; font-weight: bold; }
+    .warn { color: #e65100; font-weight: bold; }
+    .result-row { font-size: 12px; }
+    .score { font-family: monospace; font-size: 11px; color: #666; }
+    .match { background: #e8f5e9; }
+    .mismatch { background: #ffebee; }
+    pre { white-space: pre-wrap; word-break: break-all; font-size: 11px; }
+    .embedding-vector { max-height: 200px; overflow-y: auto; font-size: 10px; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <v-app>
+    <v-main>
+      <v-container max-width="1200">
+        <v-row class="mt-4 mb-2">
+          <v-col>
+            <h2 class="text-h5">HNSW vs Flat — Recall Comparison</h2>
+            <p class="text-body-2 text-medium-emphasis">
+              Compare HNSW approximate search against brute-force flat search. Flat results are the ground truth.
+              Recall@k = overlap of top-k results (how many flat top-k appear in HNSW top-k).
+              <strong>Note:</strong> First comparison loads the flat index (~44 MB for PRWP) — may take 10–30 seconds.
+            </p>
+            <p class="text-caption text-medium-emphasis mt-1">
+              <strong>ef</strong> (layer 0 beam) has the biggest impact on recall — try "High recall" (ef=200) or "Near-full" (ef=500) to approach flat search. <strong>ef_upper</strong>=2 may show little difference; use 10+ for noticeable effect.
+            </p>
+          </v-col>
+        </v-row>
+
+        <!-- Config -->
+        <v-card class="mb-4" variant="outlined">
+          <v-card-text>
+            <v-row dense>
+              <v-col cols="12" md="4">
+                <v-text-field
+                  v-model="manifestUrl"
+                  label="Manifest URL (must be HNSW mode)"
+                  placeholder="data/prwp/manifest.json"
+                  density="compact"
+                  variant="outlined"
+                  hide-details
+                />
+              </v-col>
+              <v-col cols="4" md="1">
+                <v-text-field v-model.number="efSearch" label="ef" type="number"
+                  density="compact" variant="outlined" hide-details />
+              </v-col>
+              <v-col cols="4" md="1">
+                <v-text-field v-model.number="efUpper" label="ef_upper" type="number"
+                  density="compact" variant="outlined" hide-details />
+              </v-col>
+              <v-col cols="4" md="1">
+                <v-text-field v-model.number="topK" label="top_k" type="number"
+                  density="compact" variant="outlined" hide-details />
+              </v-col>
+              <v-col cols="12" md="5">
+                <v-text-field v-model="testQuery" label="Query"
+                  placeholder="poverty reduction"
+                  density="compact" variant="outlined" hide-details
+                  @keyup.enter="runCompare"
+                />
+              </v-col>
+            </v-row>
+            <v-row dense class="mt-2">
+              <v-col>
+                <v-btn color="primary" :loading="loading" :disabled="loading || !ready"
+                  @click="runCompare" prepend-icon="mdi-compare">
+                  Compare HNSW vs Flat
+                </v-btn>
+                <v-btn variant="outlined" class="ml-2" :loading="batchLoading" :disabled="batchLoading || !ready"
+                  @click="runBatch" prepend-icon="mdi-play-circle">
+                  Run Batch ({{ TEST_QUERIES.length }} queries)
+                </v-btn>
+                <v-btn variant="text" class="ml-2" @click="initWorker" :disabled="loading || batchLoading">
+                  Re-init
+                </v-btn>
+                <v-btn variant="outlined" class="ml-2" :loading="embeddingLoading" :disabled="embeddingLoading || !ready || !testQuery.trim()"
+                  @click="getEmbedding" prepend-icon="mdi-vector-arrange-below">
+                  Get Embedding
+                </v-btn>
+                <span class="ml-4 text-caption text-medium-emphasis">Presets:</span>
+                <v-btn variant="text" size="small" class="ml-1" @click="applyPreset('default')">Default</v-btn>
+                <v-btn variant="text" size="small" class="ml-1" @click="applyPreset('high')">High recall</v-btn>
+                <v-btn variant="text" size="small" class="ml-1" @click="applyPreset('near-full')">Near-full</v-btn>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+
+        <!-- Status -->
+        <v-alert v-if="statusMessage" :type="statusType" class="mb-4" density="compact">
+          {{ statusMessage }}
+        </v-alert>
+
+        <!-- Single query: recall + side-by-side -->
+        <v-row v-if="compareResult" class="mb-4">
+          <v-col cols="12" md="4">
+            <v-card variant="tonal" :color="recallColor" class="text-center pa-4">
+              <div class="text-h4 font-weight-bold">{{ (compareResult.recall * 100).toFixed(1) }}%</div>
+              <div class="text-caption">Recall@{{ compareResult.k }}</div>
+              <div class="text-body-2 mt-2">Overlap: {{ compareResult.overlap }} / {{ compareResult.k }}</div>
+            </v-card>
+          </v-col>
+          <v-col cols="12" md="8">
+            <v-card variant="outlined">
+              <v-card-title class="text-subtitle-1">Query: "{{ lastQuery }}"</v-card-title>
+              <v-divider />
+              <v-card-text class="pa-0">
+                <v-table density="compact" class="result-row">
+                  <thead>
+                    <tr>
+                      <th style="width:40px">#</th>
+                      <th>HNSW (approx)</th>
+                      <th>Flat (exact)</th>
+                      <th style="width:80px">Match</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(_, i) in compareResult.k" :key="i"
+                      :class="rowMatch(i) ? 'match' : 'mismatch'">
+                      <td>{{ i + 1 }}</td>
+                      <td>
+                        <span v-if="compareResult.hnsw[i]">
+                          {{ (compareResult.hnsw[i].title || compareResult.hnsw[i].idno || compareResult.hnsw[i].id || '—').slice(0, 50) }}…
+                        </span>
+                        <span v-else class="text-medium-emphasis">—</span>
+                        <div v-if="compareResult.hnsw[i]" class="score">score: {{ compareResult.hnsw[i].score?.toFixed(4) }}</div>
+                      </td>
+                      <td>
+                        <span v-if="compareResult.flat[i]">
+                          {{ (compareResult.flat[i].title || compareResult.flat[i].id || '—').slice(0, 50) }}…
+                        </span>
+                        <span v-else class="text-medium-emphasis">—</span>
+                        <div v-if="compareResult.flat[i]" class="score">score: {{ compareResult.flat[i].score?.toFixed(4) }}</div>
+                      </td>
+                      <td>
+                        <span :class="rowMatch(i) ? 'pass' : 'fail'">
+                          {{ rowMatch(i) ? '✓' : '✗' }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </v-table>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Batch summary -->
+        <v-card v-if="batchResults.length" variant="outlined" class="mb-4">
+          <v-card-title class="text-subtitle-1">Batch Results ({{ batchResults.length }} queries)</v-card-title>
+          <v-divider />
+          <v-card-text>
+            <v-row class="mb-3">
+              <v-col cols="6" md="3">
+                <v-card variant="tonal" color="info" class="text-center pa-3">
+                  <div class="text-h5">{{ (avgRecall * 100).toFixed(1) }}%</div>
+                  <div class="text-caption">Avg Recall@{{ topK }}</div>
+                </v-card>
+              </v-col>
+              <v-col cols="6" md="3">
+                <v-card variant="tonal" color="success" class="text-center pa-3">
+                  <div class="text-h5">{{ minRecall >= 0 ? (minRecall * 100).toFixed(1) : '—' }}%</div>
+                  <div class="text-caption">Min Recall</div>
+                </v-card>
+              </v-col>
+              <v-col cols="6" md="3">
+                <v-card variant="tonal" color="success" class="text-center pa-3">
+                  <div class="text-h5">{{ fullRecallCount }}</div>
+                  <div class="text-caption">Queries with 100% recall</div>
+                </v-card>
+              </v-col>
+              <v-col cols="6" md="3">
+                <v-card variant="tonal" :color="avgRecall >= 0.95 ? 'success' : 'warning'" class="text-center pa-3">
+                  <div class="text-h5">{{ avgRecall >= 0.95 ? '✓' : '⚠' }}</div>
+                  <div class="text-caption">Overall</div>
+                </v-card>
+              </v-col>
+            </v-row>
+            <v-table density="compact">
+              <thead>
+                <tr>
+                  <th>Query</th>
+                  <th>Recall@{{ topK }}</th>
+                  <th>Overlap</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in batchResults" :key="r.query">
+                  <td>{{ r.query }}</td>
+                  <td>{{ (r.recall * 100).toFixed(1) }}%</td>
+                  <td>{{ r.overlap }} / {{ r.k }}</td>
+                  <td>
+                    <span :class="r.recall >= 0.95 ? 'pass' : r.recall >= 0.8 ? 'warn' : 'fail'">
+                      {{ r.recall >= 0.95 ? '✓' : r.recall >= 0.8 ? '⚠' : '✗' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+          </v-card-text>
+        </v-card>
+
+        <!-- Embedding vector display -->
+        <v-card v-if="embeddingVector" variant="outlined" class="mb-4">
+          <v-card-title class="text-subtitle-1">
+            Query: "{{ embeddingQuery }}" → {{ embeddingVector.length }}D vector
+          </v-card-title>
+          <v-card-text>
+            <div class="text-caption mb-2">min: {{ embeddingStats.min }} · max: {{ embeddingStats.max }} · L2 norm: {{ embeddingStats.norm }}</div>
+            <pre class="embedding-vector pa-2">{{ embeddingVectorFormatted }}</pre>
+          </v-card-text>
+        </v-card>
+
+        <!-- Log -->
+        <v-expansion-panels v-if="log.length">
+          <v-expansion-panel title="Log">
+            <v-expansion-panel-text>
+              <pre>{{ log.join('\n') }}</pre>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </v-expansion-panels>
+
+      </v-container>
+    </v-main>
+  </v-app>
+</div>
+
+<script type="module">
+const { createApp, ref, computed, onMounted } = Vue;
+const { createVuetify } = Vuetify;
+
+const vuetify = createVuetify({ theme: { defaultTheme: 'light' } });
+
+const TEST_QUERIES = [
+  // Single keywords
+  'poverty',
+  'climate',
+  'education',
+  'health',
+  'fiscal',
+  'microfinance',
+  'infrastructure',
+  // Longer phrases
+  'poverty reduction and social protection programs',
+  'climate change adaptation in developing countries',
+  'education outcomes and human capital development',
+  'public health systems and disease prevention',
+  'fiscal policy and government expenditure',
+  'financial inclusion and microfinance',
+  'infrastructure investment and economic growth',
+];
+
+createApp({
+  setup() {
+    const manifestUrl = ref('data/prwp/manifest.json');
+    const efSearch = ref(50);
+    const efUpper = ref(2);
+    const topK = ref(10);
+    const testQuery = ref('poverty reduction and social protection');
+    const loading = ref(false);
+    const batchLoading = ref(false);
+    const ready = ref(false);
+    const statusMessage = ref('');
+    const statusType = ref('info');
+    const compareResult = ref(null);
+    const batchResults = ref([]);
+    const lastQuery = ref('');
+    const log = ref([]);
+    const embeddingVector = ref(null);
+    const embeddingQuery = ref('');
+    const embeddingLoading = ref(false);
+
+    let worker = null;
+
+    function addLog(msg) {
+      const ts = new Date().toISOString().split('T')[1].slice(0, 12);
+      log.value.push(`[${ts}] ${msg}`);
+    }
+
+    const recallColor = computed(() => {
+      if (!compareResult.value) return 'info';
+      const r = compareResult.value.recall;
+      if (r >= 0.95) return 'success';
+      if (r >= 0.8) return 'warning';
+      return 'error';
+    });
+
+    const avgRecall = computed(() => {
+      if (!batchResults.value.length) return -1;
+      const sum = batchResults.value.reduce((s, r) => s + r.recall, 0);
+      return sum / batchResults.value.length;
+    });
+
+    const minRecall = computed(() => {
+      if (!batchResults.value.length) return -1;
+      return Math.min(...batchResults.value.map(r => r.recall));
+    });
+
+    const fullRecallCount = computed(() => {
+      if (!batchResults.value.length) return 0;
+      return batchResults.value.filter(r => r.recall >= 1).length;
+    });
+
+    const embeddingStats = computed(() => {
+      if (!embeddingVector.value) return { min: 0, max: 0, norm: 0 };
+      const v = embeddingVector.value;
+      let min = v[0], max = v[0], sumSq = 0;
+      for (let i = 0; i < v.length; i++) {
+        if (v[i] < min) min = v[i];
+        if (v[i] > max) max = v[i];
+        sumSq += v[i] * v[i];
+      }
+      return { min: min.toFixed(6), max: max.toFixed(6), norm: Math.sqrt(sumSq).toFixed(6) };
+    });
+
+    const embeddingVectorFormatted = computed(() => {
+      if (!embeddingVector.value) return '';
+      const v = embeddingVector.value;
+      return '[' + Array.from(v).map(x => x.toFixed(6)).join(', ') + ']';
+    });
+
+    const PRESETS = {
+      default: { ef: 50, ef_upper: 2 },
+      high: { ef: 200, ef_upper: 10 },
+      'near-full': { ef: 500, ef_upper: 20 },
+    };
+
+    function applyPreset(name) {
+      const p = PRESETS[name];
+      if (p) { efSearch.value = p.ef; efUpper.value = p.ef_upper; }
+    }
+
+    async function getEmbedding() {
+      if (!worker || !ready.value || !testQuery.value.trim()) return;
+      embeddingLoading.value = true;
+      embeddingVector.value = null;
+      embeddingQuery.value = testQuery.value.trim();
+
+      return new Promise((resolve) => {
+        const handler = (e) => {
+          const msg = e.data;
+          if (msg?.type === 'embedding') {
+            worker.removeEventListener('message', handler);
+            embeddingVector.value = Array.from(msg.data);
+            embeddingLoading.value = false;
+            addLog(`Embedding for "${embeddingQuery.value}": ${embeddingVector.value.length}D`);
+            resolve(msg.data);
+          } else if (msg?.type === 'error') {
+            worker.removeEventListener('message', handler);
+            embeddingLoading.value = false;
+            statusMessage.value = msg.message;
+            resolve(null);
+          }
+        };
+        worker.addEventListener('message', handler);
+        worker.postMessage({ type: 'embed', text: embeddingQuery.value });
+      });
+    }
+
+    function toDocId(r) {
+      const v = r?.idno ?? r?.id;
+      return v != null && v !== '' ? String(v) : '';
+    }
+
+    function rowMatch(i) {
+      if (!compareResult.value || i >= compareResult.value.k) return false;
+      const hnsw = compareResult.value.hnsw[i];
+      const flat = compareResult.value.flat[i];
+      if (!hnsw || !flat) return false;
+      const hnswKey = toDocId(hnsw);
+      const flatKey = toDocId(flat);
+      return hnswKey && flatKey && hnswKey === flatKey;
+    }
+
+    async function initWorker() {
+      if (worker) { worker.terminate(); worker = null; }
+      ready.value = false;
+      statusMessage.value = 'Initializing…';
+      statusType.value = 'info';
+
+      worker = new Worker('js/search/search.worker.js', { type: 'module' });
+      const resolvedManifestUrl = new URL(manifestUrl.value, location.href).href;
+
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Init timeout (90s)')), 90000);
+
+        worker.onmessage = (e) => {
+          const msg = e.data;
+          if (!msg?.type) return;
+          addLog(`← ${msg.type}`);
+          if (msg.type === 'ready') {
+            clearTimeout(timeout);
+            ready.value = true;
+            statusMessage.value = `Ready (mode=${msg.mode}). Enter a query and click Compare.`;
+            statusType.value = 'success';
+            resolve(msg);
+          } else if (msg.type === 'error') {
+            clearTimeout(timeout);
+            statusMessage.value = msg.message;
+            statusType.value = 'error';
+            reject(new Error(msg.message));
+          }
+        };
+        worker.onerror = (e) => {
+          clearTimeout(timeout);
+          reject(new Error(e.message));
+        };
+
+        worker.postMessage({ type: 'init', manifestUrl: resolvedManifestUrl });
+      });
+    }
+
+    async function runCompare() {
+      if (!worker || !ready.value || !testQuery.value.trim()) return;
+      loading.value = true;
+      compareResult.value = null;
+      batchResults.value = [];
+      statusMessage.value = 'Running comparison…';
+
+      return new Promise((resolve) => {
+        const timeout = setTimeout(() => {
+          loading.value = false;
+          statusMessage.value = 'Timeout';
+          resolve();
+        }, 60000);
+
+        worker.onmessage = (e) => {
+          const msg = e.data;
+          if (msg?.type === 'compare') {
+            clearTimeout(timeout);
+            lastQuery.value = testQuery.value;
+            compareResult.value = msg;
+            loading.value = false;
+            statusMessage.value = `Recall@${msg.k}: ${(msg.recall * 100).toFixed(1)}% (overlap: ${msg.overlap}/${msg.k})`;
+            if (msg.debug) {
+              addLog(`"${msg.debug.query}" (recall ${(msg.recall * 100).toFixed(0)}%)`);
+              addLog(`  Flat top-${msg.k}: ${JSON.stringify(msg.debug.flatIds)}`);
+              addLog(`  HNSW top-${msg.k}: ${JSON.stringify(msg.debug.hnswIds)}`);
+            }
+            statusType.value = msg.recall >= 0.95 ? 'success' : msg.recall >= 0.8 ? 'warning' : 'error';
+            resolve();
+          } else if (msg?.type === 'error') {
+            clearTimeout(timeout);
+            loading.value = false;
+            statusMessage.value = msg.message;
+            statusType.value = 'error';
+            resolve();
+          }
+        };
+
+        worker.postMessage({
+          type: 'searchCompare',
+          text: testQuery.value.trim(),
+          topK: topK.value,
+          ef: efSearch.value,
+          ef_upper: efUpper.value,
+        });
+      });
+    }
+
+    async function runBatch() {
+      if (!worker || !ready.value) return;
+      batchLoading.value = true;
+      compareResult.value = null;
+      batchResults.value = [];
+      statusMessage.value = `Running ${TEST_QUERIES.length} queries…`;
+
+      const results = [];
+      for (const q of TEST_QUERIES) {
+        testQuery.value = q;
+        const res = await new Promise((resolve) => {
+          worker.onmessage = (e) => {
+            const msg = e.data;
+            if (msg?.type === 'compare') resolve(msg);
+            else if (msg?.type === 'error') resolve({ recall: 0, overlap: 0, k: topK.value, query: q });
+          };
+          worker.postMessage({ type: 'searchCompare', text: q, topK: topK.value, ef: efSearch.value, ef_upper: efUpper.value });
+        });
+        results.push({ query: q, recall: res.recall, overlap: res.overlap, k: res.k });
+        batchResults.value = [...results];
+      }
+
+      const avg = results.reduce((s, r) => s + r.recall, 0) / results.length;
+      batchLoading.value = false;
+      statusMessage.value = `Batch done. Avg recall: ${(avg * 100).toFixed(1)}%`;
+      statusType.value = avg >= 0.95 ? 'success' : avg >= 0.8 ? 'warning' : 'error';
+    }
+
+    // Auto-init on load
+    initWorker().catch(e => {
+      statusMessage.value = 'Init failed: ' + e.message;
+      statusType.value = 'error';
+    });
+
+    onMounted(() => {
+      window.getEmbedding = getEmbedding;
+      window.testQuery = testQuery;
+    });
+
+    return {
+      manifestUrl, efSearch, efUpper, topK, testQuery,
+      loading, batchLoading, ready,
+      statusMessage, statusType,
+      compareResult, batchResults, lastQuery, log,
+      recallColor, avgRecall, minRecall, fullRecallCount,
+      rowMatch, runCompare, runBatch, initWorker, applyPreset, getEmbedding,
+      embeddingVector, embeddingQuery, embeddingLoading, embeddingStats, embeddingVectorFormatted,
+      TEST_QUERIES,
+    };
+  }
+}).use(vuetify).mount('#app');
+</script>
+</body>
+</html>

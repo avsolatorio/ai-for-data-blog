@@ -9,22 +9,24 @@
  * same shard simultaneously, only one fetch is issued. Both await the same Promise.
  */
 
+import { fetchJson } from './fetch-json.js';
+
 export class ShardLoader {
   /**
    * @param {string} baseUrl - base URL for shard files (must end with '/')
    * @param {string} [cacheName] - Cache API bucket name (versioned for cache busting)
+   * @param {string} [shardSuffix='.json'] - '.json' or '.json.gz' when compressed
    */
-  constructor(baseUrl, cacheName = 'hnsw-shards-v1') {
+  constructor(baseUrl, cacheName = 'hnsw-shards-v1', shardSuffix = '.json') {
     this.baseUrl = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
     this.cacheName = cacheName;
+    this.shardSuffix = shardSuffix;
     /** @type {Map<number, object>} shard_id → parsed shard JSON */
     this.memoryCache = new Map();
     /** @type {Map<number, Promise<object>>} shard_id → in-flight fetch promise */
     this.inflight = new Map();
     /** FIFO insertion order for LRU eviction */
     this._insertOrder = [];
-    /** Whether the Cache API is available (Service Worker context or main thread) */
-    this._hasCacheApi = typeof caches !== 'undefined';
   }
 
   /**
@@ -88,46 +90,11 @@ export class ShardLoader {
   }
 
   _shardUrl(shardId) {
-    return this.baseUrl + `shard_${String(shardId).padStart(3, '0')}.json`;
+    return this.baseUrl + `shard_${String(shardId).padStart(3, '0')}${this.shardSuffix}`;
   }
 
   async _fetchShard(shardId) {
     const url = this._shardUrl(shardId);
-
-    // Try Cache API first (populated by service-worker.js on prior visits)
-    if (this._hasCacheApi) {
-      try {
-        const cache = await caches.open(this.cacheName);
-        const cached = await cache.match(url);
-        if (cached) {
-          return cached.json();
-        }
-      } catch (_) {
-        // Cache API unavailable or quota exceeded — fall through to network
-      }
-    }
-
-    // Network fetch
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      throw new Error(`ShardLoader: failed to fetch shard ${shardId} (HTTP ${resp.status}): ${url}`);
-    }
-
-    const data = await resp.json();
-
-    // Populate Cache API for future visits (non-blocking, best-effort)
-    if (this._hasCacheApi) {
-      try {
-        const cache = await caches.open(this.cacheName);
-        // Re-create response since body is consumed above
-        cache.put(url, new Response(JSON.stringify(data), {
-          headers: { 'Content-Type': 'application/json' }
-        }));
-      } catch (_) {
-        // Non-fatal: cache storage full or unavailable
-      }
-    }
-
-    return data;
+    return fetchJson(url, { cacheName: this.cacheName });
   }
 }

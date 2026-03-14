@@ -33,24 +33,48 @@ Output format is designed for lazy browser loading:
 
 Usage:
   python 03_build_index.py \\
-    --output_dir=data/prwp \\
+    --output_dir=../../data/prwp \\
     --collection_id=prwp \\
     --model_id=avsolatorio/GIST-small-Embedding-v0
 
   # Custom HNSW params
   python 03_build_index.py \\
-    --output_dir=data/prwp \\
+    --output_dir=../../data/prwp \\
     --collection_id=prwp \\
     --hnsw_M=16 \\
     --ef_construction=200 \\
     --n_clusters=110 \\
     --flat_threshold=2000
+
+  # Custom HNSW params
+  python 03_build_index.py \
+    --output_dir=../../data/prwp \
+    --collection_id=prwp \
+    --hnsw_M=4 \
+    --ef_construction=300 \
+    --model_id=avsolatorio/GIST-small-Embedding-v0
+
+  # Disable compression (keep uncompressed .json)
+  python 03_build_index.py --output_dir=../../data/prwp --compress=none
 """
+
+import gzip
 import json
 import numpy as np
 import fire
 from pathlib import Path
 from typing import Optional
+
+
+def _compress_json(path: Path, remove_original: bool = True) -> Path:
+    """Compress a JSON file to .json.gz. Returns path to compressed file."""
+    gz_path = path.with_suffix(path.suffix + ".gz")
+    with open(path, "rb") as f_in:
+        with gzip.open(gz_path, "wb", compresslevel=6) as f_out:
+            f_out.writelines(f_in)
+    if remove_original:
+        path.unlink()
+    return gz_path
 
 
 def quantize_sq8(vec: np.ndarray) -> dict:
@@ -63,7 +87,9 @@ def quantize_sq8(vec: np.ndarray) -> dict:
     return {"scale": scale, "qv": qv}
 
 
-def get_hnsw_neighbors(hnsw, offsets, flat_neighbors, node_id: int, layer: int) -> list[int]:
+def get_hnsw_neighbors(
+    hnsw, offsets, flat_neighbors, node_id: int, layer: int
+) -> list[int]:
     """Extract the neighbors of node_id at the given HNSW layer.
 
     FAISS stores HNSW neighbors in a flat int array. The layout per node is:
@@ -82,9 +108,12 @@ def get_hnsw_neighbors(hnsw, offsets, flat_neighbors, node_id: int, layer: int) 
     return [int(n) for n in nbrs if n >= 0]  # -1 = unused slot
 
 
-def validate_recall(embeddings_norm: np.ndarray, hnsw_index, n_queries: int = 100, topk: int = 10) -> float:
+def validate_recall(
+    embeddings_norm: np.ndarray, hnsw_index, n_queries: int = 100, topk: int = 10
+) -> float:
     """Compare HNSW top-k against brute-force top-k. Returns recall@topk."""
     import faiss
+
     n = len(embeddings_norm)
     idx = np.random.choice(n, min(n_queries, n), replace=False)
     queries = embeddings_norm[idx].astype(np.float32)
@@ -106,7 +135,9 @@ def validate_recall(embeddings_norm: np.ndarray, hnsw_index, n_queries: int = 10
 
     recall = float(np.mean(recalls))
     print(f"  HNSW recall@{topk} (ef=50, {len(recalls)} queries): {recall:.4f}")
-    assert recall >= 0.85, f"HNSW recall too low: {recall:.4f} (threshold: 0.85). Try increasing hnsw_M or ef_construction."
+    assert recall >= 0.85, (
+        f"HNSW recall too low: {recall:.4f} (threshold: 0.85). Try increasing hnsw_M or ef_construction."
+    )
     return recall
 
 
@@ -114,22 +145,19 @@ def main(
     output_dir: str = "data/collection",
     collection_id: str = "collection",
     model_id: str = "avsolatorio/GIST-small-Embedding-v0",
-
     # Index params
     hnsw_M: int = 16,
     ef_construction: int = 200,
     flat_threshold: int = 2000,
-
     # Shard params
     n_clusters: Optional[int] = None,  # None = auto: max(10, sqrt(n_items))
     kmeans_niter: int = 30,
-
     # Preview fields to include in flat format (already written by 02_generate_embeddings.py)
     preview_fields: str = "idno,title,abstract,type,doi",
-
     # BM25 fields for manifest
     bm25_fields: str = "title,text",
-
+    # Compression: "gzip" writes .json.gz and removes .json (smaller transfer)
+    compress: str = "gzip",
     seed: int = 42,
 ):
     import faiss
@@ -192,27 +220,44 @@ def main(
     }
 
     # ── 2. Decide flat vs HNSW mode ─────────────────────────────────────────
+    use_compress = str(compress).lower() == "gzip"
     if n_items <= flat_threshold:
-        print(f"n_items={n_items} ≤ flat_threshold={flat_threshold} → using flat search mode")
+        print(
+            f"n_items={n_items} ≤ flat_threshold={flat_threshold} → using flat search mode"
+        )
         manifest["search_mode"] = "flat"
+        if use_compress:
+            flat_path = output_dir / "flat" / "embeddings.int8.json"
+            if flat_path.exists():
+                _compress_json(flat_path)
+                manifest["flat"]["path"] = "flat/embeddings.int8.json.gz"
+            manifest["compressed"] = True
         with open(output_dir / "manifest.json", "w") as f:
             json.dump(manifest, f, indent=2)
         print(f"Saved manifest (flat mode) → {output_dir / 'manifest.json'}")
         print("Done! Flat index already built by 02_generate_embeddings.py.")
         return
 
+    use_compress = str(compress).lower() == "gzip"
+
     # ── 3. K-Means clustering (shard assignment) ────────────────────────────
     n_auto = max(10, int(np.sqrt(n_items)))
     n_clusters_actual = n_clusters if n_clusters is not None else n_auto
-    print(f"\nK-Means clustering: {n_items} items → {n_clusters_actual} clusters (shards)...")
+    print(
+        f"\nK-Means clustering: {n_items} items → {n_clusters_actual} clusters (shards)..."
+    )
 
-    kmeans = faiss.Kmeans(dim, n_clusters_actual, niter=kmeans_niter, seed=seed, gpu=False, verbose=False)
+    kmeans = faiss.Kmeans(
+        dim, n_clusters_actual, niter=kmeans_niter, seed=seed, gpu=False, verbose=False
+    )
     kmeans.train(embeddings_norm)
     _, cluster_ids = kmeans.index.search(embeddings_norm, 1)
     cluster_ids = cluster_ids.flatten().astype(int)
 
     cluster_sizes = np.bincount(cluster_ids, minlength=n_clusters_actual)
-    print(f"  Cluster sizes — min: {cluster_sizes.min()}, max: {cluster_sizes.max()}, mean: {cluster_sizes.mean():.1f}")
+    print(
+        f"  Cluster sizes — min: {cluster_sizes.min()}, max: {cluster_sizes.max()}, mean: {cluster_sizes.mean():.1f}"
+    )
 
     # ── 4. SQ8 quantization of all vectors ──────────────────────────────────
     print("Quantizing all vectors (SQ8)...")
@@ -258,7 +303,7 @@ def main(
             continue
         actual_max_layer = num_levels - 1  # 0-indexed maximum layer for this node
         layers_neighbors = {}
-        for l in range(1, num_levels):        # layers 1 .. actual_max_layer
+        for l in range(1, num_levels):  # layers 1 .. actual_max_layer
             nbrs = get_hnsw_neighbors(hnsw, offsets, flat_neighbors, node_id, l)
             if nbrs:
                 layers_neighbors[str(l)] = nbrs
@@ -294,12 +339,14 @@ def main(
             node_to_shard[str(nid)] = cluster_id
             nbrs = get_hnsw_neighbors(hnsw, offsets, flat_neighbors, nid, 0)
             q = quantized[nid]
-            shard_nodes.append({
-                "id": nid,
-                "scale": q["scale"],
-                "qv": q["qv"],
-                "neighbors": nbrs,
-            })
+            shard_nodes.append(
+                {
+                    "id": nid,
+                    "scale": q["scale"],
+                    "qv": q["qv"],
+                    "neighbors": nbrs,
+                }
+            )
 
         shard_data = {"shard_id": cluster_id, "nodes": shard_nodes}
         shard_path = layer0_dir / f"shard_{cluster_id:03d}.json"
@@ -310,13 +357,17 @@ def main(
         (layer0_dir / f"shard_{c:03d}.json").stat().st_size / 1024
         for c in range(n_clusters_actual)
     ]
-    print(f"  Shard sizes (KB) — min: {min(shard_sizes_kb):.1f}, max: {max(shard_sizes_kb):.1f}, mean: {np.mean(shard_sizes_kb):.1f}")
+    print(
+        f"  Shard sizes (KB) — min: {min(shard_sizes_kb):.1f}, max: {max(shard_sizes_kb):.1f}, mean: {np.mean(shard_sizes_kb):.1f}"
+    )
 
     # ── 9. node_to_shard.json ────────────────────────────────────────────────
     nts_path = index_dir / "node_to_shard.json"
     with open(nts_path, "w") as f:
         json.dump(node_to_shard, f, separators=(",", ":"))
-    print(f"\nSaved node_to_shard.json ({n_items} entries, {nts_path.stat().st_size/1024:.1f} KB)")
+    print(
+        f"\nSaved node_to_shard.json ({n_items} entries, {nts_path.stat().st_size / 1024:.1f} KB)"
+    )
 
     # ── 10. cluster_centroids.json ───────────────────────────────────────────
     centroids_data = []
@@ -332,7 +383,9 @@ def main(
     centroids_path = index_dir / "cluster_centroids.json"
     with open(centroids_path, "w") as f:
         json.dump(centroids_data, f, separators=(",", ":"))
-    print(f"Saved cluster_centroids.json ({n_clusters_actual} centroids, {centroids_path.stat().st_size/1024:.1f} KB)")
+    print(
+        f"Saved cluster_centroids.json ({n_clusters_actual} centroids, {centroids_path.stat().st_size / 1024:.1f} KB)"
+    )
 
     # ── 11. config.json ──────────────────────────────────────────────────────
     config = {
@@ -389,10 +442,44 @@ def main(
     titles_path = index_dir / "titles.json"
     with open(titles_path, "w") as f:
         json.dump(titles_data, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"Saved titles.json ({n_items} entries, {titles_path.stat().st_size/1024:.1f} KB)")
+    print(
+        f"Saved titles.json ({n_items} entries, {titles_path.stat().st_size / 1024:.1f} KB)"
+    )
 
     # Update manifest to reference titles file
     manifest["index"]["titles"] = "index/titles.json"
+
+    # ── 13b. Optional gzip compression ─────────────────────────────────────────
+    use_compress = str(compress).lower() == "gzip"
+    if use_compress:
+        print("\nCompressing JSON files (gzip)...")
+        # Compress flat index (from 02)
+        flat_path = output_dir / "flat" / "embeddings.int8.json"
+        if flat_path.exists():
+            _compress_json(flat_path)
+            manifest["flat"]["path"] = "flat/embeddings.int8.json.gz"
+        # Compress index files
+        for name in ("upper_layers.json", "node_to_shard.json", "cluster_centroids.json", "config.json", "titles.json"):
+            p = index_dir / name
+            if p.exists():
+                _compress_json(p)
+        if manifest["index"].get("titles") == "index/titles.json":
+            manifest["index"]["titles"] = "index/titles.json.gz"
+        manifest["index"]["config"] = "index/config.json.gz"
+        manifest["index"]["upper_layers"] = "index/upper_layers.json.gz"
+        manifest["index"]["node_to_shard"] = "index/node_to_shard.json.gz"
+        # Compress layer0 shards
+        for c in range(n_clusters_actual):
+            sp = layer0_dir / f"shard_{c:03d}.json"
+            if sp.exists():
+                _compress_json(sp)
+        manifest["compressed"] = True
+        print("  Compressed all index files to .json.gz")
+        # Recompute shard sizes for bandwidth estimate
+        shard_sizes_kb = [
+            (layer0_dir / f"shard_{c:03d}.json.gz").stat().st_size / 1024
+            for c in range(n_clusters_actual)
+        ]
 
     # ── 14. manifest.json ────────────────────────────────────────────────────
     manifest["search_mode"] = "hnsw"
@@ -402,16 +489,27 @@ def main(
     print(f"\nSaved manifest (hnsw mode) → {manifest_path}")
 
     # ── 15. Summary ──────────────────────────────────────────────────────────
-    total_mb = sum(p.stat().st_size for p in output_dir.rglob("*.json")) / 1e6
-    print(f"\n{'='*60}")
+    total_mb = sum(
+        p.stat().st_size
+        for p in output_dir.rglob("*")
+        if p.suffix in (".json", ".gz")
+    ) / 1e6
+    print(f"\n{'=' * 60}")
     print(f"Index built successfully!")
     print(f"  Collection: {collection_id} ({n_items} items, {dim}D int8)")
-    print(f"  Mode: HNSW (M={hnsw_M}, ef={ef_construction}, {n_clusters_actual} shards)")
+    print(
+        f"  Mode: HNSW (M={hnsw_M}, ef={ef_construction}, {n_clusters_actual} shards)"
+    )
     print(f"  Recall@10: {recall:.4f}")
-    print(f"  Total index size: {total_mb:.1f} MB (uncompressed JSON)")
-    print(f"  Per-query bandwidth (cold, 3-4 shards): ~{3 * np.mean(shard_sizes_kb):.0f}–{4 * np.mean(shard_sizes_kb):.0f} KB")
-    print(f"{'='*60}")
-    print("\nDone! Next: serve the output_dir as static files and load manifest.json in search.worker.js")
+    fmt = "compressed gzip" if use_compress else "uncompressed JSON"
+    print(f"  Total index size: {total_mb:.1f} MB ({fmt})")
+    print(
+        f"  Per-query bandwidth (cold, 3-4 shards): ~{3 * np.mean(shard_sizes_kb):.0f}–{4 * np.mean(shard_sizes_kb):.0f} KB"
+    )
+    print(f"{'=' * 60}")
+    print(
+        "\nDone! Next: serve the output_dir as static files and load manifest.json in search.worker.js"
+    )
 
 
 if __name__ == "__main__":

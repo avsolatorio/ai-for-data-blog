@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Search Inference Validation</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    pre { background: #f5f5f5; padding: 1rem; overflow-x: auto; font-size: 12px; }
+    .pass { color: #2e7d32; font-weight: bold; }
+    .fail { color: #c62828; font-weight: bold; }
+    .section { margin: 1.5rem 0; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Search Inference Validation</h1>
+  <p>Verifies that the search worker correctly embeds queries and returns results.</p>
+
+  <div class="section">
+    <button id="runBtn">Run Validation</button>
+  </div>
+
+  <div id="results"></div>
+
+  <script type="module">
+    const resultsEl = document.getElementById('results');
+    const runBtn = document.getElementById('runBtn');
+
+    function log(msg, type = '') {
+      const p = document.createElement('p');
+      p.className = type;
+      p.textContent = msg;
+      resultsEl.appendChild(p);
+    }
+
+    function clear() {
+      resultsEl.innerHTML = '';
+    }
+
+    runBtn.addEventListener('click', async () => {
+      clear();
+      runBtn.disabled = true;
+
+      try {
+        const manifestUrl = new URL('data/prwp/manifest.json', location.href).href;
+        const worker = new Worker('js/search/search.worker.js', { type: 'module' });
+
+        // 1. Init
+        log('1. Initializing worker...');
+        await new Promise((resolve, reject) => {
+          worker.onmessage = (e) => {
+            if (e.data?.type === 'ready') resolve();
+            if (e.data?.type === 'error') reject(new Error(e.data.message));
+          };
+          worker.postMessage({ type: 'init', manifestUrl });
+        });
+        log('   ✓ Worker ready', 'pass');
+
+        // 2. Test embed — verify dimension
+        log('2. Testing embed...');
+        const embedResult = await new Promise((resolve, reject) => {
+          worker.onmessage = (e) => {
+            if (e.data?.type === 'embedding') resolve(e.data.data);
+            if (e.data?.type === 'error') reject(new Error(e.data.message));
+          };
+          worker.postMessage({ type: 'embed', text: 'poverty' });
+        });
+
+        const dim = embedResult?.length ?? 0;
+        const expectedDim = 384;
+        if (dim !== expectedDim) {
+          log(`   ✗ Embedding dim wrong: got ${dim}, expected ${expectedDim}`, 'fail');
+        } else {
+          log(`   ✓ Embedding dim: ${dim}`, 'pass');
+        }
+
+        const norm = Math.sqrt(Array.from(embedResult).reduce((s, x) => s + x * x, 0));
+        if (Math.abs(norm - 1) > 0.01) {
+          log(`   ✗ Embedding not L2-normalized: norm=${norm.toFixed(4)}`, 'fail');
+        } else {
+          log(`   ✓ Embedding L2-normalized: norm=${norm.toFixed(4)}`, 'pass');
+        }
+
+        // 3. Test search — verify results
+        log('3. Testing search...');
+        const searchResult = await new Promise((resolve, reject) => {
+          worker.onmessage = (e) => {
+            if (e.data?.type === 'results') resolve(e.data);
+            if (e.data?.type === 'error') reject(new Error(e.data.message));
+          };
+          worker.postMessage({ type: 'search', text: 'poverty', topK: 5, ef: 50 });
+        });
+
+        const data = searchResult?.data ?? [];
+        if (data.length === 0) {
+          log('   ✗ No results returned', 'fail');
+        } else {
+          log(`   ✓ Got ${data.length} results`, 'pass');
+        }
+
+        const scores = data.map(r => r.score);
+        const sorted = [...scores].sort((a, b) => b - a);
+        const isDescending = scores.every((s, i) => s === sorted[i]);
+        if (!isDescending) {
+          log('   ✗ Results not sorted by score descending', 'fail');
+        } else {
+          log('   ✓ Results sorted by score descending', 'pass');
+        }
+
+        const inRange = scores.every(s => s >= -1 && s <= 1);
+        if (!inRange) {
+          log(`   ✗ Scores outside [-1,1]: ${scores.map(s => s.toFixed(4)).join(', ')}`, 'fail');
+        } else {
+          log(`   ✓ Scores in [-1,1]: ${scores.map(s => s.toFixed(4)).join(', ')}`, 'pass');
+        }
+
+        if (data.length > 0) {
+          log('   Top result: ' + (data[0].title || data[0].id || 'unknown'));
+        }
+
+        log('');
+        log('Validation complete.', 'pass');
+      } catch (err) {
+        log('Error: ' + err.message, 'fail');
+        console.error(err);
+      } finally {
+        runBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

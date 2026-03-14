@@ -6,6 +6,7 @@
   <title>Semantic Indicator Search</title>
   <link href="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet" />
+  <link href="https://avsolatorio.github.io/ai-for-data-blog/semantic-search/css/index.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/vue@3.4.25/dist/vue.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.17/dist/vuetify.min.js"></script>
   <script type="text/javascript" src="https://pym.nprapps.org/pym.v1.min.js"></script>
@@ -172,7 +173,7 @@
               >
                 <div v-for="(item, index) in semanticResults" :key="item.code">
                   <v-card
-                    class="mb-2 px-4 py-2 card-clickable"
+                    class="mb-2 px-4 py-2 card-clickable card-result"
                     :class="{
                       'low-sim': applyReranking
                         ? (item.rerank_score != null ? item.rerank_score < 0.15 : item.sim < threshold)
@@ -359,8 +360,8 @@
     const rerankWorkerRemote = new Worker('/ai-for-data-blog/semantic-search/js/search/rank.worker.js', { type: 'module' });
     const rerankWorkerLocal = new Worker('/js/search/rank.worker.js', { type: 'module' });
 
-    rerankWorker = rerankWorkerRemote
-    // rerankWorker = rerankWorkerLocal
+    // rerankWorker = rerankWorkerRemote
+    rerankWorker = rerankWorkerLocal
 
     createApp({
       setup() {

@@ -62,8 +62,8 @@
       };
     </script>
     <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js');
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js");
       }
     </script>
 
@@ -2472,7 +2472,10 @@
           </v-container>
         </main>
 
-        <div v-if="pageLoading || !modelReady || !indexReady" class="full-page-loading">
+        <div
+          v-if="pageLoading || !modelReady || !indexReady"
+          class="full-page-loading"
+        >
           <v-row align-content="center" class="fill-height" justify="center">
             <v-col class="text-subtitle-1 text-center" cols="12">
               {{ loadingMessage }}
@@ -2861,15 +2864,20 @@
               const rowEl = rowRef?.$el ?? rowRef;
               const resultCol =
                 rowEl instanceof HTMLElement
-                  ? rowEl.querySelector(".search-content__result") ?? rowEl.children[0]
+                  ? (rowEl.querySelector(".search-content__result") ??
+                    rowEl.children[0])
                   : null;
               if (resultCol instanceof HTMLElement) {
-                resultListWidth.value = Math.round(resultCol.getBoundingClientRect().width);
+                resultListWidth.value = Math.round(
+                  resultCol.getBoundingClientRect().width,
+                );
               } else {
                 const col = scrollSearchContentResultMobile.value;
                 const el = col?.$el ?? col;
                 if (el instanceof HTMLElement) {
-                  resultListWidth.value = Math.round(el.getBoundingClientRect().width);
+                  resultListWidth.value = Math.round(
+                    el.getBoundingClientRect().width,
+                  );
                 }
               }
             }
@@ -2910,7 +2918,7 @@
               const idno = r.idno ?? r.id;
               if (!idno) return;
               fetch(
-                `https://avsolatorio.github.io/ids-metadata/data/metadata/${dtype}/${dtype}_${idno}.json`
+                `https://avsolatorio.github.io/ids-metadata/data/metadata/${dtype}/${dtype}_${idno}.json`,
               )
                 .then((res) => (res.ok ? res.json() : null))
                 .then((meta) => {
@@ -2921,10 +2929,12 @@
                     ? String(dd.date_published).slice(0, 4)
                     : dd.time_coverage;
                   const src = dd.authors?.length
-                    ? dd.authors.map((a) => a.full_name ?? a.name ?? "").filter(Boolean)
+                    ? dd.authors
+                        .map((a) => a.full_name ?? a.name ?? "")
+                        .filter(Boolean)
                     : dd.source;
                   const idx = fullResults.value.findIndex(
-                    (x) => (x.idno ?? x.id) === idno
+                    (x) => (x.idno ?? x.id) === idno,
                   );
                   if (idx >= 0) {
                     Object.assign(fullResults.value[idx], {
@@ -2951,7 +2961,7 @@
               case "bm25_init":
                 if (msg.items?.length > 0) {
                   msg.items.forEach((item) =>
-                    metaById.set(String(item.id ?? item.idno), item)
+                    metaById.set(String(item.id ?? item.idno), item),
                   );
                 }
                 indexReady.value = true;
@@ -3021,6 +3031,7 @@
               text,
               topK: 50,
               ef: 50,
+              ef_upper: 5,
             });
           };
 
@@ -3104,7 +3115,6 @@
             hasQueried.value = false;
             submit();
           };
-
 
           const loadMetadata = () => {
             fetch(

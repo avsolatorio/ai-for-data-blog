@@ -3,7 +3,7 @@
  * Brute-force cosine similarity search over an int8 flat index.
  * Used for small collections (≤ flat_threshold items, e.g. WDI ~1.5k indicators).
  *
- * Index format: flat/embeddings.int8.json
+ * Index format: flat/embeddings.int8.json (or .json.gz when compressed)
  * {
  *   format: "int8_flat",
  *   n_items: number,
@@ -15,6 +15,7 @@
  */
 
 import { dotProductMixed, toInt8Array } from './int8-codec.js';
+import { fetchJson } from './fetch-json.js';
 
 export class FlatEngine {
   constructor() {
@@ -27,16 +28,13 @@ export class FlatEngine {
   /**
    * Load the flat index from a URL.
    * Returns the items array (also stored on this.items) for BM25 index construction.
+   * Supports .json.gz (decompresses automatically).
    *
-   * @param {string} url - URL to flat/embeddings.int8.json
+   * @param {string} url - URL to flat/embeddings.int8.json or .json.gz
    * @returns {Promise<Array>} loaded items (without the typed qv, use this.items for search)
    */
   async load(url) {
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      throw new Error(`FlatEngine: failed to load index (HTTP ${resp.status}): ${url}`);
-    }
-    const data = await resp.json();
+    const data = await fetchJson(url);
     this.dim = data.dim;
 
     // Convert qv arrays to Int8Array for faster typed access during search

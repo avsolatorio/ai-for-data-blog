@@ -3,9 +3,10 @@
  * Browser-native HNSW approximate nearest neighbor search over sharded JSON files.
  *
  * Algorithm (standard HNSW, Malkov & Yashunin 2016):
- *   Phase 1 — Greedy descent through upper layers (layers max → 1):
+ *   Phase 1 — Beam descent through upper layers (layers max → 1):
  *     All upper-layer nodes are loaded at init (upper_layers.json, tiny).
- *     Traverse greedily (ef=1): always move to the neighbor with highest similarity.
+ *     Use ef_upper entry points per layer (default 2): beam over current nodes + neighbors,
+ *     keep top ef_upper for next layer. Higher ef_upper = better recall, more work.
  *
  *   Phase 2 — Beam search at layer 0:
  *     Lazy-load layer0 shards on demand via ShardLoader.
@@ -22,6 +23,7 @@
 
 import { dotProductMixed, toInt8Array } from './int8-codec.js';
 import { ShardLoader } from './shard-loader.js';
+import { fetchJson } from './fetch-json.js';
 
 export class HNSWEngine {
   constructor() {
@@ -50,21 +52,27 @@ export class HNSWEngine {
    * @param {string} baseUrl - base URL for the collection (e.g. 'data/prwp/')
    * @param {object} [opts]
    * @param {string} [opts.cacheName] - Cache API bucket name
+   * @param {object} [opts.manifest] - Manifest (when compressed, paths point to .json.gz)
    * @returns {Promise<void>}
    */
-  async init(baseUrl, { cacheName = 'hnsw-shards-v1' } = {}) {
-    const indexUrl = baseUrl.endsWith('/') ? baseUrl + 'index/' : baseUrl + '/index/';
+  async init(baseUrl, { cacheName = 'hnsw-shards-v1', manifest = null } = {}) {
+    const base = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+    const idx = manifest?.index ?? {};
+    const configPath = base + (idx.config ?? 'index/config.json');
+    const upperPath = base + (idx.upper_layers ?? 'index/upper_layers.json');
+    const nodePath = base + (idx.node_to_shard ?? 'index/node_to_shard.json');
+    const shardSuffix = manifest?.compressed ? '.json.gz' : '.json';
 
     const [config, upperLayers, nodeToShard] = await Promise.all([
-      fetch(indexUrl + 'config.json').then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-      fetch(indexUrl + 'upper_layers.json').then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-      fetch(indexUrl + 'node_to_shard.json').then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+      fetchJson(configPath, { cacheName }),
+      fetchJson(upperPath, { cacheName }),
+      fetchJson(nodePath, { cacheName }),
     ]);
 
     this.config = config;
     this.upperLayers = upperLayers;
     this.nodeToShard = nodeToShard;
-    this.loader = new ShardLoader(indexUrl + 'layer0/', cacheName);
+    this.loader = new ShardLoader(base + 'index/layer0/', cacheName, shardSuffix);
 
     // Pre-populate node cache with all upper-layer nodes (already in memory)
     for (const [idStr, node] of Object.entries(upperLayers.nodes)) {
@@ -87,25 +95,26 @@ export class HNSWEngine {
    * @param {Float32Array} queryVec - L2-normalized query embedding (dim must match config.dim)
    * @param {object} [opts]
    * @param {number} [opts.ef=50] - beam width at layer 0 (higher = better recall, slower)
+   * @param {number} [opts.ef_upper=2] - beam width for upper layers (entry points per layer)
    * @param {number} [opts.topK=10] - number of results to return
    * @returns {Promise<Array<{id: number, score: number}>>}
    */
-  async search(queryVec, { ef = 50, topK = 10 } = {}) {
+  async search(queryVec, { ef = 50, ef_upper = 2, topK = 10 } = {}) {
     if (!this.ready) throw new Error('HNSWEngine: not initialized. Call init() first.');
 
     const t0 = Date.now();
     let shardsLoaded = 0;
     const prevCacheSize = this.loader.memoryCache.size;
 
-    // ── Phase 1: Greedy descent through upper layers ─────────────────────
-    let entryId = this.upperLayers.entry_node_id;
+    // ── Phase 1: Beam descent through upper layers (multiple entry points per layer) ─
+    let entryPoints = [[this._scoreUpperNode(queryVec, this.upperLayers.entry_node_id), this.upperLayers.entry_node_id]];
 
     for (let layer = this.config.n_layers - 1; layer >= 1; layer--) {
-      entryId = this._greedyDescentLayer(queryVec, entryId, layer);
+      entryPoints = this._beamDescentLayer(queryVec, entryPoints, layer, ef_upper);
     }
 
-    // ── Phase 2: Beam search at layer 0 ──────────────────────────────────
-    const results = await this._beamSearchLayer0(queryVec, entryId, ef);
+    // ── Phase 2: Beam search at layer 0 (start from all upper-layer entry points) ─
+    const results = await this._beamSearchLayer0(queryVec, entryPoints, ef);
 
     // Count shards loaded during this search
     shardsLoaded = this.loader.memoryCache.size - prevCacheSize +
@@ -123,31 +132,44 @@ export class HNSWEngine {
     return results.slice(0, topK);
   }
 
-  // ── Private: Greedy descent (upper layers, ef=1) ─────────────────────────
+  // ── Private: Beam descent (upper layers, ef_upper entry points) ────────────
 
-  _greedyDescentLayer(queryVec, startId, layer) {
+  /**
+   * At this layer, expand each entry point to its neighbors, collect all scored,
+   * keep top ef_upper as entry points for the next layer.
+   *
+   * @param {Float32Array} queryVec
+   * @param {Array<[number, number]>} entryPoints - [[score, nodeId], ...] descending by score
+   * @param {number} layer
+   * @param {number} ef_upper
+   * @returns {Array<[number, number]>} top ef_upper [score, nodeId] for next layer
+   */
+  _beamDescentLayer(queryVec, entryPoints, layer, ef_upper) {
     const layerStr = String(layer);
-    let bestId = startId;
-    let bestScore = this._scoreUpperNode(queryVec, startId);
-    let changed = true;
+    const seen = new Set();
+    let W = []; // [score, nodeId] ascending (worst first)
 
-    while (changed) {
-      changed = false;
-      const node = this.nodeCache.get(bestId);
-      if (!node) break;
+    for (const [, nodeId] of entryPoints) {
+      if (seen.has(nodeId)) continue;
+      seen.add(nodeId);
+      const score = this._scoreUpperNode(queryVec, nodeId);
+      _sortedInsert(W, [score, nodeId]);
+      if (W.length > ef_upper) W.shift();
+
+      const node = this.nodeCache.get(nodeId);
+      if (!node) continue;
       const neighbors = node.layers?.[layerStr] ?? [];
 
       for (const nid of neighbors) {
-        const score = this._scoreUpperNode(queryVec, nid);
-        if (score > bestScore) {
-          bestScore = score;
-          bestId = nid;
-          changed = true;
-        }
+        if (seen.has(nid)) continue;
+        seen.add(nid);
+        const s = this._scoreUpperNode(queryVec, nid);
+        _sortedInsert(W, [s, nid]);
+        if (W.length > ef_upper) W.shift();
       }
     }
 
-    return bestId;
+    return W; // ascending, will be used as seeds for next layer
   }
 
   _scoreUpperNode(queryVec, nodeId) {
@@ -158,17 +180,27 @@ export class HNSWEngine {
 
   // ── Private: Beam search at layer 0 ──────────────────────────────────────
 
-  async _beamSearchLayer0(queryVec, entryId, ef) {
-    // Load entry node's shard to get its layer0 neighbors
-    const entryNode = await this._getLayer0Node(entryId);
-    const entryScore = dotProductMixed(queryVec, entryNode.qv, entryNode.scale);
+  /**
+   * @param {Float32Array} queryVec
+   * @param {Array<[number, number]>} entryPoints - [[score, nodeId], ...] from upper-layer descent
+   * @param {number} ef
+   */
+  async _beamSearchLayer0(queryVec, entryPoints, ef) {
+    const visited = new Set();
+    let W = [];
+    let C = [];
 
-    const visited = new Set([entryId]);
-
-    // W: result set (top-ef by score, descending). We'll pop from the end for eviction.
-    // C: candidate frontier (ascending by score so we pop the best from the end).
-    let W = [[entryScore, entryId]];
-    let C = [[entryScore, entryId]];
+    for (const [score, nodeId] of entryPoints) {
+      if (visited.has(nodeId)) continue;
+      visited.add(nodeId);
+      const node = await this._getLayer0Node(nodeId);
+      if (!node) continue;
+      const s = dotProductMixed(queryVec, node.qv, node.scale);
+      _sortedInsert(W, [s, nodeId]);
+      _sortedInsert(C, [s, nodeId]);
+    }
+    if (W.length > ef) W = W.slice(-ef);
+    if (C.length > ef) C = C.slice(-ef);
 
     while (C.length > 0) {
       // Pop best candidate (highest score = last element in ascending-sorted C)
