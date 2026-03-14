@@ -5,14 +5,16 @@
   "embedding_dim": 384,
   "matryoshka_dim": null,
   "quant": "int8",
-  "model_id": "unknown",
+  "model_id": "avsolatorio/GIST-small-Embedding-v0",
   "flat": {
-    "path": "flat/embeddings.int8.json"
+    "path": "flat/embeddings.int8.json.gz"
   },
   "index": {
     "path": "index/",
-    "config": "index/config.json",
-    "titles": "index/titles.json"
+    "config": "index/config.json.gz",
+    "titles": "index/titles.json.gz",
+    "upper_layers": "index/upper_layers.json.gz",
+    "node_to_shard": "index/node_to_shard.json.gz"
   },
   "thresholds": {
     "flat_max": 2000
@@ -28,5 +30,6 @@
     "title",
     "text"
   ],
+  "compressed": true,
   "search_mode": "hnsw"
 }
