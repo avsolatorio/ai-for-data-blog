@@ -20,6 +20,10 @@
  *   → { type: 'ping' }
  *   ← { type: 'pong' }  or  { type: 'loading' }
  *
+ *   → { type: 'getRecent', limit? }
+ *   ← { type: 'recent', data: [{id,idno,title,type,...}] }
+ *   Lightweight prepopulation when query is empty. Uses in-memory titles/flatItems.
+ *
  * Legacy compatibility: bare { text, ping } messages still handled.
  */
 
@@ -201,6 +205,30 @@ self.onmessage = async (e) => {
 
       case 'ping': {
         self.postMessage({ type: isReady ? 'pong' : 'loading' });
+        break;
+      }
+
+      case 'getRecent': {
+        const { limit = 10 } = params;
+        if (!isReady) {
+          self.postMessage({ type: 'recent', data: [] });
+          break;
+        }
+        let items = [];
+        if (titlesMap && typeof titlesMap === 'object') {
+          items = Object.entries(titlesMap)
+            .slice(0, limit)
+            .map(([id, meta]) => ({ id: parseInt(id, 10), ...meta }));
+        } else if (flatItems && Array.isArray(flatItems)) {
+          items = flatItems.slice(0, limit).map((item, i) => ({
+            id: item.id ?? i,
+            idno: item.idno ?? item.id,
+            title: item.title ?? '',
+            type: item.type ?? 'document',
+            ...item,
+          }));
+        }
+        self.postMessage({ type: 'recent', data: items });
         break;
       }
 
