@@ -33,6 +33,8 @@ export interface WorkerInitMessage {
   modelId?: string
   /** If true, skip loading the embedding model (for testing BM25 fallback). Index + BM25 still load. */
   skipModelLoad?: boolean
+  /** Delay (seconds) before starting to load the embedding model; index + BM25 load first (for testing). */
+  modelLoadDelaySeconds?: number
 }
 
 export interface WorkerSearchMessage {

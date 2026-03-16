@@ -620,9 +620,6 @@
               <!-- Normal layout: search bar full width, then row with results | detail. On mobile (width < 960) always use this layout. -->
               <template v-if="!detailExpanded || busy || width < 960">
                 <div class="px-4 px-md-0 mt-md-9 search-bar-wrapper">
-                  <v-chip v-if="skipModelLoad" size="small" color="warning" variant="tonal" class="mb-2">
-                    BM25 fallback test: embedding model skipped — searches use lexical-only
-                  </v-chip>
                   <div
                     class="position-relative search-bar-area search-bar"
                     @click="isActive = true"
@@ -647,8 +644,17 @@
                           ></textarea>
                         </div>
                       </div>
-                      <div class="custom-search-bar-filter__append">
-                        <div class="right-icons-container">
+                      <div class="custom-search-bar-filter__append position-relative align-self-stretch" style="min-height: 0">
+                        <span
+                          v-if="indexReady && !modelReady"
+                          class="rounded-circle position-absolute"
+                          style="width: 5px; height: 5px; background-color: #4caf50; left: 10px; top: 50%; transform: translateY(-50%);"
+                          title="BM25 (lexical) active"
+                        ></span>
+                        <div
+                          class="right-icons-container d-flex align-center h-100"
+                          :class="{ 'pl-6': indexReady && !modelReady }"
+                        >
                           <div
                             class="w-[30px] h-[30px] custom-search-bar-filter__icon d-flex justify-center align-center"
                             v-if="(!query && !tempFile) || isListening === true"
@@ -1653,9 +1659,6 @@
                     :style="resultListWidth ? { width: resultListWidth + 'px', minWidth: resultListWidth + 'px', maxWidth: resultListWidth + 'px' } : {}"
                   >
                     <div class="expanded-layout__search px-4 px-md-0 mt-md-4">
-                      <v-chip v-if="skipModelLoad" size="small" color="warning" variant="tonal" class="mb-2">
-                        BM25 fallback test: embedding model skipped — searches use lexical-only
-                      </v-chip>
                       <div
                         class="position-relative search-bar-area search-bar"
                         @click="isActive = true"
@@ -1679,8 +1682,17 @@
                               ></textarea>
                             </div>
                           </div>
-                          <div class="custom-search-bar-filter__append">
-                            <div class="right-icons-container">
+                          <div class="custom-search-bar-filter__append position-relative align-self-stretch" style="min-height: 0">
+                            <span
+                              v-if="indexReady && !modelReady"
+                              class="rounded-circle position-absolute"
+                              style="width: 5px; height: 5px; background-color: #4caf50; left: 10px; top: 50%; transform: translateY(-50%);"
+                              title="BM25 (lexical) active"
+                            ></span>
+                            <div
+                              class="right-icons-container d-flex align-center h-100"
+                              :class="{ 'pl-6': indexReady && !modelReady }"
+                            >
                               <div
                                 v-if="(!query && !tempFile) || isListening === true"
                                 class="w-[30px] h-[30px] custom-search-bar-filter__icon d-flex justify-center align-center"
@@ -2480,7 +2492,7 @@
         </main>
 
         <div
-          v-if="pageLoading || !modelReady || !indexReady"
+          v-if="pageLoading || !indexReady"
           class="full-page-loading"
         >
           <v-row align-content="center" class="fill-height" justify="center">
@@ -2691,6 +2703,9 @@
       const manifestUrl = params.get("manifest") || "../semantic-search/data/prwp/manifest.json";
       // ?skipModel=1 — skip loading the embedding model to test BM25 fallback (semantic/hybrid → lexical).
       const skipModelLoad = params.has("skipModel");
+      // ?modelDelay=60 — delay loading the embedding model by N seconds so index + BM25 are ready first.
+      const modelDelayParam = params.get("modelDelay");
+      const modelLoadDelaySeconds = modelDelayParam != null ? Math.max(0, parseInt(modelDelayParam, 10) || 0) : undefined;
       const { createVuetify } = Vuetify;
       const vuetify = createVuetify({
         defaults: {},
@@ -2964,6 +2979,7 @@
           // workerFactory points to the pre-built worker so it works on any static server.
           const client = new SearchClient(manifestUrl, {
             skipModelLoad,
+            modelLoadDelaySeconds: skipModelLoad ? undefined : modelLoadDelaySeconds,
             workerFactory: () => new Worker(
               new URL('./dist/search.worker.js', location.href),
               { type: 'module' }
@@ -2981,8 +2997,8 @@
             if (!hasQueried.value) loadRecent();
           });
 
-          client.on('ready', () => {
-            modelReady.value = true;
+          client.on('ready', (msg) => {
+            modelReady.value = msg.modelLoaded !== false;
             indexReady.value = true;
             loadingMessage.value = 'Ready';
             if (!hasQueried.value) loadRecent();
@@ -3389,6 +3405,7 @@
             modelReady,
             indexReady,
             skipModelLoad,
+            modelLoadDelaySeconds,
           };
         },
       })

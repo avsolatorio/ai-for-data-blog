@@ -35,6 +35,8 @@ export interface SearchClientOptions {
   modelId?: string
   /** If true, skip loading the embedding model (for testing BM25 fallback). */
   skipModelLoad?: boolean
+  /** Delay (seconds) before loading the embedding model; index + BM25 load first (for testing). */
+  modelLoadDelaySeconds?: number
   /**
    * Factory function that creates the Web Worker.
    * Defaults to the bundled search worker created via `new URL()`.
@@ -116,6 +118,7 @@ export class SearchClient {
       manifestUrl: resolvedUrl,
       modelId: opts.modelId,
       skipModelLoad: opts.skipModelLoad,
+      modelLoadDelaySeconds: opts.modelLoadDelaySeconds,
     }
     this.worker.postMessage(initMsg)
   }

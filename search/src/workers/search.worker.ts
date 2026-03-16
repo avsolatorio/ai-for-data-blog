@@ -262,6 +262,7 @@ async function init(
   manifestUrl: string,
   modelId?: string,
   skipModelLoad?: boolean,
+  modelLoadDelaySeconds?: number,
 ): Promise<void> {
   try {
     if (skipModelLoad) {
@@ -274,7 +275,19 @@ async function init(
         modelLoaded: false,
       });
     } else {
-      await Promise.all([loadModel(modelId), initIndex(manifestUrl)]);
+      const delaySec = Math.max(0, modelLoadDelaySeconds ?? 0);
+      const loadModelAfterDelay = async () => {
+        if (delaySec > 0) {
+          postMsg({
+            type: "progress",
+            phase: "model",
+            message: `Waiting ${delaySec} s before loading embedding model…`,
+          });
+          await new Promise((r) => setTimeout(r, delaySec * 1000));
+        }
+        await loadModel(modelId);
+      };
+      await Promise.all([loadModelAfterDelay(), initIndex(manifestUrl)]);
       isModelReady = true;
       postMsg({
         type: "ready",
@@ -349,7 +362,12 @@ self.onmessage = async (
   switch ((msg as WorkerInboundMessage).type) {
     case "init": {
       const m = msg as Extract<WorkerInboundMessage, { type: "init" }>;
-      await init(m.manifestUrl, m.modelId, m.skipModelLoad);
+      await init(
+        m.manifestUrl,
+        m.modelId,
+        m.skipModelLoad,
+        m.modelLoadDelaySeconds,
+      );
       break;
     }
 

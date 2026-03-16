@@ -14,7 +14,8 @@
     "config": "index/config.json",
     "titles": "index/titles.json",
     "upper_layers": "index/upper_layers.json",
-    "node_to_shard": "index/node_to_shard.json"
+    "node_to_shard": "index/node_to_shard.json",
+    "bm25_corpus": "index/bm25_corpus.json"
   },
   "thresholds": {
     "flat_max": 2000
