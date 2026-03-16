@@ -9,9 +9,11 @@ import type { SearchResult } from '../src/types/search'
 
 // ── Configuration from URL params ──────────────────────────────────────────
 const params = new URLSearchParams(window.location.search)
-const manifestParam = params.get('manifest') ?? 'data/prwp/manifest.json'
-// Dev default resolves to http://localhost:5173/data/prwp/manifest.json
-// which the Vite dev plugin serves from ../semantic-search/data/prwp/
+// Base path for GitHub Pages (e.g. /ai-for-data-blog); empty when served from repo root
+const basePathMatch = typeof location !== 'undefined' && location.pathname.match(/^\/([^/]+)\/search\//)
+const basePath = basePathMatch ? '/' + basePathMatch[1] : ''
+const manifestParam = params.get('manifest') ?? (basePath + '/data/prwp/manifest.json')
+// Dev default: basePath is '' so manifest is /data/prwp/manifest.json (Vite proxy serves it)
 const modelParam = params.get('model') ?? undefined
 
 // ── Search worker ───────────────────────────────────────────────────────────

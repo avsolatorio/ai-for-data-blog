@@ -2697,8 +2697,11 @@
       const { createApp, ref, onMounted, nextTick, watch, computed } = Vue;
 
       const params = new URLSearchParams(location.search);
-      // Default: /data/prwp/manifest.json (from site root). Override with ?manifest=...
-      const manifestUrl = params.get("manifest") || "/data/prwp/manifest.json";
+      // Base path for GitHub Pages (e.g. /ai-for-data-blog); empty when served from repo root
+      const basePathMatch = location.pathname.match(/^\/([^/]+)\/search\//);
+      const basePath = basePathMatch ? "/" + basePathMatch[1] : "";
+      // Default: {basePath}/data/prwp/manifest.json. Override with ?manifest=...
+      const manifestUrl = params.get("manifest") || basePath + "/data/prwp/manifest.json";
       // ?skipModel=1 — skip loading the embedding model to test BM25 fallback (semantic/hybrid → lexical).
       const skipModelLoad = params.has("skipModel");
       // ?modelDelay=60 — delay loading the embedding model by N seconds so index + BM25 are ready first.
