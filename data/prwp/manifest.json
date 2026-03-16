@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "collection_id": "prwp",
+  "n_items": 10921,
+  "embedding_dim": 384,
+  "matryoshka_dim": null,
+  "quant": "int8",
+  "model_id": "avsolatorio/GIST-small-Embedding-v0",
+  "flat": {
+    "path": "flat/embeddings.int8.json"
+  },
+  "index": {
+    "path": "index/",
+    "config": "index/config.json",
+    "titles": "index/titles.json",
+    "bm25_corpus": "index/bm25_corpus.json"
+  },
+  "thresholds": {
+    "flat_max": 2000
+  },
+  "preview_fields": [
+    "idno",
+    "title",
+    "abstract",
+    "type",
+    "doi",
+    "url",
+    "date_published"
+  ],
+  "bm25_fields": [
+    "title",
+    "text"
+  ],
+  "search_mode": "hnsw"
+}
