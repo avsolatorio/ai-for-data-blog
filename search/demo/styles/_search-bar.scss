@@ -1,0 +1,181 @@
+// Search bar — grow-wrap auto-expanding textarea + filter chrome.
+// CSS extracted from semantic-search/css/universal.min.css and docs-opt.html.
+
+.search-buttons {
+  color: var(--primary-dark);
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.card-icons {
+  color: var(--primary-dark);
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+}
+
+// ── Search bar container ─────────────────────────────────────────────────────
+
+.search-bar-area {
+  position: relative;
+  height: 54px;
+  width: 100%;
+  border-radius: var(--border-radius);
+  z-index: 1;
+}
+
+// ── grow-wrap auto-expanding textarea ────────────────────────────────────────
+// Uses CSS grid: textarea and ::after pseudo-element share one grid cell,
+// so the container grows to fit the replicated content.
+
+.grow-wrap {
+  display: grid;
+  font-size: 14px;
+  max-width: 100%;
+  word-break: break-all;
+  line-height: 1.4;
+
+  &.active textarea,
+  &.active::after {
+    white-space: pre-wrap;
+  }
+
+  &::after {
+    content: attr(data-replicated-value) " ";
+    visibility: hidden;
+  }
+
+  > textarea {
+    resize: none;
+    outline: none;
+    border: 0;
+    border-width: 0;
+    overflow: hidden;
+    max-width: 100%;
+    background: transparent;
+  }
+
+  > textarea,
+  &::after {
+    line-height: 1.4;
+    font: inherit;
+    padding: 0 8px;
+    white-space: nowrap;
+    grid-area: 1 / 1 / 2 / 2;
+  }
+}
+
+// ── custom-search-bar-filter ─────────────────────────────────────────────────
+
+.custom-search-bar-filter {
+  display: flex;
+  padding: 11px 12px;
+  width: 100%;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--primary-dark);
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: var(--background);
+
+  &__prepend {
+    padding-right: 8px;
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      width: 1px;
+      height: 20.5px;
+      top: 5px;
+      right: 0;
+      background-color: var(--primary-dark);
+    }
+  }
+
+  &__content {
+    max-height: 102px;
+    overflow: hidden;
+    overflow-y: auto;
+    width: 100%;
+    padding: 5px 0;
+  }
+
+  &__append {
+    display: flex;
+    padding: 0 0 0 8px;
+
+    .v-btn {
+      padding: 0;
+      min-width: 30px;
+    }
+  }
+
+  &__icon {
+    position: relative;
+    cursor: pointer;
+    z-index: 1;
+
+    &::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      width: calc(100% + 4px);
+      height: calc(100% + 4px);
+      top: -2px;
+      left: -2px;
+      border-radius: 8px;
+      transition: background-color 0.15s;
+    }
+
+    &:hover {
+      color: var(--purple);
+
+      &::after {
+        background-color: var(--purple-200);
+      }
+    }
+  }
+}
+
+// ── right-icons-container ────────────────────────────────────────────────────
+
+.right-icons-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-left: 15px;
+
+  &.more-line {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    height: 100%;
+
+    .right-icons-container__append {
+      flex-direction: column-reverse;
+      justify-content: space-between;
+      align-items: center;
+      height: 100%;
+
+      .v-btn--close {
+        margin-right: 0;
+        margin-top: 4px;
+      }
+    }
+  }
+
+  &__append {
+    align-items: center;
+
+    .v-btn {
+      box-shadow: none;
+      min-width: 30px;
+      padding: 0;
+    }
+
+    .v-btn--close {
+      margin-right: 17px;
+    }
+  }
+}

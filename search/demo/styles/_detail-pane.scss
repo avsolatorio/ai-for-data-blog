@@ -1,0 +1,107 @@
+// Detail pane — PDF viewer and metadata display styles.
+// These were inline in docs-opt.html; extracted here for maintainability.
+
+.pdf-viewer-wrap {
+  position: relative;
+  height: 80vh;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+
+  &.pdf-viewer-external {
+    height: auto;
+    min-height: 0;
+  }
+}
+
+.pdf-viewer-external-card {
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+}
+
+.pdf-viewer-external-msg {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: rgba(0, 0, 0, 0.75);
+  line-height: 1.5;
+}
+
+.full-page-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.doi-link {
+  color: var(--primary-dark);
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.pdf-link {
+  color: var(--primary-dark);
+
+  &:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+}
+
+// Metadata document display (recursive nested key-value renderer)
+.metadata-document {
+  font-size: 0.875rem;
+  line-height: 1.6;
+
+  &__key {
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-right: 0.35rem;
+    display: inline-block;
+  }
+
+  &__value {
+    color: var(--charcoal);
+  }
+
+  &__nested {
+    padding-left: 1rem;
+    border-left: 2px solid var(--secondary);
+    margin: 0.25rem 0;
+  }
+
+  &__namecode-sep {
+    color: rgba(0, 0, 0, 0.35);
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 0 0.35rem;
+    user-select: none;
+  }
+
+  dl {
+    margin: 0.25rem 0;
+  }
+
+  dt {
+    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: 0.8125rem;
+    margin-top: 0.5rem;
+  }
+
+  dd {
+    margin-left: 0;
+    color: var(--charcoal);
+  }
+}

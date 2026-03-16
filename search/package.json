@@ -1,0 +1,60 @@
+{
+  "name": "@ai-for-data-blog/search",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./vue": {
+      "import": "./dist/adapters/vue.js",
+      "types": "./dist/adapters/vue.d.ts"
+    },
+    "./react": {
+      "import": "./dist/adapters/react.js",
+      "types": "./dist/adapters/react.d.ts"
+    },
+    "./worker": "./dist/search.worker.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "adapters",
+    "src"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "build:lib": "vue-tsc --noEmit && cross-env MODE=lib vite build",
+    "build:gh": "cross-env VITE_BASE_URL=/ai-for-data-blog/ npm run build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "serve": "tsx server/server.ts"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.5.0",
+    "@mdi/font": "^7.4.47",
+    "vue": "^3.5.13",
+    "vuetify": "^3.7.15",
+    "wink-bm25-text-search": "^3.1.2",
+    "wink-eng-lite-web-model": "^1.5.2",
+    "wink-nlp": "^2.3.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.18",
+    "@types/react": "^19.2.14",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "cross-env": "^7.0.3",
+    "express": "^4.21.2",
+    "sass": "^1.86.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vite": "^6.3.5",
+    "vite-plugin-vuetify": "^2.0.4",
+    "vue-tsc": "^2.2.8"
+  }
+}

@@ -8,6 +8,7 @@
    - [01_fetch_and_prepare.py](#01_fetch_and_preparepy)
    - [02_generate_embeddings.py](#02_generate_embeddingspy)
    - [03_build_index.py](#03_build_indexp)
+   - [decompress_for_github_pages.py](#decompress_for_github_pagespy)
    - [pipeline.py](#pipelinepy)
 4. [Index File Format](#4-index-file-format)
 5. [JavaScript Modules](#5-javascript-modules)
@@ -21,10 +22,12 @@
    - [service-worker.js](#service-workerjs)
 6. [Apps](#6-apps)
    - [app.html](#apphtml)
+   - [docs.html and docs-opt.html](#docshtml-and-docs-opthtml)
    - [test-hnsw-search.html](#test-hnsw-searchhtml)
    - [test-hnsw-vs-flat.html](#test-hnsw-vs-flathtml)
 7. [Bandwidth and Performance](#7-bandwidth-and-performance)
 8. [Key Design Decisions](#8-key-design-decisions)
+   - [HNSW parameter reference](#hnsw-parameter-reference)
 9. [Extending to a New Collection](#9-extending-to-a-new-collection)
 10. [Troubleshooting](#10-troubleshooting)
 
@@ -54,6 +57,12 @@ This system is a **fully browser-native semantic search engine** — no backend 
 | Flat vs HNSW routing | Threshold on `n_items` | Small collections brute-force faster; large ones need ANN |
 | Titles file | Separate `titles.json` | Lightweight display metadata avoids loading the 44 MB flat file in HNSW mode |
 | Embedding model | GIST-small-Embedding-v0 | 384-dim, small quantized ONNX (~30 MB), high quality |
+
+### Key considerations
+
+- **Transformers.js:** Use `@xenova/transformers` (v2) with `model(tokenizer(text))` → `sentence_embedding.data` for embedding consistency with the Python pipeline. `@huggingface/transformers` (v3) uses a different API.
+- **GitHub Pages:** Does not serve `.gz` files. Use `--compress=none` or run `decompress_for_github_pages.py` before deploying.
+- **docs.html vs docs-opt.html:** Use `docs-opt.html` for production (HNSW + worker); `docs.html` for legacy in-page embedding with pre-computed JSON.
 
 ### High-level architecture
 
@@ -88,7 +97,7 @@ This system is a **fully browser-native semantic search engine** — no backend 
 |  app.html                                                           |
 |   +-- Vue 3 + Vuetify UI                                           |
 |   +-- search.worker.js  (Web Worker)                               |
-|   |    +-- Transformers.js v3  (ONNX embedding model)              |
+|   |    +-- Transformers.js (@xenova, ONNX embedding)               |
 |   |    +-- hnsw-engine.js  (or flat-engine.js)                     |
 |   |    |    +-- shard-loader.js  (3-tier cache)                    |
 |   |    |    +-- int8-codec.js   (dot product hot path)             |
@@ -406,6 +415,20 @@ A lightweight metadata file keyed by integer node ID (insertion order = HNSW nod
 | `--preview_fields` | `"idno,title,abstract,type,doi"` | Fields to include in `titles.json` (excluding `abstract` and `text`) |
 | `--bm25_fields` | `"title,text"` | BM25 field list written to `manifest.json` |
 | `--seed` | `42` | Random seed |
+
+---
+
+### `decompress_for_github_pages.py`
+
+**Purpose:** Decompress `.json.gz` index files to `.json` for GitHub Pages deployment. GitHub Pages does not serve pre-compressed `.gz` files correctly (500 errors).
+
+Run after `03_build_index.py` with `--compress=gzip` when deploying to GitHub Pages:
+
+```bash
+python decompress_for_github_pages.py --output_dir=../../data/prwp
+```
+
+This decompresses flat index, index files, and layer0 shards, then updates `manifest.json` to use `.json` paths and sets `compressed: false`.
 
 ---
 
@@ -791,14 +814,12 @@ A `ShardLoader` is created pointing at `index/layer0/`.
 
 #### Two-phase search algorithm
 
-**Phase 1 — Greedy descent through upper layers (`_greedyDescentLayer`)**
+**Phase 1 — Beam descent through upper layers (`_beamDescentLayer`)**
 
-Starting from the global entry node at the top layer, the algorithm descends one layer at a time using greedy hill-climbing with `ef=1`:
+Starting from the global entry node at the top layer, the algorithm descends one layer at a time using a beam of size `ef_upper` (default 2):
 
-- At each step, score all neighbors of the current best node using `dotProductMixed`.
-- If any neighbor has a higher score, move to it.
-- Repeat until no improvement is found.
-- Move down one layer and repeat from the best node found.
+- At each layer, expand the current beam to its neighbors, score them, and keep the top `ef_upper` as entry points for the next layer.
+- Higher `ef_upper` = more entry points per layer = better recall, at negligible cost (upper layers are in memory).
 
 All upper-layer nodes are already in `nodeCache` from init — this phase requires zero I/O.
 
@@ -838,10 +859,9 @@ This is forwarded to the main thread in the `results` message.
 #### Searching
 
 ```js
-const results = await engine.search(queryF32, { ef: 50, topK: 10 });
+const results = await engine.search(queryF32, { ef: 50, ef_upper: 2, topK: 10 });
 // Returns: [{ id: number, score: number }]
-// Note: for HNSW mode, id is the integer node ID, not the document idno.
-// Enrich with titles: titlesMap[String(result.id)]
+// Note: id is the integer node ID (insertion order). Enrich with titlesMap[String(id)] for idno, title, etc.
 ```
 
 ---
@@ -897,7 +917,7 @@ All messages use a `type` field. The worker also handles a legacy bare-message f
 | `init` | `manifestUrl: string`, `modelId?: string` | Start initialization. `manifestUrl` must be an absolute URL — resolve with `new URL(url, location.href).href`. |
 | `search` | `text: string`, `topK?: number`, `ef?: number`, `threshold?: number` | Run a search query. Worker must be ready. |
 | `embed` | `text: string` | Get a raw embedding vector (transferred as `ArrayBuffer`). |
-| `searchCompare` | `text: string`, `topK?: number`, `ef?: number` | Run both HNSW and flat search, return both result sets + recall@k overlap. Only supported in HNSW mode. |
+| `searchCompare` | `text: string`, `topK?: number`, `ef?: number`, `ef_upper?: number` | Run both HNSW and flat search, return both result sets + recall@k overlap. Only supported in HNSW mode. |
 | `ping` | — | Health check. |
 
 **Inbound from worker (worker -> main thread):**
@@ -941,14 +961,16 @@ For HNSW mode, results from `HNSWEngine` contain only `{ id, score }`. The worke
 
 #### Embedding inference
 
+The worker uses **@xenova/transformers** (Transformers.js v2) with the `model(tokenizer(text))` pattern and `sentence_embedding.data` — this matches the Python pipeline and `docs.html` for consistent results:
+
 ```js
-// Transformers.js v3 API — call pipeline directly with pooling option
-const output = await extractor(text, { pooling: 'mean', normalize: false });
-const raw = new Float32Array(output.data);
+// @xenova/transformers (v2) — used in search.worker.js
+const result = await extractor.model(extractor.tokenizer(text));
+const raw = new Float32Array(result.sentence_embedding.data);
 l2NormalizeInPlace(raw);
 ```
 
-The model tries WebGPU first for hardware acceleration, then falls back to WASM.
+**Note:** `@huggingface/transformers` (v3) uses a different API (`extractor(text, { pooling, normalize })`). The search worker uses Xenova for embedding consistency with the index. The model tries WebGPU first, then falls back to WASM.
 
 ---
 
@@ -1064,6 +1086,27 @@ const results = (msg.data || []).map(r => {
 #### Reranker
 
 An optional cross-encoder reranker runs in a separate worker (`rank.worker.js`). The reranker is triggered by toggling the `applyReranking` switch in the UI. It processes the top 20 results by sending `{ query, documents, top_k }` to `rank.worker.js` and reorders the results by `rerank_score`. The reranker operates on `title + "\n\n" + abstract` concatenations.
+
+---
+
+### `docs.html` and `docs-opt.html`
+
+Two document-search UIs for IDS (International Development Statistics) and similar collections:
+
+| App | Embedding / search | Use case |
+|---|---|---|
+| **docs.html** | In-page: loads `@xenova/transformers` and `doc_embeddings.json`, computes dot product client-side | Legacy; small collections; when pre-computed embeddings JSON is available |
+| **docs-opt.html** | Worker-based: uses `search.worker.js` with HNSW index, manifest-driven | Production; large collections; lazy shard loading; metadata enrichment |
+
+**docs-opt.html** features:
+- HNSW search via `search.worker.js` (same as `app.html`)
+- Manifest-driven collection (`?manifest=data/prwp/manifest.json`)
+- `modelReady` / `indexReady` progress states
+- `enrichResultsWithMetadata` — fetches IDs metadata (geographic_coverage, time_coverage, source) for result cards
+- Optional reranker (`rank.worker.js`)
+- Service worker for index caching
+
+**docs.html** loads embeddings from a remote JSON (e.g. `*__doc_embeddings.json`) and uses `model(tokenizer(text))` → `sentence_embedding.data` for query embedding. No HNSW; full scan over the JSON.
 
 ---
 
@@ -1198,6 +1241,19 @@ levels[i] = k  ->  node is in layers 0 through k-1; its max layer index = k-1
 ```
 
 The filter for upper-layer nodes is `levels[i] >= 2`. Using `levels[i] >= 1` would include all nodes (none would be skipped). Using `levels[i] > max_level` would miss nearly all upper-layer nodes. The `max_layer` field stored per node in `upper_layers.json` is always `levels[i] - 1`.
+
+### HNSW parameter reference
+
+| Parameter | When | Default | Effect |
+|---|---|---|---|
+| `hnsw_M` | Build (03_build_index.py) | 16 | Neighbors per node per layer. Higher = better recall, larger index. Lower M reduces index size. |
+| `ef_construction` | Build | 200 | Build-time beam width. Higher = better graph quality, slower build. Does not affect index size. |
+| `ef` (efSearch) | Search (hnsw-engine) | 50 | Beam width at layer 0. Higher = better recall, more shard fetches, slower. |
+| `ef_upper` | Search | 2 | Beam width for upper-layer descent. Higher = more entry points per layer, better recall, negligible I/O (upper layers in memory). |
+
+**Recall vs size:** Lower `hnsw_M` reduces index size but may hurt recall. The build validates recall@10 ≥ 0.85; if it fails, increase `hnsw_M` or `ef_construction`. For search-time tuning, increase `ef` if recall is insufficient (at the cost of latency and shard fetches).
+
+**Node ID vs document ID:** HNSW results use integer node IDs (insertion order = 0..n-1). The worker enriches with `titlesMap[nodeId]` to get `idno`, `title`, etc. for display. Do not confuse `result.id` (node ID) with `result.idno` (document identifier).
 
 ---
 
@@ -1345,28 +1401,27 @@ for l in range(1, num_levels):     # layers 1 through actual_max_layer
     nbrs = get_hnsw_neighbors(hnsw, offsets, flat_neighbors, node_id, l)
 ```
 
-### Transformers.js v3 API change — wrong embedding call
+### Transformers.js: Xenova (v2) vs HuggingFace (v3)
 
-**Symptom:** `TypeError: extractor.model is not a function` or `TypeError: extractor.tokenizer is not a function`.
-
-**Cause:** Transformers.js v2 required separate `tokenizer` and `model` calls. Version 3 changed the API to call the pipeline directly with options.
-
-**Fix (v3 API):**
+**Current setup:** The search worker and `docs.html` use **@xenova/transformers** (v2) with:
 
 ```js
-// Correct for Transformers.js v3:
-const output = await extractor(text, { pooling: 'mean', normalize: false });
+// @xenova/transformers — correct for search.worker.js and docs.html
+const result = await extractor.model(extractor.tokenizer(text));
+const raw = new Float32Array(result.sentence_embedding.data);
+l2NormalizeInPlace(raw);
+```
+
+**If using @huggingface/transformers (v3):** The v3 API does not expose `model` and `tokenizer` on the pipeline. Use the direct call instead:
+
+```js
+// @huggingface/transformers (v3)
+const output = await extractor(text, { pooling: 'cls', normalize: false });
 const raw = new Float32Array(output.data);
 l2NormalizeInPlace(raw);
 ```
 
-**Wrong (v2 style, will fail in v3):**
-
-```js
-// Do NOT use this — will throw in Transformers.js v3:
-const encoded = await extractor.tokenizer(text);
-const output = await extractor.model(encoded);
-```
+**Why Xenova for search:** The `model(tokenizer(text))` → `sentence_embedding.data` pattern produces embeddings closer to the Python pipeline and `docs.html` expectations. Stick with `@xenova/transformers` for the search worker unless you validate v3 output against the index.
 
 ### Vuetify icon set must be `defaultSet: 'mdi'`
 

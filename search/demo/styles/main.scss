@@ -1,0 +1,18 @@
+// main.scss — root SCSS entry point for the search app.
+// Vite processes this file and injects _variables.scss into every component
+// via the `additionalData` setting in vite.config.ts.
+
+// Design tokens (injected globally by Vite, but also here for standalone CSS builds)
+@use './variables' as *;
+
+// Layout and scroll containers
+@use './search';
+
+// Search bar (grow-wrap textarea)
+@use './search-bar';
+
+// Result card hover/active states
+@use './card-result';
+
+// Detail pane, PDF viewer, metadata display
+@use './detail-pane';
