@@ -620,6 +620,9 @@
               <!-- Normal layout: search bar full width, then row with results | detail. On mobile (width < 960) always use this layout. -->
               <template v-if="!detailExpanded || busy || width < 960">
                 <div class="px-4 px-md-0 mt-md-9 search-bar-wrapper">
+                  <v-chip v-if="skipModelLoad" size="small" color="warning" variant="tonal" class="mb-2">
+                    BM25 fallback test: embedding model skipped — searches use lexical-only
+                  </v-chip>
                   <div
                     class="position-relative search-bar-area search-bar"
                     @click="isActive = true"
@@ -1650,6 +1653,9 @@
                     :style="resultListWidth ? { width: resultListWidth + 'px', minWidth: resultListWidth + 'px', maxWidth: resultListWidth + 'px' } : {}"
                   >
                     <div class="expanded-layout__search px-4 px-md-0 mt-md-4">
+                      <v-chip v-if="skipModelLoad" size="small" color="warning" variant="tonal" class="mb-2">
+                        BM25 fallback test: embedding model skipped — searches use lexical-only
+                      </v-chip>
                       <div
                         class="position-relative search-bar-area search-bar"
                         @click="isActive = true"
@@ -2479,6 +2485,7 @@
         >
           <v-row align-content="center" class="fill-height" justify="center">
             <v-col class="text-subtitle-1 text-center" cols="12">
+              <span v-if="loadingPhase" class="text-medium-emphasis">{{ loadingPhase }}:</span>
               {{ loadingMessage }}
             </v-col>
             <v-col cols="6">
@@ -2682,6 +2689,8 @@
       // GitHub Pages: served at /search/docs-demo.html → data lives at /semantic-search/data/
       // Vite dev server: pass ?manifest=data/prwp/manifest.json (served via Vite middleware)
       const manifestUrl = params.get("manifest") || "../semantic-search/data/prwp/manifest.json";
+      // ?skipModel=1 — skip loading the embedding model to test BM25 fallback (semantic/hybrid → lexical).
+      const skipModelLoad = params.has("skipModel");
       const { createVuetify } = Vuetify;
       const vuetify = createVuetify({
         defaults: {},
@@ -2772,7 +2781,8 @@
               "&embedded=true"
             );
           });
-          const loadingMessage = ref("Loading index…");
+          const loadingMessage = ref("Initializing…");
+          const loadingPhase = ref("");
 
           const scrollSearchContentResultMobile = ref(null);
           const scrollSearchContentResultDesktop = ref(null);
@@ -2953,6 +2963,7 @@
           // SearchClient — framework-agnostic wrapper around the search worker.
           // workerFactory points to the pre-built worker so it works on any static server.
           const client = new SearchClient(manifestUrl, {
+            skipModelLoad,
             workerFactory: () => new Worker(
               new URL('./dist/search.worker.js', location.href),
               { type: 'module' }
@@ -2960,6 +2971,8 @@
           });
 
           client.on('progress', (msg) => {
+            const p = msg.phase || '';
+            loadingPhase.value = p ? p.charAt(0).toUpperCase() + p.slice(1) : '';
             loadingMessage.value = msg.message || '';
           });
 
@@ -3372,8 +3385,10 @@
             pdfLoadTimeout,
             onPdfIframeLoad,
             loadingMessage,
+            loadingPhase,
             modelReady,
             indexReady,
+            skipModelLoad,
           };
         },
       })

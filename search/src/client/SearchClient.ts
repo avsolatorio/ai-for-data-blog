@@ -33,6 +33,8 @@ export type SearchMode = 'semantic' | 'lexical' | 'hybrid'
 export interface SearchClientOptions {
   /** HuggingFace model ID to use for embeddings (default: avsolatorio/GIST-small-Embedding-v0) */
   modelId?: string
+  /** If true, skip loading the embedding model (for testing BM25 fallback). */
+  skipModelLoad?: boolean
   /**
    * Factory function that creates the Web Worker.
    * Defaults to the bundled search worker created via `new URL()`.
@@ -113,6 +115,7 @@ export class SearchClient {
       type: 'init',
       manifestUrl: resolvedUrl,
       modelId: opts.modelId,
+      skipModelLoad: opts.skipModelLoad,
     }
     this.worker.postMessage(initMsg)
   }
@@ -202,7 +205,7 @@ export class SearchClient {
         this.isIndexReady = true
         break
       case 'ready':
-        this.isModelReady = true
+        this.isModelReady = msg.modelLoaded !== false
         this.manifest = msg.config
         break
       case 'results':

@@ -31,6 +31,8 @@ export interface WorkerInitMessage {
   manifestUrl: string
   /** HuggingFace model ID, defaults to avsolatorio/GIST-small-Embedding-v0 */
   modelId?: string
+  /** If true, skip loading the embedding model (for testing BM25 fallback). Index + BM25 still load. */
+  skipModelLoad?: boolean
 }
 
 export interface WorkerSearchMessage {
@@ -96,13 +98,15 @@ export interface WorkerIndexReadyMessage {
 }
 
 /**
- * Sent when BOTH the index AND the embedding model are ready.
- * Semantic and hybrid search are available from this point on.
+ * Sent when the index is ready; if the embedding model was loaded, semantic/hybrid are available.
+ * When skipModelLoad was used, modelLoaded is false and only lexical (BM25) runs for semantic/hybrid.
  */
 export interface WorkerReadyMessage {
   type: 'ready'
   mode: 'flat' | 'hnsw'
   config: CollectionManifest
+  /** false when init was called with skipModelLoad (embedding model not loaded). */
+  modelLoaded?: boolean
 }
 
 export interface WorkerResultsMessage {

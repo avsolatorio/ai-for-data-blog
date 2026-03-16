@@ -81,37 +81,28 @@ function enrichFromTitlesMap(results: SearchResult[]): SearchResult[] {
 
 // ── BM25 setup ────────────────────────────────────────────────────────────────
 
+const tokenizeForBM25 = (nlp: any, its: any) => (text: string) =>
+  nlp
+    .readDoc(text)
+    .tokens()
+    .filter((t: any) => t.out(its.type) === "word")
+    .out(its.normal);
+
 function buildBM25Engine(
   corpus: Array<{ id: string | number; title: string; text: string }>,
 ): ReturnType<typeof winkBM25> {
   const nlp = winkNLP(model);
   const its = nlp.its;
+  const tokenize = tokenizeForBM25(nlp, its);
+  const prepTasks = [tokenize, (tokens: string[]) => tokens];
+
   const engine = winkBM25();
   engine.defineConfig({ fldWeights: { title: 3, text: 1 } });
-  engine.definePrepTasks(
-    [
-      (text: string) =>
-        nlp
-          .readDoc(text)
-          .tokens()
-          .filter((t: any) => t.out(its.type) === "word")
-          .out(its.normal),
-      (tokens: string[]) => tokens,
-    ],
-    "title",
-  );
-  engine.definePrepTasks(
-    [
-      (text: string) =>
-        nlp
-          .readDoc(text)
-          .tokens()
-          .filter((t: any) => t.out(its.type) === "word")
-          .out(its.normal),
-      (tokens: string[]) => tokens,
-    ],
-    "text",
-  );
+  // Default prep tasks are used for search query tokenization; without these,
+  // prepareInput(text, 'search') returns the raw string and .filter() throws.
+  engine.definePrepTasks(prepTasks);
+  engine.definePrepTasks(prepTasks, "title");
+  engine.definePrepTasks(prepTasks, "text");
   corpus.forEach((item, idx) => {
     engine.addDoc({ title: item.title, text: item.text }, idx);
   });
@@ -192,11 +183,11 @@ async function initIndex(manifestUrl: string): Promise<void> {
       text: String(item.text ?? ""),
     }));
   } else {
-    // HNSW mode
+    // HNSW mode: load graph, titles, and BM25 corpus in parallel
     postMsg({
       type: "progress",
       phase: "index",
-      message: "Loading HNSW index…",
+      message: "Loading HNSW index and BM25 corpus…",
     });
     const engine = new HNSWEngine();
     const titlesUrl = manifest.index?.titles
@@ -227,6 +218,11 @@ async function initIndex(manifestUrl: string): Promise<void> {
   // Build BM25 engine from corpus
   let bm25Ready = false;
   if (bm25Corpus && bm25Corpus.length > 0) {
+    postMsg({
+      type: "progress",
+      phase: "index",
+      message: "Building BM25 index…",
+    });
     try {
       bm25Engine = buildBM25Engine(bm25Corpus);
 
@@ -262,16 +258,31 @@ async function initIndex(manifestUrl: string): Promise<void> {
 
 // ── Orchestration ─────────────────────────────────────────────────────────────
 
-async function init(manifestUrl: string, modelId?: string): Promise<void> {
+async function init(
+  manifestUrl: string,
+  modelId?: string,
+  skipModelLoad?: boolean,
+): Promise<void> {
   try {
-    // Load model and index in parallel — index phase 1 (BM25) completes much faster
-    await Promise.all([loadModel(modelId), initIndex(manifestUrl)]);
-    isModelReady = true;
-    postMsg({
-      type: "ready",
-      mode: manifest?.search_mode ?? "flat",
-      config: manifest!,
-    });
+    if (skipModelLoad) {
+      // Load index + BM25 only; leave embedding model unloaded to test BM25 fallback.
+      await initIndex(manifestUrl);
+      postMsg({
+        type: "ready",
+        mode: manifest?.search_mode ?? "flat",
+        config: manifest!,
+        modelLoaded: false,
+      });
+    } else {
+      await Promise.all([loadModel(modelId), initIndex(manifestUrl)]);
+      isModelReady = true;
+      postMsg({
+        type: "ready",
+        mode: manifest?.search_mode ?? "flat",
+        config: manifest!,
+        modelLoaded: true,
+      });
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     postMsg({ type: "error", message });
@@ -338,7 +349,7 @@ self.onmessage = async (
   switch ((msg as WorkerInboundMessage).type) {
     case "init": {
       const m = msg as Extract<WorkerInboundMessage, { type: "init" }>;
-      await init(m.manifestUrl, m.modelId);
+      await init(m.manifestUrl, m.modelId, m.skipModelLoad);
       break;
     }
 
