@@ -24,17 +24,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python (uv)
-        uses: astral-sh/setup-uv@v4
-        with:
-          python-version: "3.11"
-
-      - name: Install Python dependencies
-        run: uv sync
-
-      - name: Build search pipeline (data/prwp)
-        run: uv run python search/pipeline/pipeline.py prwp --compress=none
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
