@@ -45,9 +45,8 @@ export default defineConfig({
   ],
 
   resolve: {
-    // Use the extern-WASM build of onnxruntime-web so Rollup does NOT inline
-    // the WASM binary as base64. The worker sets env.backends.onnx.wasm.wasmPaths
-    // to load WASM from CDN at runtime instead.
+    // Prefer extern-WASM build of onnxruntime-web so the worker bundle does not
+    // inline the WASM binary. Xenova loads ONNX/WASM at runtime.
     conditions: ['onnxruntime-web-use-extern-wasm'],
     alias: {
       '@': fileURLToPath(new URL('./demo', import.meta.url)),
@@ -106,15 +105,15 @@ export default defineConfig({
             // doesn't block page load. The ONNX model itself is fetched at runtime
             // (not bundled), but the transformers.js library code is separate.
             manualChunks: {
-              transformers: ['@huggingface/transformers'],
+              transformers: ['@xenova/transformers'],
               vuetify: ['vuetify'],
             },
           },
         },
       },
 
-  // Enable top-level await (needed by @huggingface/transformers in workers)
+  // Top-level await in workers (used by @xenova/transformers)
   optimizeDeps: {
-    exclude: ['@huggingface/transformers'],
+    exclude: ['@xenova/transformers'],
   },
 })
