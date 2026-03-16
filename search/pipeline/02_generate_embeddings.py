@@ -225,6 +225,8 @@ def main(
                 field: item.get(field) for field in preview_field_list if field in item
             }
             meta["id"] = str(item.get(id_field, item.get("id", "")))
+            if "idno" in meta:
+                meta["idno"] = str(meta["idno"])
             meta["title"] = item.get(title_field, "")
             meta["text"] = item.get(bm25_text_field, item.get(content_field, ""))
             metadata.append(meta)
@@ -257,10 +259,13 @@ def main(
 
         metadata = []
         for doc in docs:
+            raw_id = doc.get(id_field, doc.get("id", ""))
             meta = {
                 field: doc.get(field) for field in preview_field_list if field in doc
             }
-            meta["id"] = str(doc.get(id_field, doc.get("id", "")))
+            meta["id"] = str(raw_id)
+            if "idno" in meta:
+                meta["idno"] = str(meta["idno"])  # normalize to string (match semantic-search shape)
             meta["title"] = doc.get(title_field, "")
             meta["text"] = doc.get(bm25_text_field, doc.get(content_field, ""))
             metadata.append(meta)

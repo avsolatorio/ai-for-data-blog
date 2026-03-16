@@ -57,9 +57,19 @@ Usage:
 
 import gzip
 import json
+import sys
+import warnings
 import numpy as np
 import fire
 from pathlib import Path
+
+# Suppress resource_tracker "leaked semaphore" at shutdown (FAISS/OpenMP leave one open)
+warnings.filterwarnings(
+    "ignore",
+    message="resource_tracker: There appear to be.*leaked semaphore",
+    category=UserWarning,
+    module="multiprocessing.resource_tracker",
+)
 
 
 def _compress_json(path: Path, remove_original: bool = True) -> Path:
@@ -247,6 +257,12 @@ def main(
     """
     import faiss
 
+    # Limit FAISS/OpenMP threads to avoid semaphore leak at shutdown
+    try:
+        faiss.omp_set_num_threads(1)
+    except AttributeError:
+        pass
+
     np.random.seed(seed)
     output_path = Path(output_dir)
     index_dir = output_path / "index"
@@ -342,10 +358,14 @@ def main(
     print(
         f"  Cluster sizes — min: {cluster_sizes.min()}, max: {cluster_sizes.max()}, mean: {cluster_sizes.mean():.1f}"
     )
+    sys.stdout.flush()
 
     # ── 4. SQ8 quantization of all vectors ──────────────────────────────────
     print("Quantizing all vectors (SQ8)...")
+    sys.stdout.flush()
     quantized = [quantize_sq8(embeddings_norm[i]) for i in range(n_items)]
+    print(f"  Quantized {len(quantized)} vectors.")
+    sys.stdout.flush()
 
     # ── 5. Build HNSW index ──────────────────────────────────────────────────
     print(f"\nBuilding HNSW index (M={hnsw_M}, ef_construction={ef_construction})...")
@@ -511,6 +531,7 @@ def main(
     # ── 13. titles.json (lightweight metadata for result display) ───────────
     # Omits vectors and long text — only display fields needed by the browser.
     # Indexed by integer node_id (same as HNSW node ID, which is insertion order).
+    # Format matches semantic-search: idno, title, type (always "document").
     # NOTE: The ``text`` field is intentionally excluded here to keep this file
     # small. Use bm25_corpus.json if you need the text for BM25 search.
     preview_field_list = [f.strip() for f in preview_fields.split(",")]
@@ -522,9 +543,10 @@ def main(
             v = meta.get(k)
             if v:
                 entry[k] = v
-        # Always include title
         if "title" in meta:
             entry["title"] = meta["title"]
+        # Normalize type to "document" so titles.json matches semantic-search format
+        entry["type"] = "document"
         titles_data[str(i)] = entry
 
     titles_path = index_dir / "titles.json"

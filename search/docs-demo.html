@@ -2697,10 +2697,8 @@
       const { createApp, ref, onMounted, nextTick, watch, computed } = Vue;
 
       const params = new URLSearchParams(location.search);
-      // Default manifest is relative to this file's location in the repo.
-      // GitHub Pages: served at /search/docs-demo.html → data lives at /semantic-search/data/
-      // Vite dev server: pass ?manifest=data/prwp/manifest.json (served via Vite middleware)
-      const manifestUrl = params.get("manifest") || "../semantic-search/data/prwp/manifest.json";
+      // Default: /data/prwp/manifest.json (from site root). Override with ?manifest=...
+      const manifestUrl = params.get("manifest") || "/data/prwp/manifest.json";
       // ?skipModel=1 — skip loading the embedding model to test BM25 fallback (semantic/hybrid → lexical).
       const skipModelLoad = params.has("skipModel");
       // ?modelDelay=60 — delay loading the embedding model by N seconds so index + BM25 are ready first.
@@ -3134,13 +3132,58 @@
           };
 
           const loadMetadata = () => {
-            fetch(
-              `https://avsolatorio.github.io/ids-metadata/data/metadata/${dtype}/${dtype}_${viewItem.value.idno}.json`,
-            )
-              .then((res) => res.json())
+            const item = viewItem.value;
+            const idno = item?.idno ?? item?.id;
+            if (!idno) return;
+            const url = `https://avsolatorio.github.io/ids-metadata/data/metadata/${dtype}/${dtype}_${idno}.json`;
+            fetch(url)
+              .then(async (res) => {
+                if (!res.ok) return null;
+                try {
+                  return await res.json();
+                } catch {
+                  return null;
+                }
+              })
               .then((data) => {
-                metadata.value = data;
-                pdfURL.value = metadata.value?.document_description?.url;
+                // Only apply if still viewing this document (avoid stale response overwriting)
+                if ((viewItem.value?.idno ?? viewItem.value?.id) !== idno) return;
+                if (data && typeof data === 'object') {
+                  // API may return { document_description, ... } or a flat object; ensure expected shape
+                  metadata.value = data.document_description
+                    ? data
+                    : { document_description: data };
+                  pdfURL.value = metadata.value?.document_description?.url ?? null;
+                } else {
+                  metadata.value = {
+                    document_description: {
+                      idno: item?.idno ?? item?.id,
+                      title: item?.title,
+                      abstract: item?.text ?? item?.abstract,
+                      type: item?.type,
+                      doi: item?.doi,
+                      url: item?.url,
+                      date_published: item?.date_published,
+                    },
+                  };
+                  pdfURL.value = item?.url ?? null;
+                }
+                pdfViewLoaded.value = false;
+              })
+              .catch(() => {
+                if ((viewItem.value?.idno ?? viewItem.value?.id) !== idno) return;
+                metadata.value = {
+                  document_description: {
+                    idno: item?.idno ?? item?.id,
+                    title: item?.title,
+                    abstract: item?.text ?? item?.abstract,
+                    type: item?.type,
+                    doi: item?.doi,
+                    url: item?.url,
+                    date_published: item?.date_published,
+                  },
+                };
+                pdfURL.value = item?.url ?? null;
                 pdfViewLoaded.value = false;
               });
           };

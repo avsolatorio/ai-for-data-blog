@@ -8,10 +8,10 @@ Runs all three pipeline steps in order:
 
 Usage:
   # PRWP (full run, fetch from API)
-  python pipeline.py prwp \\
-    --source=worldbank_api \\
-    --doctype="Policy Research Working Paper" \\
-    --model=avsolatorio/GIST-small-Embedding-v0 \\
+  python pipeline.py prwp \
+    --source=worldbank_api \
+    --doctype="Policy Research Working Paper" \
+    --model=avsolatorio/GIST-small-Embedding-v0 \
     --output_dir=../../data/prwp
 
   # WDI from local Excel
@@ -44,6 +44,7 @@ Usage:
     --output_dir=../../data/my_collection
 """
 import sys
+
 import fire
 import importlib.util
 from pathlib import Path
@@ -157,9 +158,11 @@ def main(
         seed: Random seed passed to all steps.
     """
     if output_dir is None:
-        output_dir = f"../../data/{collection_id}"
-
-    output_path = Path(output_dir)
+        # Default: repo root / data / {collection_id} (stable regardless of cwd)
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        output_path = repo_root / "data" / collection_id
+    else:
+        output_path = Path(output_dir)
     print(f"\n{'='*60}")
     print(f"Pipeline: {collection_id}")
     print(f"Output:   {output_path.resolve()}")
@@ -209,20 +212,24 @@ def main(
     # ── Step 3: Build index ──────────────────────────────────────────────────
     print("\nStep 3: Building search index...")
     index_mod = _load_module("index", pipeline_dir / "03_build_index.py")
-    index_mod.main(
-        output_dir=str(output_path),
-        collection_id=collection_id,
-        model_id=model,
-        hnsw_M=hnsw_M,
-        ef_construction=ef_construction,
-        flat_threshold=flat_threshold,
-        n_clusters=n_clusters,
-        kmeans_niter=kmeans_niter,
-        preview_fields=preview_fields,
-        bm25_fields=bm25_fields,
-        compress=compress,
-        seed=seed,
-    )
+    try:
+        index_mod.main(
+            output_dir=str(output_path),
+            collection_id=collection_id,
+            model_id=model,
+            hnsw_M=hnsw_M,
+            ef_construction=ef_construction,
+            flat_threshold=flat_threshold,
+            n_clusters=n_clusters,
+            kmeans_niter=kmeans_niter,
+            preview_fields=preview_fields,
+            bm25_fields=bm25_fields,
+            compress=compress,
+            seed=seed,
+        )
+    except Exception as e:
+        print(f"\nStep 3 failed: {e}", file=sys.stderr)
+        raise
 
     print(f"\n{'='*60}")
     print(f"Pipeline complete! Index ready at: {output_path.resolve()}")
